@@ -355,35 +355,26 @@ def cron_job():
             print(f"DEBUG: Could not read target file: {target_path}")
             return jsonify({'status': 'Could not identify target file'}), 200
 
-        # Generate High-Quality Improvement
+        # Generate High-Quality Improvement using external prompt
         ts = int(time.time())
-        improvement_prompt = (
-            f"Repository: {target_repo.full_name}\n"
-            f"File Path: {target_path}\n"
-            "File Content:\n"
-            "--- START OF FILE ---\n"
-            f"{file_content}\n"
-            "--- END OF FILE ---\n\n"
-            "TASK: Propose a HIGH-VALUE, TECHNICAL improvement for this file.\n\n"
-            "CRITICAL RULES:\n"
-            "1. NO SLOP: Strictly forbid trivial changes like whitespace, simple comments, or basic docstrings.\n"
-            "2. TECHNICAL DEPTH: Focus on Security (vulns), Performance (O-notation), Logic Bugs, or Advanced Refactoring (DRY, Patterns).\n"
-            "3. SURGICAL EDITS: Use search/replace blocks. DO NOT rewrite the whole file.\n"
-            "4. PRESERVATION: Ensure 100% of unrelated code, comments, and documentation are preserved.\n"
-            "5. NO PLACEHOLDERS: Your 'replace' block must be fully working code.\n\n"
-            "RESPONSE FORMAT (Strict JSON only):\n"
-            "{\n"
-            '  "title": "Technical PR Title",\n'
-            '  "body": "Explain WHY this is a high-value technical improvement.",\n'
-            f'  "branch_name": "bot/tech-fix-{ts}",\n'
-            '  "edits": [\n'
-            '    {\n'
-            '      "search": "EXACT block of original code (include indentation)",\n'
-            '      "replace": "The improved code block"\n'
-            '    }\n'
-            '  ]\n'
-            "}\n"
-        )
+        try:
+            prompt_path = os.path.join(os.path.dirname(__file__), 'improvement_prompt.txt')
+            with open(prompt_path, 'r') as f:
+                prompt_template = f.read()
+            
+            improvement_prompt = prompt_template.replace('{{REPO_NAME}}', target_repo.full_name)\
+                                              .replace('{{FILE_PATH}}', target_path)\
+                                              .replace('{{FILE_CONTENT}}', file_content)\
+                                              .replace('{{TIMESTAMP}}', str(ts))
+        except Exception as e:
+            print(f"DEBUG: Failed to load external prompt: {e}. Falling back to internal.")
+            improvement_prompt = (
+                f"Repository: {target_repo.full_name}\n"
+                f"File Path: {target_path}\n"
+                f"Content:\n{file_content}\n\n"
+                "TASK: Propose a high-value technical improvement using surgical search/replace JSON."
+            )
+
         raw_response = query_gemini(improvement_prompt, temperature=0.1)
         print(f"DEBUG: Gemini raw response length: {len(raw_response) if raw_response else 0}")
         improvement_data = extract_json_from_response(raw_response)
@@ -396,7 +387,7 @@ def cron_job():
                 print("DEBUG: No changes applied after surgical edits.")
                 return jsonify({'status': 'No changes applied'}), 200
 
-            branch = improvement_data.get('branch_name', f'bot/fix-{ts}')
+            branch = improvement_data.get('branch_name', f'bot/tech-fix-{ts}')
             title = improvement_data.get('title', 'Automated technical improvement')
             body = improvement_data.get('body', 'Automated technical changes by Joe-Gemini.')
             
