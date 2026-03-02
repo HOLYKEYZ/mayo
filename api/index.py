@@ -206,16 +206,23 @@ def commit_changes_via_api(repo, branch_name, file_changes, commit_message):
         return False
 
 def apply_surgical_edits(content, edits):
-    """Apply search/replace blocks to content."""
+    """Apply search/replace blocks to content with safety guards."""
     new_content = content
     for edit in edits:
         search = edit.get('search')
         replace = edit.get('replace')
         if search and search in new_content:
+            # SAFETY GUARD: Reject edits that delete more than 50% of the search block
+            search_lines = len(search.strip().splitlines())
+            replace_lines = len(replace.strip().splitlines()) if replace else 0
+            if search_lines > 5 and replace_lines < search_lines * 0.5:
+                print(f"DEBUG: BLOCKED destructive edit - would delete {search_lines - replace_lines} lines ({search[:60]}...)")
+                continue
             new_content = new_content.replace(search, replace, 1)
         else:
             print(f"DEBUG: Search block not found in file: {search[:50]}...")
     return new_content
+
 
 def query_gemini(prompt, context="", temperature=0.4):
     headers = {'Content-Type': 'application/json'}
@@ -422,8 +429,8 @@ def cron_job():
                     old_memory = old_memory_file.decoded_content.decode('utf-8')
                     
                     lesson = (
-                        f"\n- **Repo: {target_repo.full_name}**: {title}. (Ref: {pr.html_url})\n"
-                        f"  - *Impact: {improvement_data.get('body', 'Improved technical quality.')}*"
+                        f"\n- **Repo: {target_repo.name}**: {title}. "
+                        f"(Ref: {pr.html_url}) - *Status: PENDING REVIEW*"
                     )
                     
                     new_memory = old_memory + lesson
@@ -463,8 +470,62 @@ def webhook():
         handle_issue_comment(payload)
     elif event_type == 'pull_request' and payload.get('action') in ['opened', 'synchronize']:
          handle_pr(payload)
+    elif event_type == 'pull_request_review' and payload.get('action') == 'submitted':
+        handle_pr_review_feedback(payload)
 
     return jsonify({'status': 'ok'})
+
+def handle_pr_review_feedback(payload):
+    """Record Joseph's review outcome in global memory."""
+    try:
+        pr_data = payload.get('pull_request', {})
+        review = payload.get('review', {})
+        pr_url = pr_data.get('html_url', '')
+        review_state = review.get('state', 'commented').upper()  # APPROVED, CHANGES_REQUESTED, COMMENTED
+        reviewer = review.get('user', {}).get('login', 'unknown')
+        
+        # Only process reviews from the repo owner, not the bot itself
+        bot_login = get_bot_login()
+        if reviewer == bot_login:
+            return
+        
+        # Map review states to memory-friendly labels
+        state_map = {
+            'APPROVED': 'APPROVED - Joseph liked this!',
+            'CHANGES_REQUESTED': 'REJECTED - Needs improvement',
+            'COMMENTED': 'COMMENTED - Joseph had feedback',
+            'DISMISSED': 'DISMISSED'
+        }
+        memory_status = state_map.get(review_state, review_state)
+        
+        installation = payload.get('installation')
+        if not installation:
+            return
+        
+        gh = get_github_client(installation['id'])
+        bot_repo = gh.get_repo("HOLYKEYZ/joe-gemini")
+        
+        memory_file = bot_repo.get_contents("api/global_memory.md")
+        old_memory = memory_file.decoded_content.decode('utf-8')
+        
+        # Update the PENDING REVIEW status for this PR
+        if pr_url in old_memory:
+            new_memory = old_memory.replace(
+                f"(Ref: {pr_url}) - *Status: PENDING REVIEW*",
+                f"(Ref: {pr_url}) - *Status: {memory_status}*"
+            )
+            if new_memory != old_memory:
+                bot_repo.update_file(
+                    "api/global_memory.md",
+                    f"feat(memory): record review outcome ({review_state})",
+                    new_memory,
+                    memory_file.sha
+                )
+                print(f"DEBUG: Memory updated with review: {review_state} for {pr_url}")
+        else:
+            print(f"DEBUG: PR {pr_url} not found in memory, skipping review update")
+    except Exception as e:
+        print(f"DEBUG: Failed to record review feedback: {e}")
 
 def handle_pr(payload):
     """Handle PR opened/synchronized events."""
