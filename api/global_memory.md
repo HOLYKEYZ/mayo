@@ -1,4 +1,4 @@
-# Joe-Gemini Global Memory & Experience
+# mayo Global Memory & Experience
 
 This file tracks the bot's successful improvements, technical patterns learned, and mistakes avoided across all repositories.
 
