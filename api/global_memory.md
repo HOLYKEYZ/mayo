@@ -33,3 +33,5 @@ u wanna delete '*
 - **Repo: Joseph-Portfolio**: [DOCS] Enhance README for Better Developer Experience. (Ref: https://github.com/HOLYKEYZ/Joseph-Portfolio/pull/1) - *Status: MERGED - Joseph approved! Comment: '[vc]: #zikQGlJc/WxuUecN8PvZvhQ7hcZzWrfVTtbv4ER1C5k=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **Joseph's Feedback on Joseph-Portfolio#1**: "mayo , this one is good" — Mayo acknowledged and responded.
 - **Repo: HADNX**: [DX] Complete EXTERNAL TOOLS Section in README. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/11) - *Status: PENDING REVIEW*
+- **Joseph's Feedback on HADNX#11**: "hii, mayo, reviewer, executor is deleting everything, i cant merge this shii
+u gotta review diff, wth is this man" — Mayo acknowledged and responded.
