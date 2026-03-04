@@ -208,32 +208,69 @@ def commit_changes_via_api(repo, branch_name, file_changes, commit_message):
         return False
 
 def apply_surgical_edits(content, edits):
-    """Apply search/replace blocks to content with safety guards."""
-    new_content = content
-    original_line_count = len(content.splitlines())
+    """Apply search/replace blocks using LINE-BASED matching (not substring).
+    
+    This prevents partial-line matches from cascading into mass deletions.
+    The search block is split into lines, matched against complete file lines,
+    and only the matched line range is replaced.
+    """
+    content_lines = content.splitlines(True)  # Keep line endings
+    original_line_count = len(content_lines)
+    
     for edit in edits:
         search = edit.get('search')
         replace = edit.get('replace')
-        if search and search in new_content:
-            # SAFETY GUARD 1: Reject edits that delete more than 50% of search block
-            search_lines = len(search.strip().splitlines())
-            replace_lines = len(replace.strip().splitlines()) if replace else 0
-            if search_lines > 5 and replace_lines < search_lines * 0.5:
-                print(f"DEBUG: BLOCKED destructive edit - would delete {search_lines - replace_lines} lines ({search[:60]}...)")
-                continue
-            
-            # SAFETY GUARD 2: Test-apply and check total file damage
-            test_content = new_content.replace(search, replace, 1)
-            new_line_count = len(test_content.splitlines())
-            lines_lost = original_line_count - new_line_count
-            if lines_lost > max(10, original_line_count * 0.2):
-                print(f"DEBUG: BLOCKED catastrophic edit - would remove {lines_lost}/{original_line_count} total lines ({search[:60]}...)")
-                continue
-            
-            new_content = test_content
-        else:
-            print(f"DEBUG: Search block not found in file: {search[:50]}...")
-    return new_content
+        if not search:
+            continue
+        
+        search_lines = search.splitlines()
+        replace_text = replace if replace else ""
+        
+        # SAFETY GUARD 1: Reject edits that delete more than 50% of search block
+        replace_line_count = len(replace_text.strip().splitlines()) if replace_text.strip() else 0
+        if len(search_lines) > 5 and replace_line_count < len(search_lines) * 0.5:
+            print(f"DEBUG: BLOCKED destructive edit - would delete {len(search_lines) - replace_line_count} lines ({search[:60]}...)")
+            continue
+        
+        # Find the search block in content using LINE-BY-LINE matching
+        match_start = -1
+        for i in range(len(content_lines) - len(search_lines) + 1):
+            matched = True
+            for j, search_line in enumerate(search_lines):
+                content_line = content_lines[i + j].rstrip('\r\n')
+                if content_line.rstrip() != search_line.rstrip():
+                    matched = False
+                    break
+            if matched:
+                match_start = i
+                break
+        
+        if match_start == -1:
+            print(f"DEBUG: Search block not found (line-match): {search[:50]}...")
+            continue
+        
+        match_end = match_start + len(search_lines)
+        
+        # Build the replacement lines (preserve file's line ending style)
+        line_ending = '\n'
+        if content_lines and '\r\n' in content_lines[0]:
+            line_ending = '\r\n'
+        
+        replacement_lines = []
+        for line in replace_text.splitlines():
+            replacement_lines.append(line + line_ending)
+        
+        # SAFETY GUARD 2: Test-apply and check total file damage
+        test_lines = content_lines[:match_start] + replacement_lines + content_lines[match_end:]
+        lines_lost = original_line_count - len(test_lines)
+        if lines_lost > max(10, original_line_count * 0.2):
+            print(f"DEBUG: BLOCKED catastrophic edit - would remove {lines_lost}/{original_line_count} total lines ({search[:60]}...)")
+            continue
+        
+        content_lines = test_lines
+        print(f"DEBUG: Applied edit at lines {match_start+1}-{match_end} ({len(search_lines)} lines matched, {len(replacement_lines)} replacement lines)")
+    
+    return ''.join(content_lines)
 
 
 def query_gemini(prompt, context="", temperature=0.4):
