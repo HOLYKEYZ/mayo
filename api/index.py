@@ -387,7 +387,7 @@ def audit_pending_reviews(gh):
 def update_ai_communication_log(gh, ts, scanner_summary, executor_proposal, reviewer_verdict):
     """Append a cycle entry to ai_communication.md and truncate to last 5 cycles."""
     try:
-        bot_repo = gh.get_repo("HOLYKEYZ/joe-gemini")
+        bot_repo = gh.get_repo(os.environ.get('BOT_REPO_NAME', 'HOLYKEYZ/mayo'))
         comm_file = bot_repo.get_contents("api/ai_communication.md")
         old_log = comm_file.decoded_content.decode('utf-8')
         
@@ -429,7 +429,7 @@ def get_status():
             
         token = integration.get_access_token(installations[0].id).token
         gh = Github(token)
-        bot_repo = gh.get_repo("HOLYKEYZ/joe-gemini")
+        bot_repo = gh.get_repo(os.environ.get('BOT_REPO_NAME', 'HOLYKEYZ/mayo'))
         
         # Get memory length
         mem_file = bot_repo.get_contents("api/global_memory.md")
@@ -642,7 +642,7 @@ def cron_job():
                 print(f"DEBUG: Failed to load executor prompt: {e}")
                 break
             
-            # Kimi K2 executes via Groq
+            # Llama 3.3 70B executes via Groq
             executor_response = query_groq(executor_prompt)
             if not executor_response:
                 print("DEBUG: Executor returned nothing")
@@ -663,8 +663,8 @@ def cron_job():
                     reviewer_template = f.read()
                 
                 reviewer_prompt = reviewer_template.replace('{{REPO_NAME}}', target_repo.full_name)\
-                                                   .replace('{{FILE_PATH}}', target_path)\
-                                                   .replace('{{FILE_CONTENT}}', file_content)\
+                                                   .replace('{{FILE_PATH}}', target_path_display)\
+                                                   .replace('{{FILE_CONTENT}}', file_contents)\
                                                    .replace('{{PROPOSED_EDITS}}', json.dumps(improvement_data.get('edits', [])))\
                                                    .replace('{{SCANNER_PLAN}}', scanner_plan)\
                                                    .replace('{{GLOBAL_MEMORY}}', global_memory)
@@ -768,7 +768,7 @@ def cron_job():
             owner_login = target_repo.owner.login
             pr = target_repo.create_pull(
                 title=f"[VALIDATED] {final_title}",
-                body=f"Hey @{owner_login}! Joseph, I've found an improvement for you.\n\n{final_body}\n\n---\n*Validated by Triple-AI: Scanner (Gemini) → Executor (Kimi K2) → Reviewer (Gemini)*\n\nGenerated autonomously by Mayo 🤖",
+                body=f"Hey @{owner_login}! Joseph, I've found an improvement for you.\n\n{final_body}\n\n---\n*Validated by Triple-AI: Scanner (Gemini 2.5 Flash) → Executor (Llama 3.3 70B) → Reviewer (Gemini 2.5 Flash)*\n\nGenerated autonomously by Mayo 🤖",
                 head=final_branch,
                 base=target_repo.default_branch
             )
@@ -1215,7 +1215,7 @@ Instructions:
         
         # 6. Execute Code Changes (Executor)
         if "[REQUIRES_EXECUTION]" in plan:
-            issue.create_comment("⚡ *Executor (Kimi K2) is now writing the code changes...*")
+            issue.create_comment("⚡ *Executor (Llama 3.3 70B) is now writing the code changes...*")
             
             executor_prompt = f"""You are Mayo, the Executor AI (Code Engineer).
 The Reviewer AI has established this plan based on Joseph's feedback:
