@@ -210,17 +210,27 @@ def commit_changes_via_api(repo, branch_name, file_changes, commit_message):
 def apply_surgical_edits(content, edits):
     """Apply search/replace blocks to content with safety guards."""
     new_content = content
+    original_line_count = len(content.splitlines())
     for edit in edits:
         search = edit.get('search')
         replace = edit.get('replace')
         if search and search in new_content:
-            # SAFETY GUARD: Reject edits that delete more than 50% of the search block
+            # SAFETY GUARD 1: Reject edits that delete more than 50% of search block
             search_lines = len(search.strip().splitlines())
             replace_lines = len(replace.strip().splitlines()) if replace else 0
             if search_lines > 5 and replace_lines < search_lines * 0.5:
                 print(f"DEBUG: BLOCKED destructive edit - would delete {search_lines - replace_lines} lines ({search[:60]}...)")
                 continue
-            new_content = new_content.replace(search, replace, 1)
+            
+            # SAFETY GUARD 2: Test-apply and check total file damage
+            test_content = new_content.replace(search, replace, 1)
+            new_line_count = len(test_content.splitlines())
+            lines_lost = original_line_count - new_line_count
+            if lines_lost > max(10, original_line_count * 0.2):
+                print(f"DEBUG: BLOCKED catastrophic edit - would remove {lines_lost}/{original_line_count} total lines ({search[:60]}...)")
+                continue
+            
+            new_content = test_content
         else:
             print(f"DEBUG: Search block not found in file: {search[:50]}...")
     return new_content
@@ -655,8 +665,31 @@ def cron_job():
                 print("DEBUG: No valid improvement JSON from Executor")
                 break
 
-            # === PHASE 3: REVIEWER (Gemini B) ===
+            # === PHASE 3: REVIEWER (Gemini B) — validates ACTUAL DIFF ===
             print(f"DEBUG: Phase 3 — Reviewer validating attempt {attempt}")
+            
+            # Pre-apply edits to compute a real diff for the Reviewer
+            proposed_edits = improvement_data.get('edits', [])
+            diff_preview = ""
+            for edit in proposed_edits:
+                fpath = edit.get('file') or target_paths[0]
+                original = read_file_content(target_repo, fpath) or ""
+                patched = apply_surgical_edits(original, [edit])
+                if patched != original:
+                    orig_lines = original.splitlines()
+                    new_lines = patched.splitlines()
+                    lines_removed = len(orig_lines) - len(new_lines)
+                    diff_preview += f"\n--- {fpath} (original: {len(orig_lines)} lines → patched: {len(new_lines)} lines, net: {'+' if lines_removed < 0 else '-'}{abs(lines_removed)})\n"
+                    # Show what was removed/added
+                    for line in orig_lines:
+                        if line not in new_lines:
+                            diff_preview += f"- {line[:120]}\n"
+                    for line in new_lines:
+                        if line not in orig_lines:
+                            diff_preview += f"+ {line[:120]}\n"
+                else:
+                    diff_preview += f"\n--- {fpath}: NO CHANGES (search block not found or blocked by safety guard)\n"
+            
             try:
                 reviewer_path = os.path.join(os.path.dirname(__file__), 'reviewer_prompt.txt')
                 with open(reviewer_path, 'r') as f:
@@ -665,9 +698,11 @@ def cron_job():
                 reviewer_prompt = reviewer_template.replace('{{REPO_NAME}}', target_repo.full_name)\
                                                    .replace('{{FILE_PATH}}', target_path_display)\
                                                    .replace('{{FILE_CONTENT}}', file_contents)\
-                                                   .replace('{{PROPOSED_EDITS}}', json.dumps(improvement_data.get('edits', [])))\
+                                                   .replace('{{PROPOSED_EDITS}}', json.dumps(proposed_edits))\
                                                    .replace('{{SCANNER_PLAN}}', scanner_plan)\
                                                    .replace('{{GLOBAL_MEMORY}}', global_memory)
+                # Append the actual diff so Reviewer sees real impact
+                reviewer_prompt += f"\n\n## ACTUAL DIFF PREVIEW (what will be committed):\n{diff_preview}\n\nIMPORTANT: If the diff shows more lines removed than expected, REJECT the edit. The Executor's search block may be matching too broadly."
             except Exception as e:
                 print(f"DEBUG: Failed to load reviewer prompt: {e}")
                 final_edits = improvement_data.get('edits', [])
