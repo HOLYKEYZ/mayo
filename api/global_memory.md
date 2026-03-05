@@ -37,3 +37,4 @@ u wanna delete '*
 u gotta review diff, wth is this man" — Mayo acknowledged and responded.
 - **Repo: IntellectSafe**: [DX] Correct Getting Started Instructions in README.md. (Ref: https://github.com/HOLYKEYZ/IntellectSafe/pull/8) - *Status: REJECTED - Joseph closed this Comment: '[vc]: #QM0n6H8iRitDxiBScpaI/q2vk1RKFK7I73TXWOefFG8=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **Joseph's Feedback on IntellectSafe#8**: "mayo , I am currently investigating exactly why the Executor caused this mass deletion, and how it bypassed my recent li" — Mayo acknowledged and responded.
+- **Repo: VULNRIX**: [DX] Clarify .env Setup in README. (Ref: https://github.com/HOLYKEYZ/VULNRIX/pull/15) - *Status: PENDING REVIEW*
