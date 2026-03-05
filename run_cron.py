@@ -125,17 +125,20 @@ def run_cron():
         
         # List source files
         source_files = []
+        EXCLUDED_FILES = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb', '.min.js', '.min.css']
         try:
             contents = target_repo.get_contents("")
             for item in contents:
                 if item.type == 'file' and any(item.name.endswith(ext) for ext in ['.py', '.js', '.ts', '.go', '.c', '.cpp', '.h', '.md', '.json']):
-                    source_files.append(item.path)
+                    if not any(excl in item.name for excl in EXCLUDED_FILES):
+                        source_files.append(item.path)
             for dirname in ['src', 'api', 'lib', 'app', 'pages']:
                 try:
                     dir_contents = target_repo.get_contents(dirname)
                     for item in dir_contents:
-                        if item.type == 'file' and any(item.name.endswith(ext) for ext in ['.py', '.js', '.ts', '.go', '.jsx', '.tsx', '.c', '.cpp', '.h']):
-                            source_files.append(item.path)
+                        if item.type == 'file' and any(item.name.endswith(ext) for ext in ['.py', '.js', '.ts', '.go', '.jsx', '.tsx', '.c', '.cpp', '.h', '.md', '.json']):
+                            if not any(excl in item.name for excl in EXCLUDED_FILES):
+                                source_files.append(item.path)
                 except:
                     pass
         except Exception as e:

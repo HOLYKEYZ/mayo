@@ -151,6 +151,11 @@ def parse_diff_files(diff_text):
 
 def read_file_content(repo, file_path):
     """Read file content from repo."""
+    EXCLUDED_FILES = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb', '.min.js', '.min.css']
+    if any(excl in file_path for excl in EXCLUDED_FILES):
+        print(f"Skipping reading {file_path} (excluded file type)")
+        return None
+
     try:
         content = repo.get_contents(file_path)
         return content.decoded_content.decode('utf-8')
