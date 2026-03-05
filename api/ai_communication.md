@@ -270,3 +270,83 @@ This is a precise, single-file documentation update. It involves modifying two s
 **Reviewer**: APPROVE: The proposed edit correctly addresses a critical inconsistency in the `README.md` regarding the Gemini API key name for Render deployment. It aligns perfectly with the Scanner's recommendation, is surgical, non-destructive, and highly valuable for developer experience and successful deployment. All validation checks passed.
 
 ---
+
+## Cycle 1772689870
+**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/model-unfetter
+
+### Step 1: Codebase Understanding
+
+This repository, "Model Unfetter," is a Python framework designed for AI safety research. Its primary function is to remove refusal behaviors from large language models using a technique called directional ablation. This involves identifying and ablating specific linear directions in the model's weight space responsible for refusal, while aiming to preserve general capabilities.
+
+The `setup.py` file is the standard Python packaging configuration. It defines the project's metadata, dependencies, entry points for the command-line interface, and various optional feature sets (extras). The `README.md` serves as the primary documentation for the project, providing an overview, features, quick start guides for both CLI and Python API usage, architectural details, hardware requirements, troubleshooting, and a comparison to similar tools.
+
+The codebase uses standard Python packaging conventions (`setuptools`), HuggingFace Transformers for model interaction, and Click for its command-line interface. It emphasizes modularity with distinct directories for core algorithms, backends, models, datasets, and utilities.
+
+### Step 2: Deep Analysis
+
+**Security**:
+*   No immediate security vulnerabilities like hardcoded secrets or obvious injection points were found in the analyzed files. The project's nature (AI safety research) implies handling models, which can have their own security implications, but these files themselves are clean.
+*   Input validation for CLI arguments is handled by Click, which is generally robust, but the specific validation logic for model paths or ablation parameters would reside in the `unfetter.cli` modules, not directly in `setup.py` or `README.md`.
+
+**Logic**:
+*   `setup.py` correctly defines the package, its version, author, description, and dependencies. The `find_packages()` and `package_data` ensure necessary files are included.
+*   The `extras_require` section logically groups dependencies for different use cases (GPU, datasets, full features, development).
+*   `README.md` presents a logical flow from overview to usage, architecture, and troubleshooting. The core formula and architectural diagrams enhance understanding.
+
+**Performance**:
+*   `setup.py` and `README.md` are static configuration and documentation files, so performance is not directly applicable to them. The dependencies listed in `setup.py` (e.g., `torch`, `transformers`, `bitsandbytes`, `accelerate`) are standard for high-performance ML, indicating an awareness of performance in the core application.
+
+**DX (Developer Experience)**:
+*   **`setup.py`**: The `extras_require` section is well-defined, but the `README.md` does not fully leverage it for installation instructions. Specifically, the `.[datasets]` and `.[dev]` extras are defined but not explicitly mentioned in the "Quick Start" installation guide.
+*   **`README.md`**: The README is generally excellent, providing clear installation steps, basic usage examples, a Python API example, and a detailed architecture overview. However, the omission of installation instructions for the `.[dev]` extra is a minor gap for developers looking to contribute or run tests. The `.[datasets]` extra is also missing, though `.[full]` includes it. Adding a specific instruction for setting up a development environment would be beneficial.
+
+**Consistency**:
+*   The project name "model-unfetter" is consistently used across `setup.py` and `README.md`.
+*   Dependency versions in `setup.py` use `>=` which is a common and flexible approach.
+*   The `README.md` uses consistent markdown formatting.
+*   The inconsistency lies in the `README.md`'s "Quick Start" installation section not fully reflecting all defined `extras_require` from `setup.py`.
+
+**Dead Code**:
+*   No dead code is present in `setup.py` or `README.md` as they are configuration and documentation files.
+
+### Step 3: Pick ONE Improvement
+
+The most valuable improvement is to enhance the Developer Experience by explicitly adding instructions for installing the development dependencies (`.[dev]` extra) to the `README.md`. This directly addresses a gap for contributors and aligns with the "DX Matters" master lesson, which emphasizes proactive documentation for maintainers. While the `.[datasets]` extra is also missing, the `.[dev]` extra is more critical for anyone wanting to contribute or run tests, which is a core part of developer setup.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT to change**:
+Add a new installation instruction to the "Quick Start" section of the `README.md` for setting up the development environment, specifically mentioning the `.[dev]` extra.
+
+**WHERE in the file**:
+Locate the "Quick Start" section in `README.md`, specifically after the existing `pip install -e ".[full]"` command.
+
+**WHY this matters**:
+This improvement significantly enhances the Developer Experience (DX). By explicitly stating how to install development dependencies, new contributors or developers setting up their environment can quickly get started with testing and linting, reducing friction and promoting code quality. This aligns with the "DX Matters" master lesson from global memory, which highlights the value of clear build/run guides.
+
+**HOW to do it**:
+1.  Find the "Quick Start" section in the `README.md` file.
+2.  Locate the line that describes installing for full features: `pip install -e ".[full]"`.
+3.  After this line, insert a new instruction that explains how to install the development dependencies. This instruction should include the command `pip install -e ".[dev]"`. It should also briefly explain what this extra provides (e.g., for testing and linting).
+
+**SCOPE**:
+This change is a small, surgical addition to the `README.md` file. It involves adding a few lines of text to an existing section without modifying any existing instructions or code blocks.
+
+**Executor**: ```json
+{
+  "title": "[DX] Enhance README with Development Environment Setup",
+  "body": "### Problem / Gap\nThe current README does not provide instructions for setting up a development environment, which can hinder new contributors or developers looking to run tests and contribute to the project.\n\n### Solution & Insight\nTo address this gap, we will add a new section to the README that outlines the steps for installing development dependencies. This will involve adding a command to install the `.[dev]` extra, which includes necessary packages for testing and development.\n\n### Impact\nBy providing clear instructions for setting up a development environment, we can reduce the barrier to entry for new contributors, improve the overall developer experience, and encourage more active participation in the project.",
+  "branch_name": "bot/upgrade-1772689870",
+  "edits": [
+    {
+      "file": "README.md",
+      "search": "# For full features\npip install -e \".[full]\"\n",
+      "replace": "# For full features\npip install -e \".[full]\"\n# For development environment (testing, linting)\npip install -e \".[dev]\"\n"
+    }
+  ]
+}
+```
+
+**Reviewer**: APPROVE: The proposed edit correctly adds installation instructions for the development environment (`.[dev]` extra) to the README.md. This directly addresses the Scanner's recommendation to enhance Developer Experience (DX) by providing clear setup guidance for contributors. The edit is surgical, non-destructive, and aligns with the 'DX Matters' master lesson.
+
+---
