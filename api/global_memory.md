@@ -70,3 +70,4 @@ did the reviewer not tell the executor to edit real code files? " — Mayo ackno
 - **Joseph's Feedback on HADNX#12**: "DUDE, mayo
 
 how'd u come up with this shit, i have an ai pentester..., so why the fuck should u remove it from the rea" — Mayo acknowledged and responded.
+- **Joseph's Feedback on HADNX#12**: "the scanner is different, therefore closed" — Mayo acknowledged and responded.
