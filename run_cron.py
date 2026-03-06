@@ -36,6 +36,141 @@ def run_cron():
         print("DEBUG: Phase 0 — Auditing pending reviews")
         audit_pending_reviews(gh)
         
+        # === PHASE 0.5: CHECK APPROVED ISSUES ===
+        print("DEBUG: Phase 0.5 — Checking for approved issues")
+        try:
+            bot_repo_name = os.environ.get('BOT_REPO_NAME', 'HOLYKEYZ/mayo')
+            bot_repo = gh.get_repo(bot_repo_name)
+            mem_file = bot_repo.get_contents("api/global_memory.md")
+            mem_content = mem_file.decoded_content.decode('utf-8')
+            
+            import re as re_mod
+            awaiting_entries = re_mod.findall(
+                r'\(Ref: (https://github\.com/([^/]+/[^/]+)/issues/(\d+))\) - \*Status: AWAITING JOSEPH\'S INPUT\*',
+                mem_content
+            )
+            
+            for issue_url, repo_name, issue_num in awaiting_entries:
+                try:
+                    issue_repo = gh.get_repo(repo_name)
+                    issue = issue_repo.get_issue(int(issue_num))
+                    
+                    # Check if Joseph replied with approval
+                    approval_keywords = ['yes', 'go ahead', 'do it', 'proceed', 'approved', 'fix it', 'go for it', 'yeah', 'yep', 'sure']
+                    joseph_approved = False
+                    joseph_reply = ""
+                    
+                    for comment in issue.get_comments():
+                        if comment.user.login != 'joe-gemini-bot[bot]':
+                            body_lower = comment.body.lower().strip()
+                            if any(kw in body_lower for kw in approval_keywords):
+                                joseph_approved = True
+                                joseph_reply = comment.body
+                                break
+                    
+                    if not joseph_approved:
+                        continue
+                    
+                    print(f"DEBUG: Joseph approved issue {issue_url} — executing!")
+                    
+                    # Extract the Scanner's original analysis from the issue body
+                    scanner_context = issue.body or ""
+                    
+                    # Gather the repo's code context for the Executor
+                    structure = get_repo_structure(issue_repo, max_depth=2)
+                    source_files = []
+                    try:
+                        contents = issue_repo.get_contents("")
+                        EXCLUDED_FILES = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb', '.min.js', '.min.css']
+                        for item in contents:
+                            if item.type == 'file' and any(item.name.endswith(ext) for ext in ['.py', '.js', '.ts', '.go', '.c', '.cpp', '.h', '.md', '.json']):
+                                if not any(excl in item.name for excl in EXCLUDED_FILES):
+                                    source_files.append(item.path)
+                    except:
+                        pass
+                    
+                    import random
+                    random.shuffle(source_files)
+                    target_paths = source_files[:10]
+                    file_contents = ""
+                    for tp in target_paths:
+                        content = read_file_content(issue_repo, tp)
+                        if content:
+                            file_contents += f"\n--- {tp} ---\n{content}\n"
+                    
+                    if not file_contents:
+                        print(f"DEBUG: Could not read files for approved issue {issue_url}")
+                        continue
+                    
+                    ts = int(time.time())
+                    target_path_display = ", ".join(target_paths)
+                    
+                    # Run Executor with Joseph's approval context
+                    executor_prompt = (
+                        f"You are the EXECUTOR — a Senior Code Engineer.\n"
+                        f"Joseph has approved this change via GitHub Issue: {issue.title}\n\n"
+                        f"Joseph's reply: \"{joseph_reply}\"\n\n"
+                        f"Original Scanner analysis:\n{scanner_context}\n\n"
+                        f"Repo: {issue_repo.full_name}\nFiles: {target_path_display}\n"
+                        f"Repo structure:\n{structure}\n\n"
+                        f"File contents:\n{file_contents}\n\n"
+                        f"Execute the approved change. Output strict JSON:\n"
+                        f'{{"title": "[TYPE] Brief title", "body": "Description", '
+                        f'"branch_name": "bot/issue-{issue_num}-{ts}", '
+                        f'"edits": [{{"file": "path", "search": "exact original", "replace": "replacement"}}]}}'
+                    )
+                    
+                    executor_response = query_groq(executor_prompt)
+                    if executor_response:
+                        improvement_data = extract_json_from_response(executor_response)
+                        if improvement_data and 'edits' in improvement_data:
+                            
+                            file_edits = {}
+                            for edit in improvement_data['edits']:
+                                fpath = edit.get('file') or (target_paths[0] if target_paths else '')
+                                if fpath not in file_edits:
+                                    file_edits[fpath] = []
+                                file_edits[fpath].append(edit)
+                            
+                            file_changes = {}
+                            for fpath, edits in file_edits.items():
+                                content = read_file_content(issue_repo, fpath)
+                                if not content:
+                                    continue
+                                new_content = apply_surgical_edits(content, edits)
+                                if new_content != content:
+                                    file_changes[fpath] = new_content
+                            
+                            if file_changes:
+                                branch = improvement_data.get('branch_name', f'bot/issue-{issue_num}-{ts}')
+                                title = improvement_data.get('title', f'Fix from approved issue #{issue_num}')
+                                
+                                if commit_changes_via_api(issue_repo, branch, file_changes, title):
+                                    pr = issue_repo.create_pull(
+                                        title=f"[VALIDATED] {title}",
+                                        body=f"Approved by Joseph in {issue_url}\n\n{improvement_data.get('body', '')}\n\n*Executed by Mayo 🤖*",
+                                        head=branch,
+                                        base=issue_repo.default_branch
+                                    )
+                                    print(f"DEBUG: PR created from approved issue: {pr.html_url}")
+                                    
+                                    # Close the issue
+                                    issue.create_comment(f"✅ Done! PR created: {pr.html_url}")
+                                    issue.edit(state='closed')
+                                    
+                                    # Update memory
+                                    mem_file = bot_repo.get_contents("api/global_memory.md")
+                                    mem = mem_file.decoded_content.decode('utf-8')
+                                    mem = mem.replace(
+                                        f"(Ref: {issue_url}) - *Status: AWAITING JOSEPH'S INPUT*",
+                                        f"(Ref: {issue_url}) - *Status: EXECUTED → {pr.html_url}*"
+                                    )
+                                    bot_repo.update_file("api/global_memory.md", f"feat(memory): executed approved issue on {repo_name}", mem, mem_file.sha)
+                except Exception as e:
+                    print(f"DEBUG: Error processing approved issue {issue_url}: {e}")
+        except Exception as e:
+            print(f"DEBUG: Phase 0.5 error: {e}")
+        
         # Get all repos via REST API
         headers = {
             'Authorization': f'token {token}',
