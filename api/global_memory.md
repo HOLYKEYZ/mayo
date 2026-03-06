@@ -66,3 +66,4 @@ did the reviewer not tell the executor to edit real code files? " — Mayo ackno
 - **REJECTED by Reviewer**: Executor's search block failed to match due to incorrect assumption of consecutive lines, leading to 'NO CHANGES'. Emphasize exact match and structural integrity.
 - **Repo: IntellectSafe**: [DX] Correct Frontend Access Port in README. (Ref: https://github.com/HOLYKEYZ/IntellectSafe/pull/9) - *Status: REJECTED - Joseph closed this Comment: '[vc]: #9TapTf5xfATk8Mh8UyBe/02RcJ/2pnBIFAwycxCoL+Y=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **REJECTED by Reviewer**: Executor's search block mismatch led to 'NO CHANGES' in diff preview for README.md structure correction.
+- **Repo: HADNX**: [DOCS] Correct Project Structure Documentation. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/12) - *Status: PENDING REVIEW*
