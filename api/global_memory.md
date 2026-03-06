@@ -72,3 +72,4 @@ did the reviewer not tell the executor to edit real code files? " — Mayo ackno
 how'd u come up with this shit, i have an ai pentester..., so why the fuck should u remove it from the rea" — Mayo acknowledged and responded.
 - **Joseph's Feedback on HADNX#12**: "the scanner is different, therefore closed" — Mayo acknowledged and responded.
 - **Repo: VULNRIX**: [DX] Correct .env Setup Instructions in README. (Ref: https://github.com/HOLYKEYZ/VULNRIX/pull/16) - *Status: PENDING REVIEW*
+- **Repo: ModelFang**: [DX] Clarify Google Gemini API Key Environment Variable in README. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/5) - *Status: PENDING REVIEW*
