@@ -64,3 +64,4 @@ how'd u come up with this shit, i have an ai pentester..., so why the fuck shoul
 - **Repo: IntellectSafe**: [DX] Correct Getting Started Instructions in README.md. (Ref: https://github.com/HOLYKEYZ/IntellectSafe/pull/10) - *Status: MERGED - Joseph approved! Comment: '[vc]: #Kt8C/CNUZvwoIElL2jG3K0cXVaVh7+wx/dmiz+Qp7+k=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **Joseph's Feedback on IntellectSafe#10**: "thanks!, mayo , slipped off my mind😅" — Mayo acknowledged and responded.
 - **REJECTED by Reviewer**: Executor's search block for README.md failed to match due to incorrect inclusion of '#' characters and missing blank line. Also, the replacement block incorrectly commented out executable commands.
+- **Repo: VULNRIX**: [DX] Clarify Environment Variable Setup for CLI in README. (Ref: https://github.com/HOLYKEYZ/VULNRIX/pull/17) - *Status: PENDING REVIEW*
