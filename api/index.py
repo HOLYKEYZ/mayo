@@ -15,6 +15,9 @@ app = Flask(__name__)
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 GEMINI2_API_KEY = os.environ.get('GEMINI2_API_KEY')
 GROK_API_KEY = os.environ.get('GROK_API_KEY')
+GEMINI_FALLBACK_API_KEY = os.environ.get('GEMINI_FALLBACK_API_KEY')
+GEMINI2_FALLBACK_API_KEY = os.environ.get('GEMINI2_FALLBACK_API_KEY')
+GROK_FALLBACK_API_KEY = os.environ.get('GROK_FALLBACK_API_KEY')
 APP_ID = os.environ.get('APP_ID')
 PRIVATE_KEY = os.environ.get('PRIVATE_KEY', '').replace('\\n', '\n')
 WEBHOOK_SECRET = os.environ.get('WEBHOOK_SECRET')
@@ -336,7 +339,8 @@ def query_gemini_scanner(prompt, temperature=0.2):
     }
     for attempt in range(3):
         try:
-            r = requests.post(f"{GEMINI_API_URL}?key={GEMINI_API_KEY}", json=payload, headers=headers, timeout=120)
+            current_key = GEMINI_FALLBACK_API_KEY if attempt > 0 and GEMINI_FALLBACK_API_KEY else GEMINI_API_KEY
+            r = requests.post(f"{GEMINI_API_URL}?key={current_key}", json=payload, headers=headers, timeout=120)
             r.raise_for_status()
             return r.json()['candidates'][0]['content']['parts'][0]['text']
         except Exception as e:
@@ -363,6 +367,8 @@ def query_groq(prompt, temperature=0.1):
     }
     for attempt in range(3):
         try:
+            current_key = GROK_FALLBACK_API_KEY if attempt > 0 and GROK_FALLBACK_API_KEY else GROK_API_KEY
+            headers['Authorization'] = f'Bearer {current_key}'
             r = requests.post(GROQ_API_URL, json=payload, headers=headers, timeout=120)
             r.raise_for_status()
             return r.json()['choices'][0]['message']['content']
@@ -385,8 +391,10 @@ def query_gemini_reviewer(prompt, temperature=0.1):
     }
     for attempt in range(3):
         try:
-            api_key = GEMINI2_API_KEY or GEMINI_API_KEY
-            r = requests.post(f"{GEMINI_API_URL}?key={api_key}", json=payload, headers=headers, timeout=120)
+            primary = GEMINI2_API_KEY or GEMINI_API_KEY
+            fallback = GEMINI2_FALLBACK_API_KEY or GEMINI_FALLBACK_API_KEY
+            current_key = fallback if attempt > 0 and fallback else primary
+            r = requests.post(f"{GEMINI_API_URL}?key={current_key}", json=payload, headers=headers, timeout=120)
             r.raise_for_status()
             return r.json()['candidates'][0]['content']['parts'][0]['text']
         except Exception as e:
