@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: micro-edit**: [LOGIC] Complete editorPrompt return statement. (Ref: https://github.com/HOLYKEYZ/micro-edit/pull/1) - *Status: REJECTED - Joseph closed this*
 - **Repo: Jo-ayanda-real-estate**: [LOGIC] Complete inquiries array definition. (Ref: https://github.com/HOLYKEYZ/Jo-ayanda-real-estate/pull/1) - *Status: REJECTED - Joseph closed this Comment: '### <span aria-hidden="true">✅</span> Deploy Preview for *nextphaserealestate* r'*
 - **Repo: micro-edit**: [LOGIC] Complete editorPrompt functionality and robustness. (Ref: https://github.com/HOLYKEYZ/micro-edit/pull/2) - *Status: REJECTED - Joseph closed this Comment: 'joe-gemini, this is flop'*
 - **Repo: unfetter_proxy**: [DX] Improve Web Session Test Prompts for Clarity. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/2) - *Status: REJECTED - Joseph closed this Comment: 'joe-gemini , u keep doing shits after shits 
