@@ -171,6 +171,273 @@ def run_cron():
         except Exception as e:
             print(f"DEBUG: Phase 0.5 error: {e}")
         
+        # === TIMING HELPER ===
+        def should_run_timed_phase(memory_text, phase_key, interval_hours):
+            """Check if enough time has passed since last run of this phase."""
+            import re as re_mod
+            match = re_mod.search(rf'{phase_key}=(\d+)', memory_text)
+            if not match:
+                return True
+            last_run = int(match.group(1))
+            return (int(time.time()) - last_run) >= interval_hours * 3600
+        
+        def update_phase_timestamp(bot_repo_obj, memory_text, phase_key):
+            """Update the timestamp for a timed phase in memory."""
+            import re as re_mod
+            ts_now = str(int(time.time()))
+            if f'{phase_key}=' in memory_text:
+                new_mem = re_mod.sub(rf'{phase_key}=\d+', f'{phase_key}={ts_now}', memory_text)
+            else:
+                new_mem = memory_text + f'\n<!-- {phase_key}={ts_now} -->'
+            try:
+                mem_file = bot_repo_obj.get_contents("api/global_memory.md")
+                bot_repo_obj.update_file("api/global_memory.md", f"chore(timing): update {phase_key}", new_mem, mem_file.sha)
+            except Exception as e:
+                print(f"DEBUG: Failed to update {phase_key} timestamp: {e}")
+        
+        # Fetch bot repo for timed phases
+        bot_repo_name = os.environ.get('BOT_REPO_NAME', 'HOLYKEYZ/mayo')
+        try:
+            bot_repo = gh.get_repo(bot_repo_name)
+            mem_file_obj = bot_repo.get_contents("api/global_memory.md")
+            current_memory = mem_file_obj.decoded_content.decode('utf-8')
+        except:
+            current_memory = ""
+        
+        # === PHASE 0.6: AUTO-MERGE/CLOSE PRs (every 6 hours) ===
+        if should_run_timed_phase(current_memory, 'LAST_PR_JUDGE', 6):
+            print("DEBUG: Phase 0.6 — Judging open PRs (6h cycle)")
+            try:
+                repos_for_judge = [gh.get_repo(r['full_name']) for r in repos_data.get('repositories', [])[:10] if not r.get('fork')]
+                for judge_repo in repos_for_judge:
+                    try:
+                        open_prs = list(judge_repo.get_pulls(state='open'))[:3]
+                        for pr in open_prs:
+                            if pr.user.login == get_bot_login():
+                                continue  # Skip our own PRs
+                            
+                            diff = requests.get(pr.diff_url).text[:5000]
+                            judge_prompt = f"""You are Mayo, the Reviewer AI. Judge this PR for auto-merge or auto-close.
+
+Repo: {judge_repo.full_name}
+PR #{pr.number}: {pr.title}
+Author: {pr.user.login}
+Diff:
+{diff}
+
+Rate this PR's reasonableness (0-100) and decide: merge, close, or skip.
+Output ONLY JSON: {{"reasonableness_score": 85, "action": "merge|close|skip", "reason": "explanation"}}"""
+                            
+                            response = query_gemini_reviewer(judge_prompt)
+                            if response:
+                                verdict = extract_json_from_response(response)
+                                if verdict:
+                                    score = verdict.get('reasonableness_score', 50)
+                                    action = verdict.get('action', 'skip')
+                                    reason = verdict.get('reason', '')
+                                    
+                                    if action == 'merge' and score >= 85:
+                                        try:
+                                            pr.merge(merge_method='squash')
+                                            pr.create_issue_comment(f"✅ Auto-merged by Mayo (score: {score}/100)\n\n{reason}")
+                                            print(f"DEBUG: Auto-merged PR #{pr.number} on {judge_repo.name} (score: {score})")
+                                        except Exception as e:
+                                            print(f"DEBUG: Merge failed: {e}")
+                                    elif action == 'close' and score <= 30:
+                                        pr.edit(state='closed')
+                                        pr.create_issue_comment(f"❌ Closed by Mayo — not reasonable (score: {score}/100)\n\n{reason}")
+                                        print(f"DEBUG: Auto-closed PR #{pr.number} on {judge_repo.name} (score: {score})")
+                    except Exception as e:
+                        print(f"DEBUG: Error judging PRs on {judge_repo.name}: {e}")
+                
+                update_phase_timestamp(bot_repo, current_memory, 'LAST_PR_JUDGE')
+            except Exception as e:
+                print(f"DEBUG: Phase 0.6 error: {e}")
+        else:
+            print("DEBUG: Phase 0.6 — Skipping PR judge (not yet 6h)")
+        
+        # === PHASE 0.7: AUTO-FIX/CLOSE ISSUES (every 6 hours) ===
+        if should_run_timed_phase(current_memory, 'LAST_ISSUE_JUDGE', 6):
+            print("DEBUG: Phase 0.7 — Judging open issues (6h cycle)")
+            try:
+                repos_for_issues = [gh.get_repo(r['full_name']) for r in repos_data.get('repositories', [])[:10] if not r.get('fork')]
+                for issue_repo in repos_for_issues:
+                    try:
+                        open_issues = [i for i in issue_repo.get_issues(state='open') if not i.pull_request][:3]
+                        for issue in open_issues:
+                            judge_prompt = f"""You are Mayo, the Reviewer AI. Judge this issue.
+
+Repo: {issue_repo.full_name}
+Issue #{issue.number}: {issue.title}
+Body: {(issue.body or '')[:3000]}
+Labels: {[l.name for l in issue.labels]}
+
+Rate reasonableness (0-100) and decide: fix (open a PR to solve it), close (unreasonable/spam/outdated), or skip.
+Output ONLY JSON: {{"reasonableness_score": 70, "action": "fix|close|skip", "reason": "explanation", "fix_plan": "if action=fix, describe what to change"}}"""
+                            
+                            response = query_gemini_reviewer(judge_prompt)
+                            if response:
+                                verdict = extract_json_from_response(response)
+                                if verdict:
+                                    score = verdict.get('reasonableness_score', 50)
+                                    action = verdict.get('action', 'skip')
+                                    reason = verdict.get('reason', '')
+                                    
+                                    if action == 'close' and score <= 30:
+                                        issue.edit(state='closed')
+                                        issue.create_comment(f"❌ Closed by Mayo — not actionable (score: {score}/100)\n\n{reason}")
+                                        print(f"DEBUG: Auto-closed issue #{issue.number} on {issue_repo.name}")
+                                    elif action == 'fix' and score >= 70:
+                                        issue.create_comment(f"🔧 Mayo is working on a fix for this... (score: {score}/100)")
+                                        print(f"DEBUG: Issue #{issue.number} on {issue_repo.name} queued for auto-fix (score: {score})")
+                                        # The actual fix will be picked up by the normal PR pipeline
+                    except Exception as e:
+                        print(f"DEBUG: Error judging issues on {issue_repo.name}: {e}")
+                
+                update_phase_timestamp(bot_repo, current_memory, 'LAST_ISSUE_JUDGE')
+            except Exception as e:
+                print(f"DEBUG: Phase 0.7 error: {e}")
+        else:
+            print("DEBUG: Phase 0.7 — Skipping issue judge (not yet 6h)")
+        
+        # === PHASE I: PROACTIVE ISSUES (once per day) ===
+        if should_run_timed_phase(current_memory, 'LAST_PROACTIVE_ISSUE', 24):
+            print("DEBUG: Phase I — Proactive issue scan (24h cycle)")
+            try:
+                EXCLUDED_REPOS = ['Square-farms', 'Jo-ayanda-real-estate', 'Backend-images-app', 'ecom-stor', 'private-storage']
+                issue_candidates = [r for r in repos_data.get('repositories', [])
+                                    if not r.get('fork') and not r.get('archived')
+                                    and r.get('name') not in EXCLUDED_REPOS
+                                    and r.get('full_name') != bot_repo_name]
+                
+                if issue_candidates:
+                    import random
+                    chosen_repo_data = random.choice(issue_candidates)
+                    proactive_repo = gh.get_repo(chosen_repo_data['full_name'])
+                    
+                    # Quick scan
+                    structure = get_repo_structure(proactive_repo, max_depth=2)
+                    readme = read_file_content(proactive_repo, "README.md") or "(No README)"
+                    
+                    proactive_prompt = f"""You are the SCANNER. Analyze this repo for something that CANNOT be fixed with a simple PR.
+
+Repo: {proactive_repo.full_name}
+Structure:
+{structure}
+README:
+{readme[:3000]}
+
+Look for:
+- Missing CI/CD setup
+- Architectural concerns
+- Feature ideas that need discussion
+- Security audit recommendations
+- Missing test coverage strategy
+
+If you find something worth raising, output:
+DIRECTIVE: PROACTIVE_ISSUE
+TITLE: [short title]
+BODY: [detailed explanation with recommendations]
+
+If the repo looks fine, output: SKIP"""
+                    
+                    result = query_gemini_scanner(proactive_prompt)
+                    if result and 'DIRECTIVE: PROACTIVE_ISSUE' in result:
+                        import re as re_mod
+                        title_match = re_mod.search(r'TITLE:\s*(.+)', result)
+                        body_match = re_mod.search(r'BODY:\s*([\s\S]+?)(?:\n\n##|\Z)', result)
+                        
+                        issue_title = title_match.group(1).strip() if title_match else f"🤖 Improvement suggestion for {proactive_repo.name}"
+                        issue_body = body_match.group(1).strip() if body_match else result
+                        
+                        new_issue = proactive_repo.create_issue(
+                            title=f"🤖 {issue_title}",
+                            body=f"{issue_body}\n\n---\n*Proactively opened by Mayo 🤖 — Daily Architecture Scan*",
+                            labels=['mayo-generated']
+                        )
+                        print(f"DEBUG: Proactive issue created: {new_issue.html_url}")
+                    else:
+                        print("DEBUG: No proactive issue needed (repo looks clean)")
+                
+                update_phase_timestamp(bot_repo, current_memory, 'LAST_PROACTIVE_ISSUE')
+            except Exception as e:
+                print(f"DEBUG: Phase I error: {e}")
+        else:
+            print("DEBUG: Phase I — Skipping proactive issues (not yet 24h)")
+        
+        # === PHASE D: DISCUSSIONS AUTO-REPLY (every 6 hours) ===
+        if should_run_timed_phase(current_memory, 'LAST_DISCUSSION_REPLY', 6):
+            print("DEBUG: Phase D — Checking discussions (6h cycle)")
+            try:
+                def graphql_query(token_val, query, variables=None):
+                    """Execute a GitHub GraphQL query."""
+                    r = requests.post(
+                        'https://api.github.com/graphql',
+                        json={'query': query, 'variables': variables or {}},
+                        headers={'Authorization': f'bearer {token_val}', 'Content-Type': 'application/json'},
+                        timeout=30
+                    )
+                    r.raise_for_status()
+                    return r.json()
+                
+                # Check each repo for unanswered discussions
+                for repo_data in repos_data.get('repositories', [])[:10]:
+                    owner, name = repo_data['full_name'].split('/')
+                    try:
+                        result = graphql_query(token, """
+                            query($owner: String!, $name: String!) {
+                                repository(owner: $owner, name: $name) {
+                                    discussions(first: 5, orderBy: {field: CREATED_AT, direction: DESC}) {
+                                        nodes {
+                                            id
+                                            number
+                                            title
+                                            body
+                                            comments(first: 1) {
+                                                totalCount
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        """, {'owner': owner, 'name': name})
+                        
+                        discussions = result.get('data', {}).get('repository', {}).get('discussions', {}).get('nodes', [])
+                        for disc in discussions:
+                            if disc['comments']['totalCount'] == 0:
+                                print(f"DEBUG: Found unanswered discussion #{disc['number']}: {disc['title']}")
+                                
+                                structure = get_repo_structure(gh.get_repo(repo_data['full_name']), max_depth=2)
+                                disc_prompt = f"""You are Mayo, a helpful AI assistant for the repo {repo_data['full_name']}.
+Someone posted a discussion titled: "{disc['title']}"
+Body: {(disc['body'] or '')[:3000]}
+
+Repo structure:
+{structure}
+
+Write a helpful, concise reply. Be friendly and technical. If it's a question, answer it. If it's a feature request, analyze feasibility. If it's a bug report, suggest next steps."""
+                                
+                                reply = query_gemini_reviewer(disc_prompt)
+                                if reply:
+                                    # Post reply via GraphQL
+                                    graphql_query(token, """
+                                        mutation($discussionId: ID!, $body: String!) {
+                                            addDiscussionComment(input: {discussionId: $discussionId, body: $body}) {
+                                                comment { id }
+                                            }
+                                        }
+                                    """, {'discussionId': disc['id'], 'body': f"{reply}\n\n---\n*Replied by Mayo 🤖*"})
+                                    print(f"DEBUG: Replied to discussion #{disc['number']} on {repo_data['full_name']}")
+                    except Exception as e:
+                        if 'FORBIDDEN' not in str(e) and 'NOT_FOUND' not in str(e):
+                            print(f"DEBUG: Discussion error on {repo_data['full_name']}: {e}")
+                
+                update_phase_timestamp(bot_repo, current_memory, 'LAST_DISCUSSION_REPLY')
+            except Exception as e:
+                print(f"DEBUG: Phase D error: {e}")
+        else:
+            print("DEBUG: Phase D — Skipping discussions (not yet 6h)")
+        
         # Get all repos via REST API
         headers = {
             'Authorization': f'token {token}',
@@ -255,29 +522,38 @@ def run_cron():
         print(f"DEBUG: Targeting repo {target_repo.full_name} (cooldown/priority applied)")
 
         # Gather codebase context
-        structure = get_repo_structure(target_repo, max_depth=2)
+        structure = get_repo_structure(target_repo, max_depth=3)
         readme_content = read_file_content(target_repo, "README.md") or "(No README found)"
         
-        # List source files
+        # === DEEP RECURSIVE FILE SCANNING (v3) ===
+        # ONE API call gets entire repo tree — no more shallow root + hardcoded dirs
         source_files = []
         EXCLUDED_FILES = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb', '.min.js', '.min.css']
+        CODE_EXTENSIONS = ['.py', '.js', '.ts', '.jsx', '.tsx', '.go', '.c', '.cpp', '.h', '.rs', '.java', '.rb', '.php', '.swift', '.kt']
+        DOC_EXTENSIONS = ['.md', '.json', '.yaml', '.yml', '.toml', '.cfg', '.ini', '.env.example']
+        
         try:
-            contents = target_repo.get_contents("")
-            for item in contents:
-                if item.type == 'file' and any(item.name.endswith(ext) for ext in ['.py', '.js', '.ts', '.go', '.c', '.cpp', '.h', '.md', '.json']):
-                    if not any(excl in item.name for excl in EXCLUDED_FILES):
-                        source_files.append(item.path)
-            for dirname in ['src', 'api', 'lib', 'app', 'pages']:
-                try:
-                    dir_contents = target_repo.get_contents(dirname)
-                    for item in dir_contents:
-                        if item.type == 'file' and any(item.name.endswith(ext) for ext in ['.py', '.js', '.ts', '.go', '.jsx', '.tsx', '.c', '.cpp', '.h', '.md', '.json']):
-                            if not any(excl in item.name for excl in EXCLUDED_FILES):
-                                source_files.append(item.path)
-                except:
-                    pass
+            tree = target_repo.get_git_tree(target_repo.default_branch, recursive=True)
+            for item in tree.tree:
+                if item.type != 'blob':
+                    continue
+                if any(excl in item.path for excl in EXCLUDED_FILES):
+                    continue
+                if item.path.startswith('.') or '/.' in item.path:
+                    continue
+                if any(item.path.endswith(ext) for ext in CODE_EXTENSIONS + DOC_EXTENSIONS):
+                    source_files.append(item.path)
+            print(f"DEBUG: Recursive tree found {len(source_files)} eligible files")
         except Exception as e:
-            print(f"DEBUG: Error listing files: {e}")
+            print(f"DEBUG: get_git_tree failed ({e}), falling back to shallow scan")
+            try:
+                contents = target_repo.get_contents("")
+                for item in contents:
+                    if item.type == 'file' and any(item.name.endswith(ext) for ext in CODE_EXTENSIONS + DOC_EXTENSIONS):
+                        if not any(excl in item.name for excl in EXCLUDED_FILES):
+                            source_files.append(item.path)
+            except Exception as e2:
+                print(f"DEBUG: Shallow scan also failed: {e2}")
         
         if not source_files:
             if readme_content != "(No README found)":
@@ -286,10 +562,18 @@ def run_cron():
                 print("No source files found")
                 return
         
-        # Multi-file support: Pick up to 10 files for deeper architecture context
+        # Smart file selection: prioritize CODE files (7) over docs/config (3)
         import random
-        random.shuffle(source_files)
-        target_paths = [sf.path if hasattr(sf, 'path') else sf for sf in source_files[:10]]
+        code_files = [f for f in source_files if any(f.endswith(ext) for ext in CODE_EXTENSIONS)]
+        doc_files = [f for f in source_files if any(f.endswith(ext) for ext in DOC_EXTENSIONS)]
+        
+        random.shuffle(code_files)
+        random.shuffle(doc_files)
+        
+        target_paths = code_files[:7] + doc_files[:3]
+        if not target_paths:
+            target_paths = source_files[:10]
+        random.shuffle(target_paths)  # Mix them so Scanner doesn't always see code first
         
         file_contents = ""
         for tp in target_paths:

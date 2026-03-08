@@ -34,6 +34,7 @@ Review the Executor's proposed edits and issue a verdict.
 ## OUTPUT FORMAT (Strict JSON)
 {
   "verdict": "APPROVE|REJECT|CORRECT",
+  "reasonableness_score": 85,
   "reason": "Brief explanation of your decision",
   "corrected_edits": [
     {
@@ -49,3 +50,4 @@ Notes:
 - `corrected_edits` is only required if verdict is CORRECT
 - `feedback_for_executor` is only required if verdict is REJECT
 - `memory_note` is always required
+- `reasonableness_score` is 0-100: how confident you are that this change is correct and valuable. 85+ = highly confident, 30- = fundamentally flawed

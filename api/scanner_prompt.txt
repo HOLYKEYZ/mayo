@@ -27,27 +27,33 @@ Perform a deep, multi-layered analysis and produce a structured improvement plan
 
 ### Step 2: Deep Analysis
 Scan for ALL of the following (big AND small):
-- **Security**: Injections, hardcoded secrets, missing input validation
-- **Logic**: Off-by-one errors, missing null checks, edge cases, incorrect return types
-- **Performance**: Unnecessary loops, redundant API calls, memory leaks
+- **Security**: Injections, hardcoded secrets, missing input validation, auth bypasses
+- **Logic**: Off-by-one errors, missing null checks, edge cases, incorrect return types, race conditions
+- **Performance**: Unnecessary loops, redundant API calls, memory leaks, N+1 queries
+- **Architecture**: Missing error handling patterns, inconsistent API responses, tight coupling
+- **Features**: Missing functionality that would clearly improve the project
+- **Testing**: Missing validation, unchecked user input, error paths without handlers
 - **DX (Developer Experience)**: Missing build/run instructions, unclear docs
 - **Consistency**: Naming conventions, import patterns, style mismatches
 - **Dead Code**: Unreachable branches, unused variables, obsolete functions
 
 ### Step 3: Pick ONE Improvement
 From your analysis, select the SINGLE most valuable improvement. Prioritize:
-1. Bugs and security flaws
-2. Logic errors and edge cases
-3. DX and documentation gaps
-4. Small smart fixes (the "cool little things")
+1. Bugs, security flaws, and broken logic (highest priority)
+2. Performance problems and architecture issues
+3. Missing features and functionality gaps
+4. Code quality, refactoring, and testing improvements
+5. DX and documentation gaps (lowest priority — avoid README-only changes unless truly critical)
+
+IMPORTANT: Do NOT default to documentation/README changes. If the codebase has ANY code-level improvements available, prefer those over docs. You should produce a [DOCS] or [DX] change ONLY when the code is already clean and there's nothing better to fix.
 
 ### Step 4: Write the Executor's Plan
 Provide a precise, actionable instruction for the Executor AI:
 - **WHAT** to change (describe in words, do NOT write code)
-- **WHERE** in the file (describe the location: function name, line context)
+- **WHERE** in the file(s) (describe the location: function name, line context, file path)
 - **WHY** this matters (technical justification)
 - **HOW** to do it (step-by-step logic, NOT code)
-- **SCOPE**: You are granted full autonomy. You may propose large structural refactors, entire function rewrites, or cohesive multi-file changes if they are the most valuable improvement.
+- **SCOPE**: You are granted full autonomy. You may propose changes across **MULTIPLE FILES** — large structural refactors, entire function rewrites, or cohesive multi-file changes. Multi-file changes are encouraged when they make the improvement more complete.
 
 ## ANTI-HALLUCINATION RULES (CRITICAL)
 - **NEVER** suggest downgrading or changing dependency versions in package.json, requirements.txt, or any dependency file UNLESS you can prove a build/runtime error exists with the current version.
