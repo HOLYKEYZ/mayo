@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: VULNRIX**: [DX] Clarify .env Setup in README. (Ref: https://github.com/HOLYKEYZ/VULNRIX/pull/15) - *Status: MERGED - Joseph approved!*
 - **Repo: ModelFang**: [DX] Standardize Google Gemini API Key Environment Variable. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/4) - *Status: REJECTED - Joseph closed this Comment: '[vc]: #uSvL7PbT/r+1DmrsC/87GM0skuPWK1gPtYsG2pKRxnQ=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **Repo: model-unfetter**: [DX] Enhance README with Development Environment Setup. (Ref: https://github.com/HOLYKEYZ/model-unfetter/pull/1) - *Status: MERGED - Joseph approved!*
 - **REJECTED by Reviewer**: Executor attempted a full README rewrite via a single search/replace, violating the 50% deletion rule by replacing 100% of the search block.
@@ -64,6 +63,6 @@ how'd u come up with this shit, i have an ai pentester..., so why the fuck shoul
 - **REJECTED by Reviewer**: Executor's search block for `sysinfo.c` was too long (40 lines) and failed to match, resulting in 'NO CHANGES'.
 - **REJECTED by Reviewer**: Executor's search block for `sysinfo.c` was too long (39 lines) and had exact match issues (missing `\n` in `printf` statements), leading to 'NO CHANGES'.
 - **REJECTED by Reviewer**: Executor's search block for test_web_session.py produced an incorrect diff preview with unintended deletions; also submitted a no-op edit.
-- **Repo: unfetter_proxy**: [DX] Enhance test_web_session.py with Configurable Groq Model. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/6) - *Status: PENDING REVIEW*
+- **Repo: unfetter_proxy**: [DX] Enhance test_web_session.py with Configurable Groq Model. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/6) - *Status: MERGED - Joseph approved!*
 - **REJECTED by Reviewer**: Executor's search block failed to match due to quote type mismatch in an import statement (double vs. single quotes). Emphasize exact match including all characters.
-- **Repo: Alexcathe**: [REFACTOR] Remove Unused LogoMarquee Import. (Ref: https://github.com/HOLYKEYZ/Alexcathe/pull/5) - *Status: PENDING REVIEW*
+- **Repo: Alexcathe**: [REFACTOR] Remove Unused LogoMarquee Import. (Ref: https://github.com/HOLYKEYZ/Alexcathe/pull/5) - *Status: MERGED - Joseph approved! Comment: '[vc]: #cGvsWmIeWRTSDavJvrV0gkOhD6YsRpCllI6DCWdS4j0=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
