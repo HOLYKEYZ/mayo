@@ -64,3 +64,4 @@ how'd u come up with this shit, i have an ai pentester..., so why the fuck shoul
 - **Joseph's Feedback on IntellectSafe#10**: "thanks!, mayo , slipped off my mind😅" — Mayo acknowledged and responded.
 - **REJECTED by Reviewer**: Executor's search block for README.md failed to match due to incorrect inclusion of '#' characters and missing blank line. Also, the replacement block incorrectly commented out executable commands.
 - **Repo: VULNRIX**: [DX] Clarify Environment Variable Setup for CLI in README. (Ref: https://github.com/HOLYKEYZ/VULNRIX/pull/17) - *Status: MERGED - Joseph approved!*
+- **Repo: ModelFang**: [DX] Improve README Configuration Section. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/6) - *Status: PENDING REVIEW*
