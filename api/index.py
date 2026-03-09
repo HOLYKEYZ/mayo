@@ -18,6 +18,8 @@ GROK_API_KEY = os.environ.get('GROK_API_KEY')
 GEMINI_FALLBACK_API_KEY = os.environ.get('GEMINI_FALLBACK_API_KEY')
 GEMINI2_FALLBACK_API_KEY = os.environ.get('GEMINI2_FALLBACK_API_KEY')
 GROK_FALLBACK_API_KEY = os.environ.get('GROK_FALLBACK_API_KEY')
+GEMINI_NEWCRONS_API_KEY = os.environ.get('GEMINI_NEWCRONS_API_KEY')
+GROQ_NEWCRONS_API_KEY = os.environ.get('GROQ_NEWCRONS_API_KEY')
 APP_ID = os.environ.get('APP_ID')
 PRIVATE_KEY = os.environ.get('PRIVATE_KEY', '').replace('\\n', '\n')
 WEBHOOK_SECRET = os.environ.get('WEBHOOK_SECRET')
@@ -407,6 +409,30 @@ def query_gemini_scanner(prompt, temperature=0.2):
                 wait = [10, 30, 60][attempt]
                 print(f"DEBUG: Rate limited. Waiting {wait}s before retry...")
                 time.sleep(wait)
+            else:
+                return None
+    return None
+
+def query_gemini_newcrons(prompt, temperature=0.2):
+    """Dedicated Gemini call for new cron phases (0.6, 0.7, I, D) — uses separate API key to avoid rate limit conflicts with the main pipeline."""
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": temperature, "maxOutputTokens": 8000}
+    }
+    # Use dedicated newcrons key, fall back to scanner key if not set
+    primary = GEMINI_NEWCRONS_API_KEY or GEMINI_API_KEY
+    fallback = GEMINI_API_KEY
+    for attempt in range(2):
+        try:
+            current_key = fallback if attempt > 0 else primary
+            r = requests.post(f"{GEMINI_API_URL}?key={current_key}", json=payload, headers=headers, timeout=120)
+            r.raise_for_status()
+            return r.json()['candidates'][0]['content']['parts'][0]['text']
+        except Exception as e:
+            print(f"NewCrons Gemini Error (attempt {attempt+1}/2): {e}")
+            if attempt < 1 and ('429' in str(e) or '500' in str(e) or '503' in str(e)):
+                time.sleep(15)
             else:
                 return None
     return None

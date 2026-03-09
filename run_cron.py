@@ -13,7 +13,7 @@ from index import (
     APP_ID, PRIVATE_KEY, GEMINI_API_URL, GEMINI_API_KEY, GROK_API_KEY, GROQ_API_URL, GEMINI2_API_KEY,
     audit_pending_reviews, get_repo_structure, read_file_content, query_gemini_scanner,
     query_groq, extract_json_from_response, apply_surgical_edits, query_gemini_reviewer,
-    commit_changes_via_api, update_ai_communication_log
+    commit_changes_via_api, update_ai_communication_log, query_gemini_newcrons
 )
 
 def run_cron():
@@ -248,7 +248,7 @@ Diff:
 Rate this PR's reasonableness (0-100) and decide: merge, close, or skip.
 Output ONLY JSON: {{"reasonableness_score": 85, "action": "merge|close|skip", "reason": "explanation"}}"""
                             
-                            response = query_gemini_reviewer(judge_prompt)
+                            response = query_gemini_newcrons(judge_prompt)
                             if response:
                                 verdict = extract_json_from_response(response)
                                 if verdict:
@@ -302,7 +302,7 @@ Labels: {[l.name for l in issue.labels]}
 Rate reasonableness (0-100) and decide: fix (open a PR to solve it), close (unreasonable/spam/outdated), or skip.
 Output ONLY JSON: {{"reasonableness_score": 70, "action": "fix|close|skip", "reason": "explanation", "fix_plan": "if action=fix, describe what to change"}}"""
                             
-                            response = query_gemini_reviewer(judge_prompt)
+                            response = query_gemini_newcrons(judge_prompt)
                             if response:
                                 verdict = extract_json_from_response(response)
                                 if verdict:
@@ -368,7 +368,7 @@ BODY: [detailed explanation with recommendations]
 
 If the repo looks fine, output: SKIP"""
                     
-                    result = query_gemini_scanner(proactive_prompt)
+                    result = query_gemini_newcrons(proactive_prompt)
                     if result and 'DIRECTIVE: PROACTIVE_ISSUE' in result:
                         import re as re_mod
                         title_match = re_mod.search(r'TITLE:\s*(.+)', result)
@@ -444,7 +444,7 @@ Repo structure:
 
 Write a helpful, concise reply. Be friendly and technical. If it's a question, answer it. If it's a feature request, analyze feasibility. If it's a bug report, suggest next steps."""
                                 
-                                reply = query_gemini_reviewer(disc_prompt)
+                                reply = query_gemini_newcrons(disc_prompt)
                                 if reply:
                                     # Post reply via GraphQL
                                     graphql_query(token, """
