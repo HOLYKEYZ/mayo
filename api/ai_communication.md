@@ -1684,84 +1684,7 @@ The `count` variable is already defined and correctly tracks the number of proce
 
 ---
 
-## Cycle 1772995102
-**Scanner**: ## Step 1: Codebase Understanding
-
-This repository serves as Joseph Ayanda's personal GitHub profile README. It acts as a digital resume and portfolio, showcasing his skills, areas of expertise, activity statistics, and contact information.
-
-The `README.md` file is the central component of this repository. It presents Joseph's professional identity, detailing his focus areas (AI Safety, Digital Security, Fullstack Development, Agentic Engineering), his technical arsenal, GitHub activity statistics, and collaboration opportunities with contact links.
-
-The codebase primarily uses Markdown for structuring content, augmented with HTML for specific styling (e.g., image positioning) and external image badges (shields.io) and GitHub-generated statistics cards (github-readme-stats, github-readme-streak-stats, top-langs).
-
-## Step 2: Deep Analysis
-
-### Security
-*   No direct security vulnerabilities are present in a static README file.
-*   All external links (badges, contact links) appear to use HTTPS, which is good practice.
-*   The `mailto:` link is standard and generally safe.
-
-### Logic
-*   The profile views badge, GitHub stats, and streak stats are dynamically generated, ensuring they are up-to-date.
-*   The contact links (Email, WhatsApp, Twitter) appear to be correctly formatted and functional.
-*   The descriptions of "What I Do" and "Tech Arsenal" are clear and logically categorized.
-*   The `last_updated.txt` file exists in the repository but is not referenced or utilized within the `README.md`. This represents an unused asset.
-
-### Performance
-*   The local images (`cover2.jpeg`, `joseph.jpeg`) are served directly by GitHub, so their size is less critical for initial page load than if they were external.
-*   External badges and stats cards are served by Vercel and Shields.io, which are generally performant. The `cache_seconds` parameter is set to 3600, indicating a reasonable caching strategy.
-
-### DX (Developer Experience)
-*   The README is well-structured with clear headings and visual separators (`---`).
-*   The use of badges for technologies provides a quick overview of the tech stack.
-*   The contact information is readily available.
-*   The `joseph.jpeg` image uses inline HTML styling (`margin-top: -50px;`) to achieve a specific layout. While functional on GitHub, this is not pure Markdown and might render inconsistently or break on other Markdown parsers or platforms, impacting portability and maintainability.
-*   The "AGENTIC ENGINEER" statement is currently bolded text. While impactful, it could be given more visual weight to clearly distinguish it as a core tagline or mission statement, improving the immediate understanding of Joseph's primary role.
-
-### Consistency
-*   Badge styles are generally consistent (`style=flat-square`, `logoColor=white` or specific brand colors).
-*   The color scheme (`4338ca` for primary accent) is consistently applied across most badges and stats cards. However, the `text_color` for the "Top Languages" badge in dark mode (`818cf8`) differs from the main stats card (`ffffff`), creating a minor visual inconsistency in text color for dark mode.
-*   Heading levels are used appropriately.
-
-### Dead Code
-*   The `last_updated.txt` file is present in the repository but is not actively used or displayed in the `README.md`.
-
-## Step 3: Pick ONE Improvement
-
-The most valuable improvement is to enhance the visual prominence and clarity of the "AGENTIC ENGINEER" tagline. Currently, it's just bolded text, which, while emphasized, doesn't stand out as much as a core mission statement or key role should. Elevating it to a level 3 heading will provide better visual hierarchy and immediately communicate Joseph's primary identity to visitors, improving the overall developer experience and readability of the profile. This is a small, precise change that uses standard Markdown and avoids complex styling or potential rendering issues.
-
-## Step 4: Write the Executor's Plan
-
-**WHAT**: Elevate the "AGENTIC ENGINEER" tagline to a level 3 heading.
-
-**WHERE**: In the main section of the `README.md` file, specifically the line that currently reads `**AGENTIC ENGINEER**`. This line is located below the profile views badge and above the descriptive paragraph that starts with "Bridging AI alignment...".
-
-**WHY**: The current presentation of "AGENTIC ENGINEER" as bolded text, while emphasized, can blend into the subsequent descriptive paragraph. By changing it to a level 3 heading (`###`), it will gain more visual prominence and clearly establish itself as a key role or mission statement. This improves the visual hierarchy of the profile, making Joseph's core identity immediately apparent to anyone viewing the README, thus enhancing the overall developer experience and readability. This is a standard Markdown practice for important sub-sections or taglines.
-
-**HOW**:
-1.  Locate the exact line containing `**AGENTIC ENGINEER**`.
-2.  Replace this line with `### AGENTIC ENGINEER`.
-3.  Ensure that the blank line preceding the original bolded text is preserved in the context of the change to maintain the intended spacing and structural integrity.
-
-**Executor**: ```json
-{
-  "title": "[DX] Enhance AGENTIC ENGINEER Tagline",
-  "body": "### Problem / Gap\nThe 'AGENTIC ENGINEER' tagline is currently presented as bolded text, which, while emphasized, can blend into the subsequent descriptive paragraph.\n\n### Solution & Insight\nTo improve the visual hierarchy and clearly establish the 'AGENTIC ENGINEER' as a key role or mission statement, we will elevate it to a level 3 heading. This change uses standard Markdown practice for important sub-sections or taglines and enhances the overall developer experience and readability of the profile.\n\n### Impact\nThe change will make Joseph's core identity immediately apparent to anyone viewing the README, thus enhancing the overall developer experience and readability.",
-  "branch_name": "bot/enhance-AGENTIC-ENGINEER-tagline",
-  "edits": [
-    {
-      "file": "README.md",
-      "search": "**AGENTIC ENGINEER**",
-      "replace": "### AGENTIC ENGINEER"
-    }
-  ]
-}
-```
-
-**Reviewer**: APPROVE: The proposed edit precisely matches the Scanner's recommendation to elevate the 'AGENTIC ENGINEER' tagline to a level 3 heading. The search block is exact, within size limits, and the change is functionally correct Markdown, enhancing visual hierarchy and readability without being destructive or trivial. The diff preview confirms a clean, one-to-one line replacement.
-
----
-
-## Cycle 1772997957
+1772997957
 **Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/HADNX - README.md
 
 ### Step 1: Codebase Understanding
@@ -2170,5 +2093,142 @@ The current `public_repo` scope grants read/write access to all public repositor
 
 **Reviewer**: REJECTED x2: Your proposed change to remove the `public_repo` scope is correct and aligns with the plan. However, the search block for `apps/web/src/lib/auth.ts` did not match the original file content. Please ensure your search block is an *exact* match, including all characters, whitespace, and punctuation. In this case, the original file has a trailing comma (`,`) after `authorization: { params: { scope: "read:user user:email public_repo" } },
         })`, which was omitted from your search block. Please correct the search block to include this comma for an exact match and retry.
+
+---
+
+## Cycle 1773095535
+**Scanner**: ## Codebase Understanding
+
+This repository, GitPulse, aims to be a social layer for GitHub, presenting a Twitter-like feed format. It is structured as a monorepo using `pnpm` workspaces. The `apps/web` directory houses a Next.js 15 frontend, `apps/api` contains an Express.js backend, and `packages/ui` provides shared React components.
+
+The files under analysis contribute to different parts of this architecture:
+- `packages/ui/src/index.ts` and `packages/ui/src/lib/utils.ts` define and export a utility function for combining Tailwind CSS classes, forming the core of the shared UI package.
+- `packages/ui/tsconfig.json` and the root `tsconfig.json` manage TypeScript configuration for the UI package and the monorepo, respectively.
+- `packages/ui/package.json` declares the UI package's dependencies and metadata.
+- `apps/web/src/components/RepoCard.tsx` and `apps/web/src/components/ContributionHeatmap.tsx` are React components for the Next.js frontend, displaying repository details and a dummy contribution graph.
+- `apps/web/src/middleware.ts` handles authentication logic for the Next.js app, redirecting users based on their login status.
+- `apps/web/src/app/login/page.tsx` provides the login interface, utilizing GitHub OAuth via NextAuth.
+- `apps/api/src/index.ts` is the entry point for the Express.js backend, currently serving a placeholder feed endpoint.
+
+The codebase uses Next.js 15 with the App Router, Tailwind CSS for styling, Auth.js (NextAuth v5) for authentication, Express for the API, and TypeScript throughout.
+
+## Deep Analysis
+
+### Security
+- **`apps/api/src/index.ts`**: The `/api/feed/:userId` endpoint is currently unprotected. The comment "Your middleware here should verify the session to ensure the user is logged in" explicitly states the need for authentication, but the current implementation returns a placeholder response without any session verification. This is a critical security vulnerability, allowing any unauthenticated user to access what is intended to be a personalized feed.
+
+### Logic
+- **`apps/api/src/index.ts`**: The API endpoint for the feed is a placeholder (`res.json({ message: "Algo feed placeholder" });`). The `TODO: Feed scoring logic goes here (Dave)` indicates a significant missing feature. While not a bug, it's a core piece of functionality yet to be implemented.
+- **`apps/web/src/components/RepoCard.tsx`**: The `lastPush` prop is a string. While functional, it would be more robust and user-friendly to handle dates as `Date` objects and format them consistently (e.g., "2 days ago", "Jan 1, 2023") using a dedicated utility.
+
+### Performance
+- No immediate performance bottlenecks are evident in the provided files. The dummy heatmap generates random data client-side, which is fine for its current purpose.
+
+### Architecture
+- **`apps/api/src/index.ts`**: The lack of an authentication layer for the API is an architectural gap. A robust API should have clear authentication and authorization mechanisms, especially for user-specific data.
+- **SVG Icons in `RepoCard.tsx`**: The SVG icons are embedded directly as paths. While this works, for a project using a UI library (like shadcn/ui, which is mentioned in the README), it might be more consistent to use an icon library (e.g., Lucide React) or dedicated icon components for better maintainability and potential tree-shaking benefits. This is a minor architectural consistency point.
+
+### Features
+- **`apps/api/src/index.ts`**: The core "Feed scoring logic" is explicitly marked as a `TODO`, indicating a major missing feature for the backend.
+
+### Testing
+- No test files were provided in the analysis scope. Without tests, there's a lack of validation for component rendering, API responses, and middleware logic.
+
+### DX (Developer Experience)
+- The `README.md` provides good setup instructions.
+- The `TODO` comments are helpful for future development.
+
+### Consistency
+- **`packages/ui/tsconfig.json`**: While it correctly extends the root `tsconfig.json`, many `compilerOptions` are duplicated. It's generally better practice to only specify options that differ or are added in the extended configuration. This is a minor point.
+
+### Dead Code
+- No dead code was identified in the provided files.
+
+## Pick ONE Improvement
+
+The single most valuable improvement is to **implement authentication for the `/api/feed/:userId` endpoint in the Express.js backend (`apps/api/src/index.ts`)**. This addresses a critical security vulnerability and a fundamental architectural flaw, as the API is currently completely unprotected despite being intended for user-specific data. Without this, any further development of the feed logic would be built on a insecure foundation.
+
+## Executor's Plan
+
+**WHAT to change:**
+The Executor needs to add a new dependency to the `apps/api/package.json` file and then modify the `apps/api/src/index.ts` file. In `apps/api/src/index.ts`, it will add imports for JWT verification utilities, define a new Express middleware function to authenticate requests using a JWT from the `Authorization` header, and then apply this middleware to the `/api/feed/:userId` route. This will ensure that only authenticated users with a valid session token can access the feed endpoint.
+
+**WHERE in the file(s):**
+1.  **`apps/api/package.json`**: Within the `dependencies` object.
+2.  **`apps/api/src/index.ts`**:
+    *   At the top of the file, after existing imports.
+    *   After `app.use(express.json());` to define the new middleware.
+    *   In the `app.get('/api/feed/:userId', ...)` route definition, to apply the middleware.
+
+**WHY this matters:**
+This change is crucial for security and architectural integrity. The current `/api/feed/:userId` endpoint is completely open, allowing any client to request a feed without authentication. This is a severe vulnerability for an application that aims to provide personalized user data. By adding JWT verification, the API will correctly enforce that only authenticated users can access their feed, aligning with the explicit `TODO` comment in the code and the project's implied security requirements. This also sets a secure foundation for implementing the actual feed scoring logic.
+
+**HOW to do it:**
+
+1.  **Add `jose` dependency to `apps/api/package.json`:**
+    *   Locate the `dependencies` object.
+    *   Insert a new entry for `jose` with version `^5.2.3`.
+
+2.  **Modify `apps/api/src/index.ts` to add imports and define `AUTH_SECRET`:**
+    *   Locate the existing `import express from 'express';` statement.
+    *   Insert new import statements for `jwtVerify` and `decodeJwt` from `jose` immediately after the `express` import.
+    *   Locate the `const port = process.env.PORT || 4000;` line.
+    *   Insert a new constant declaration for `AUTH_SECRET` immediately after it, retrieving its value from `process.env.AUTH_SECRET`.
+
+3.  **Define the `authenticateToken` middleware in `apps/api/src/index.ts`:**
+    *   Locate the `app.use(express.json());` line.
+    *   Insert the full `authenticateToken` middleware function immediately after this line. This function will:
+        *   Extract the `Authorization` header.
+        *   Parse the Bearer token.
+        *   Handle cases where no token is provided (401 Unauthorized).
+        *   Verify the token using `jwtVerify` and the `AUTH_SECRET`.
+        *   Handle cases where `AUTH_SECRET` is missing (500 Internal Server Error).
+        *   Handle cases where the token is invalid (403 Forbidden).
+        *   If the token is valid, attach the decoded payload to the request object (e.g., `req.user`) before calling `next()`.
+
+4.  **Apply the `authenticateToken` middleware to the `/api/feed/:userId` route in `apps/api/src/index.ts`:**
+    *   Locate the `app.get('/api/feed/:userId', (req, res) => { ... });` route definition.
+    *   Insert `authenticateToken` as the second argument to `app.get`, before the existing route handler function.
+    *   Modify the existing route handler to demonstrate access to the authenticated user's payload (e.g., by including `user: (req as any).user` in the JSON response) and add a comment suggesting how to validate `userId` against the authenticated user's ID.
+
+**SCOPE:**
+This change involves modifying two files: `apps/api/package.json` and `apps/api/src/index.ts`. The Executor has full autonomy to perform these changes, including adding new dependencies, new imports, new functions, and modifying existing route definitions.
+
+**Executor**: ```json
+{
+  "title": "[SEC] Implement Authentication for /api/feed/:userId Endpoint",
+  "body": "### Problem / Gap\nThe `/api/feed/:userId` endpoint in `apps/api/src/index.ts` is currently unprotected, allowing any unauthenticated user to access what is intended to be a personalized feed. This is a critical security vulnerability.\n\n### Solution & Insight\nTo address this issue, we will add authentication to the `/api/feed/:userId` endpoint using JWT verification. We will first add the `jose` dependency to `apps/api/package.json` for handling JWTs. Then, we will modify `apps/api/src/index.ts` to import necessary functions from `jose`, define an `AUTH_SECRET` from an environment variable, create an `authenticateToken` middleware function to verify tokens, and apply this middleware to the `/api/feed/:userId` route.\n\n### Impact\nThis change will significantly improve the security of the GitPulse API by ensuring that only authenticated users can access their personalized feed, thus protecting user data and aligning with security best practices.",
+  "branch_name": "bot/secure-feed-endpoint-1773095535",
+  "edits": [
+    {
+      "file": "apps/api/package.json",
+      "search": "\"dependencies\": {",
+      "replace": "\"dependencies\": {\n    \"jose\": \"^5.2.3\","
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "search": "import express from 'express';\n\nconst app = express();",
+      "replace": "import express from 'express';\nimport { jwtVerify } from 'jose';\n\nconst app = express();"
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "search": "const port = process.env.PORT || 4000;",
+      "replace": "const port = process.env.PORT || 4000;\nconst AUTH_SECRET = process.env.AUTH_SECRET;\nif (!AUTH_SECRET) {\n  throw new Error('AUTH_SECRET environment variable is not defined.');\n}\nconst secret = new TextEncoder().encode(AUTH_SECRET);"
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "search": "app.use(express.json());",
+      "replace": "app.use(express.json());\n\nconst authenticateToken = async (req, res, next) => {\n  const authHeader = req.headers['authorization'];\n  if (!authHeader || !authHeader.startsWith('Bearer ')) {\n    return res.status(401).json({ message: 'Unauthorized' });\n  }\n  const token = authHeader.substring(7);\n  try {\n    const payload = await jwtVerify(token, secret);\n    (req as any).user = payload;\n    next();\n  } catch (error) {\n    return res.status(403).json({ message: 'Forbidden' });\n  }\n};"
+    },
+    {
+      "file": "apps/api/src/index.ts",
+      "search": "app.get('/api/feed/:userId', (req, res) => {",
+      "replace": "app.get('/api/feed/:userId', authenticateToken, (req, res) => {\n  // Example of accessing authenticated user's payload\n  const userId = req.params.userId;\n  const authenticatedUserId = (req as any).user.sub;\n  // TODO: Validate userId against authenticatedUserId for additional security\n  res.json({ message: 'Algo feed placeholder', user: (req as any).user });"
+    }
+  ]
+}
+```
+
+**Reviewer**: CORRECT: The Executor's plan correctly implements JWT authentication for the API endpoint, addressing a critical security vulnerability and aligning with the Scanner's recommendation. The middleware logic is sound and includes necessary environment variable checks. The only minor issue was an indentation mismatch in the `package.json` edit, which has been corrected.
 
 ---
