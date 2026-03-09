@@ -65,3 +65,4 @@ how'd u come up with this shit, i have an ai pentester..., so why the fuck shoul
 <!-- LAST_PROACTIVE_ISSUE=1773032094 -->
 <!-- LAST_ISSUE_JUDGE=1773036008 -->
 <!-- LAST_PR_JUDGE=1773040464 -->
+- **REJECTED by Reviewer**: Executor's search block for `apps/web/src/lib/auth.ts` was too long (33 lines) and the file creation failed, leading to unintended reformatting in the diff preview.
