@@ -55,7 +55,7 @@ def run_cron():
                     issue_repo = gh.get_repo(repo_name)
                     issue = issue_repo.get_issue(int(issue_num))
                     
-                    # Check if the repo owner (or Joseph) replied with instructions/approval
+                    # check if the repo owner (or i) replied with instructions/approval
                     joseph_approved = False
                     joseph_reply = ""
                     repo_owner_login = issue_repo.owner.login
@@ -707,7 +707,9 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
             improvement_data = extract_json_from_response(executor_response)
             
             if not improvement_data or 'edits' not in improvement_data:
-                print("DEBUG: No valid improvement JSON from Executor")
+                print("DEBUG: No valid improvement JSON from Executor. Raw response head/tail:")
+                print(f"HEAD: {executor_response[:500]}")
+                print(f"TAIL: {executor_response[-500:]}")
                 break
 
             # === PHASE 3: REVIEWER (Gemini B) — validates ACTUAL DIFF ===
