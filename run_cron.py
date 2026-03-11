@@ -55,15 +55,15 @@ def run_cron():
                     issue_repo = gh.get_repo(repo_name)
                     issue = issue_repo.get_issue(int(issue_num))
                     
-                    # Check if Joseph replied with approval
-                    approval_keywords = ['yes', 'go ahead', 'do it', 'proceed', 'approved', 'fix it', 'go for it', 'yeah', 'yep', 'sure']
+                    # Check if the repo owner (or Joseph) replied with instructions/approval
                     joseph_approved = False
                     joseph_reply = ""
+                    repo_owner_login = issue_repo.owner.login
                     
                     for comment in issue.get_comments():
-                        if comment.user.login != 'joe-gemini-bot[bot]':
-                            body_lower = comment.body.lower().strip()
-                            if any(kw in body_lower for kw in approval_keywords):
+                        if comment.user.login not in ('joe-gemini-bot[bot]', 'github-actions[bot]'):
+                            # Process any comment from the repo owner or Joseph as an instruction
+                            if comment.user.login == repo_owner_login or comment.user.login == 'HOLYKEYZ':
                                 joseph_approved = True
                                 joseph_reply = comment.body
                                 break
@@ -71,7 +71,7 @@ def run_cron():
                     if not joseph_approved:
                         continue
                     
-                    print(f"DEBUG: Joseph approved issue {issue_url} — executing!")
+                    print(f"DEBUG: Processed owner comment on issue {issue_url} — executing!")
                     
                     # Extract the Scanner's original analysis from the issue body
                     scanner_context = issue.body or ""

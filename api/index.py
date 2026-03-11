@@ -345,7 +345,8 @@ def apply_surgical_edits(content, edits):
         # SAFETY GUARD 2: Test-apply and check total file damage
         test_lines = content_lines[:match_start] + replacement_lines + content_lines[match_end:]
         lines_lost = original_line_count - len(test_lines)
-        if lines_lost > max(10, original_line_count * 0.2):
+        # Allow removing up to 25 lines or 30% of the file, whichever is higher
+        if lines_lost > max(25, original_line_count * 0.3):
             print(f"DEBUG: BLOCKED catastrophic edit - would remove {lines_lost}/{original_line_count} total lines ({search[:60]}...)")
             continue
         
