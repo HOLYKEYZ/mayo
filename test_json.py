@@ -28,7 +28,7 @@ def extract_json_from_response(text):
                 continue
     return None
 
-with open('c:/Users/USER/github-bot/api/ai_communication.md', 'r', encoding='utf-8') as f:
+with open('api/ai_communication.md', 'r', encoding='utf-8') as f:
     log_content = f.read()
 
 # Find the LAST Executor JSON
