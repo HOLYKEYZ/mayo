@@ -115,7 +115,7 @@ def run_cron():
                     ts = int(time.time())
                     target_path_display = ", ".join(target_paths)
                     
-                    # Run Executor with Joseph's approval context
+                    # Run Executor with my approval context
                     executor_prompt = (
                         f"You are the EXECUTOR — a Senior Code Engineer.\n"
                         f"Joseph has approved this change via GitHub Issue: {issue.title}\n\n"
@@ -130,11 +130,30 @@ def run_cron():
                         f'"edits": [{{"file": "path", "search": "exact original", "replace": "replacement"}}]}}'
                     )
                     
-                    executor_response = query_groq(executor_prompt)
-                    if executor_response:
-                        improvement_data = extract_json_from_response(executor_response)
-                        if improvement_data and 'edits' in improvement_data:
-                            
+                    print("DEBUG: Executing Phase 0.5 Dual Groq Llama 3.3 + Fallbacks...")
+                    executor1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_API_KEY'))
+                    executor2_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
+                    
+                    data1 = extract_json_from_response(executor1_resp) if executor1_resp else None
+                    data2 = extract_json_from_response(executor2_resp) if executor2_resp else None
+                    
+                    improvement_data = None
+                    if (data1 and 'edits' in data1) or (data2 and 'edits' in data2):
+                        improvement_data = data1 if data1 else data2
+                        if data1 and data2 and 'edits' in data1 and 'edits' in data2:
+                            improvement_data['edits'].extend(data2['edits'])
+                    else:
+                        print("DEBUG: Phase 0.5 Primary Executors failed. Checking fallbacks...")
+                        fb1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
+                        improvement_data = extract_json_from_response(fb1_resp) if fb1_resp else None
+                        
+                        if not improvement_data or 'edits' not in improvement_data:
+                            from api.index import query_grok_xai
+                            fb2_resp = query_grok_xai(executor_prompt)
+                            if fb2_resp:
+                                improvement_data = extract_json_from_response(fb2_resp)
+                    
+                    if improvement_data and 'edits' in improvement_data:
                             file_edits = {}
                             for edit in improvement_data['edits']:
                                 fpath = edit.get('file') or (target_paths[0] if target_paths else '')
