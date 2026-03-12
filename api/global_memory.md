@@ -81,3 +81,4 @@ u're working on a fix, mayo?" — Mayo acknowledged and responded.
 
 do the best thing!" — Mayo acknowledged and responded.
 - **REJECTED by Reviewer**: Executor's multiple edits conflicted, causing a subsequent search block to fail. Emphasize combining dependent changes into a single, comprehensive edit.
+- **REJECTED by Reviewer**: Executor's search blocks for `micro-edit` failed to match due to missing leading whitespace (indentation), and submitted duplicate edits. Emphasize exact match including all whitespace and avoid duplicates.
