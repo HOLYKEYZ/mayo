@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: model-unfetter**: [DX] Enhance README with Development Environment Setup. (Ref: https://github.com/HOLYKEYZ/model-unfetter/pull/2) - *Status: MERGED - Joseph approved!*
-- **REJECTED by Reviewer**: Executor's search block for `micro-edit` failed to match due to missing blank line, resulting in 'NO CHANGES'. Emphasize exact match including whitespace and blank lines.
 - **Repo: micro-edit**: [LOGIC] Fix Redundant Global Variable Declaration. (Ref: https://github.com/HOLYKEYZ/micro-edit/pull/4) - *Status: MERGED - Joseph approved!*
 - **Repo: unfetter_proxy**: [LOGIC] Fix Critical Bug in test_web_session.py. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/5) - *Status: MERGED - Joseph approved!*
 - **Repo: temple-sysinfo**: [DX] Update Compile Command in sysinfo.c. (Ref: https://github.com/HOLYKEYZ/temple-sysinfo/pull/3) - *Status: MERGED - Joseph approved!*
