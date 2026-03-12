@@ -83,3 +83,4 @@ do the best thing!" — Mayo acknowledged and responded.
 - **REJECTED by Reviewer**: Executor's multiple edits conflicted, causing a subsequent search block to fail. Emphasize combining dependent changes into a single, comprehensive edit.
 - **REJECTED by Reviewer**: Executor's search blocks for `micro-edit` failed to match due to missing leading whitespace (indentation), and submitted duplicate edits. Emphasize exact match including all whitespace and avoid duplicates.
 - **REJECTED by Reviewer**: Executor submitted multiple redundant/conflicting edits for the same locations and failed to match leading whitespace in search blocks for `micro-edit`.
+- **REJECTED by Reviewer**: Executor submitted two identical edits and a search block that did not match the actual file content shown in the diff preview for `unfetter_proxy/cli.py`.
