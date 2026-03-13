@@ -1186,27 +1186,31 @@ OUTPUT FORMAT (Strict JSON, nothing else):
             data1 = extract_json_from_response(executor1_resp) if executor1_resp else None
             data2 = extract_json_from_response(executor2_resp) if executor2_resp else None
             
-            parsed = None
-            if (data1 and 'edits' in data1) or (data2 and 'edits' in data2):
-                parsed = data1 if (data1 and 'edits' in data1) else data2
-                if data1 and data2 and isinstance(data1.get('edits'), list) and isinstance(data2.get('edits'), list):
-                    parsed['edits'] = data1['edits'] + data2['edits']
+            final_payload = None
+            if data1 and isinstance(data1, dict) and 'edits' in data1:
+                final_payload = data1
+                if data2 and isinstance(data2, dict) and 'edits' in data2 and isinstance(final_payload.get('edits'), list) and isinstance(data2.get('edits'), list):
+                    combined_edits = final_payload['edits'] + data2['edits']
+                    final_payload = {"title": final_payload.get('title', ''), "body": final_payload.get('body', ''), "edits": combined_edits}
+            elif data2 and isinstance(data2, dict) and 'edits' in data2:
+                final_payload = data2
             else:
                 # Fallback: Groq Fallback Key
                 fb1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
-                parsed = extract_json_from_response(fb1_resp) if fb1_resp else None
+                final_payload = extract_json_from_response(fb1_resp) if fb1_resp else None
                 
-                if not parsed or 'edits' not in parsed:
+                if not isinstance(final_payload, dict) or 'edits' not in final_payload:
                     # Ultimate Fallback: Gemini Executor
                     fb2_resp = query_gemini_executor(executor_prompt)
                     if fb2_resp:
-                        parsed = extract_json_from_response(fb2_resp)
+                        final_payload = extract_json_from_response(fb2_resp)
             
-            if parsed and 'edits' in parsed:
+            if isinstance(final_payload, dict) and isinstance(final_payload.get('edits'), list):
                 # Group edits by file
                 file_edits = {}
-                for edit in parsed['edits']:
-                    fpath = edit.get('file')
+                for edit in final_payload['edits']:
+                    if not isinstance(edit, dict): continue
+                    fpath = edit['file'] if 'file' in edit else None
                     if not fpath: continue
                     if fpath not in file_edits:
                         file_edits[fpath] = []
@@ -1239,25 +1243,27 @@ OUTPUT FORMAT (Strict JSON, nothing else):
                     else:
                         branch = f"mayo/fix-{issue_number}-{int(time.time())}"
                     
-                    commit_title = parsed.get('title', f"Fix: Addressed feedback in #{issue_number}")
+                    commit_title = final_payload.get('title', f"Fix: Addressed feedback in #{issue_number}")
                     if commit_changes_via_api(repo, branch, file_changes, commit_title):
-                        msg = f"✅ Committed changes to `{branch}`.\n\nDescription: {parsed.get('body', commit_title)}"
+                        msg = f"✅ Committed changes to `{branch}`.\n\nDescription: {final_payload.get('body', commit_title)}"
                         if failed_edits:
-                            failed_preview = "\n".join(f"- {fe}" for fe in failed_edits[:5])
-                            msg += f"\n\n⚠️ Some edits failed to match:\n{failed_preview}"
+                            safe_preview = [f"- {fe}" for i, fe in enumerate(failed_edits) if i < 5]
+                            msg += f"\\n\\n⚠️ Some edits failed to match:\\n" + "\\n".join(safe_preview)
                         issue.create_comment(msg)
                         
                         if not issue.pull_request:
                             try:
-                                repo.create_pull(title=commit_title, body=f"Automated fix.\n{parsed.get('body', '')}", head=branch, base=repo.default_branch)
+                                repo.create_pull(title=commit_title, body=f"Automated fix.\n{final_payload.get('body', '')}", head=branch, base=repo.default_branch)
                                 issue.create_comment(f"🚀 Created new PR for `{branch}`")
                             except Exception as e:
                                 print(f"PR Creation error: {e}")
                     else:
                         issue.create_comment("⚠️ Executor generated edits, but the commit failed. Check logs.")
                 else:
-                    debug_info = "\n".join(f"- {fe}" for fe in failed_edits[:5]) if failed_edits else "No debug info available"
-                    issue.create_comment(f"⚠️ Executor generated edits, but none matched the file contents.\n\n**Failed search blocks:**\n{debug_info}\n\n*Retrying on next trigger.*")
+                    safe_preview = [f"- {fe}" for i, fe in enumerate(failed_edits) if i < 5]
+                    
+                    debug_info = "\\n".join(safe_preview) if failed_edits else "No debug info available"
+                    issue.create_comment(f"⚠️ Executor generated edits, but none matched the file contents.\\n\\n**Failed search blocks:**\\n{debug_info}\\n\\n*Retrying on next trigger.*")
             else:
                  issue.create_comment("⚠️ Executor failed to generate valid JSON edits.")
     except Exception as e:
