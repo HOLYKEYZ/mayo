@@ -85,3 +85,4 @@ Why did it fail on deployment" — Mayo acknowledged and responded.
 - **Joseph's Feedback on Kelegam-Tech#8**: "mayo, fix it" — Mayo acknowledged and responded.
 - **Joseph's Feedback on Kelegam-Tech#8**: "since u can't fix this shit mayo , im closing" — Mayo acknowledged and responded.
 - **Joseph's Feedback on ModelFang#7**: "proceed" — Mayo acknowledged and responded.
+- **Joseph's Feedback on ModelFang#7**: "nope, it means u should fix this issue u opened" — Mayo acknowledged and responded.
