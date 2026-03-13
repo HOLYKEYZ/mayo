@@ -1189,8 +1189,8 @@ OUTPUT FORMAT (Strict JSON, nothing else):
             parsed = None
             if (data1 and 'edits' in data1) or (data2 and 'edits' in data2):
                 parsed = data1 if (data1 and 'edits' in data1) else data2
-                if data1 and data2 and 'edits' in data1 and 'edits' in data2:
-                    parsed['edits'].extend(data2['edits'])
+                if data1 and data2 and isinstance(data1.get('edits'), list) and isinstance(data2.get('edits'), list):
+                    parsed['edits'] = data1['edits'] + data2['edits']
             else:
                 # Fallback: Groq Fallback Key
                 fb1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
@@ -1243,7 +1243,8 @@ OUTPUT FORMAT (Strict JSON, nothing else):
                     if commit_changes_via_api(repo, branch, file_changes, commit_title):
                         msg = f"✅ Committed changes to `{branch}`.\n\nDescription: {parsed.get('body', commit_title)}"
                         if failed_edits:
-                            msg += f"\n\n⚠️ Some edits failed to match:\n" + "\n".join(f"- {fe}" for fe in failed_edits[:5])
+                            failed_preview = "\n".join(f"- {fe}" for fe in failed_edits[:5])
+                            msg += f"\n\n⚠️ Some edits failed to match:\n{failed_preview}"
                         issue.create_comment(msg)
                         
                         if not issue.pull_request:
