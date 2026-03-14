@@ -807,14 +807,11 @@ def webhook():
     payload = request.json
     
     if event_type == 'issue_comment' and payload.get('action') == 'created':
-        import threading
-        threading.Thread(target=handle_issue_comment, args=(payload,)).start()
+        handle_issue_comment(payload)
     elif event_type == 'pull_request' and payload.get('action') in ['opened', 'synchronize']:
-        import threading
-        threading.Thread(target=handle_pr, args=(payload,)).start()
+         handle_pr(payload)
     elif event_type == 'pull_request_review' and payload.get('action') == 'submitted':
-        import threading
-        threading.Thread(target=handle_pr_review_feedback, args=(payload,)).start()
+        handle_pr_review_feedback(payload)
 
     return jsonify({'status': 'ok'})
 
