@@ -1255,6 +1255,7 @@ HARD RULES:
 4. NO UNINTENDED DELETIONS: Ensure you are not accidentally deleting important surrounding context.
 5. PRESERVE EVERYTHING: Indentation, comments, blank lines outside your edit MUST remain untouched.
 6. COPY DIRECTLY: Copy the search text DIRECTLY from the file contents shown above. Do NOT retype from memory.
+7. NEW FILES: If you need to CREATE a new file that doesn't exist yet, use an EMPTY "search" field ("") and put the ENTIRE file content in "replace".
 
 OUTPUT FORMAT (Strict JSON, nothing else):
 {{
@@ -1262,9 +1263,14 @@ OUTPUT FORMAT (Strict JSON, nothing else):
   "body": "What was fixed and why.",
   "edits": [
     {{
-      "file": "path/to/file",
+      "file": "path/to/existing_file",
       "search": "EXACT lines from original (max 10 lines)",
       "replace": "Your improved replacement"
+    }},
+    {{
+      "file": "path/to/new_file.yml",
+      "search": "",
+      "replace": "Full content of the new file here"
     }}
   ]
 }}
@@ -1312,7 +1318,19 @@ OUTPUT FORMAT (Strict JSON, nothing else):
                 for fpath, edits in file_edits.items():
                     content = read_file_content(repo, fpath)
                     if not content:
-                        failed_edits.append(f"`{fpath}`: file not found or empty")
+                        # File doesn't exist — check if the executor wants to CREATE it
+                        # (search is empty/missing but replace has full content)
+                        new_file_content = ""
+                        for edit in edits:
+                            replace_val = edit.get('replace', '')
+                            search_val = edit.get('search', '')
+                            if replace_val and (not search_val or search_val.strip() == ''):
+                                new_file_content += replace_val
+                        if new_file_content:
+                            file_changes[fpath] = new_file_content
+                            print(f"DEBUG: New file will be created: {fpath}")
+                        else:
+                            failed_edits.append(f"`{fpath}`: file not found or empty")
                         continue
                     new_content = apply_surgical_edits(content, edits)
                     if new_content != content:
