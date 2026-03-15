@@ -76,7 +76,7 @@ def fetch_memory(repo, issue_number, bot_login):
             if comment.user.login.lower() == bot_login.lower():
                 body = comment.body
                 # Look for hidden memory block
-                memory_match = re.search(r'<!-- \\[MEMORY\\]([\\s\\S]*?)\\[/MEMORY\\] -->', body)
+                memory_match = re.search(r'<!-- \[MEMORY\]([\s\S]*?)\[/MEMORY\] -->', body)
                 if memory_match:
                     try:
                         mem = json.loads(memory_match.group(1).strip())
@@ -488,7 +488,7 @@ Instructions:
         "generationConfig": {"temperature": temperature, "maxOutputTokens": 16000}
     }
     try:
-        r = requests.post(f"{GEMINI_API_URL}?key={GEMINI_API_KEY}", json=payload, headers=headers)
+        r = requests.post(f"{GEMINI_API_URL}?key={GEMINI_API_KEY}", json=payload, headers=headers, timeout=120)
         r.raise_for_status()
         return r.json()['candidates'][0]['content']['parts'][0]['text']
     except Exception as e:
@@ -1142,6 +1142,8 @@ def handle_issue_comment(payload):
 
     try:
         issue = repo.get_issue(number=issue_number)
+        # Immediate feedback to confirm webhook receipt
+        issue.create_comment("🧠 **Mayo is thinking...**")
         
         # 1. Fetch Memory with [MEMORY] blocks
         memory = fetch_memory(repo, issue_number, bot_login)
@@ -1222,7 +1224,9 @@ Instructions:
 3. If Joseph's request requires code changes, explain the technical plan for the fix and end your ENTIRE response with the exact marker: [REQUIRES_EXECUTION]
 """
         plan = query_gemini_reviewer(reviewer_prompt)
-        if not plan: return
+        if not plan:
+            issue.create_comment("⚠️ **Reviewer (Mayo) Error:** I failed to generate a technical plan after multiple attempts. Please re-trigger me or check my API health.")
+            return
         
         all_files_for_mem = []
         if isinstance(files_already_read, list):
