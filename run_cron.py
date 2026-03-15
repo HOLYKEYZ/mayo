@@ -32,12 +32,16 @@ def run_cron():
         token = integration.get_access_token(installation.id).token
         gh = Github(token)
         
-        # === PHASE 0: REVIEWER AUDITS PENDING REVIEWS ===
-        print("DEBUG: Phase 0 — Auditing pending reviews")
-        audit_pending_reviews(gh)
-        
-        # === PHASE 0.5: CHECK APPROVED ISSUES ===
-        print("DEBUG: Phase 0.5 — Checking for approved issues")
+# === PHASE 0: REVIEWER AUDITS PENDING REVIEWS ===
+print("DEBUG: Phase 0 — Auditing pending reviews")
+audit_pending_reviews(gh)
+
+# === PHASE 1: SCANNER - DEEP CODEBASE ANALYSIS ===
+print("DEBUG: Phase 1 — Running SCANNER for deep codebase analysis")
+query_gemini_newcrons(gh)
+
+# === PHASE 0.5: CHECK APPROVED ISSUES ===
+print("DEBUG: Phase 0.5 — Checking for approved issues")
         try:
             bot_repo_name = os.environ.get('BOT_REPO_NAME', 'HOLYKEYZ/mayo')
             bot_repo = gh.get_repo(bot_repo_name)
