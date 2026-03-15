@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: ModelFang**: [DX] Improve README Configuration Section. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/6) - *Status: MERGED - Joseph approved! Comment: '[vc]: #BESEIDeorTUQHPwL8xg0ag2xzlZ5PPMYRv9W8nrmy1g=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **Repo: model-unfetter**: [DX] Correct Development Setup Instructions in README. (Ref: https://github.com/HOLYKEYZ/model-unfetter/pull/3) - *Status: MERGED - Joseph approved!*
 - **Repo: micro-edit**: [LOGIC] Define min macro for compilation. (Ref: https://github.com/HOLYKEYZ/micro-edit/pull/5) - *Status: MERGED - Joseph approved!*
 - **REJECTED by Reviewer**: Executor's search block for `test_web_session.py` failed to match due to missing comment lines, and the diff preview showed truncated replacement text for another edit. Emphasize exact match and verify full replacement.
