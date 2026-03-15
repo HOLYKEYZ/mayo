@@ -49,8 +49,8 @@ def verify_signature(req):
     if not hmac.compare_digest(expected.encode('utf-8'), signature_hash.encode('utf-8')):
         safe_expected = expected[:8]
         safe_got = signature_hash[:8]
-        print(f"ERROR: Signature mismatch. Expected {safe_expected}... but got {safe_got}...")
-        return False, "SIGNATURE_MISMATCH"
+        print(f"ERROR: Signature mismatch. Expected {safe_expected}... but got {safe_got}... (Payload len: {len(req.data)})")
+        return False, f"SIGNATURE_MISMATCH (len:{len(req.data)})"
     
     return True, "OK"
 
@@ -827,6 +827,36 @@ def health():
         'bot_login': BOT_LOGIN_CACHE or 'Not cached yet'
     }
     return jsonify(status)
+
+@app.route('/permissions', methods=['GET'])
+def permissions_check():
+    """Returns the current permissions and events Mayo is subscribed to."""
+    try:
+        integration = GithubIntegration(APP_ID, PRIVATE_KEY)
+        installations = integration.get_installations()
+        results = []
+        for inst in installations:
+            token = integration.get_access_token(inst.id).token
+            headers = {
+                'Authorization': f'token {token}',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+            # Check the installation settings
+            resp = requests.get(f"https://api.github.com/app/installations/{inst.id}", headers=headers)
+            if resp.status_code == 200:
+                data = resp.json()
+                results.append({
+                    'installation_id': inst.id,
+                    'permissions': data.get('permissions', {}),
+                    'events': data.get('events', []),
+                    'repositories_selection': data.get('repository_selection', 'unknown')
+                })
+            else:
+                results.append({'installation_id': inst.id, 'error': resp.status_code, 'body': resp.text})
+        return jsonify({'installations': results})
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 @app.errorhandler(500)
 def handle_500(e):
