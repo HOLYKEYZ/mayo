@@ -31,16 +31,16 @@ def extract_json_from_response(text):
 with open('api/ai_communication.md', 'r', encoding='utf-8') as f:
     log_content = f.read()
 
-# Find the LAST Executor JSON
+# Find ALL Executor JSON blocks
 blocks = re.findall(r'\*\*Executor\*\*: ```json\n(.*?)\n```', log_content, re.DOTALL)
 if blocks:
-    last_block = '{' + blocks[-1].split('{', 1)[-1] if '{' in blocks[-1] else blocks[-1]
-    last_block = '```json\n' + last_block + '\n```'
-    print(f"Testing parser on last block (length: {len(last_block)})...")
-    result = extract_json_from_response(last_block)
-    if result:
-        print("Success! Keys:", result.keys())
-    else:
-        print("Failed completely")
+    for index, block in enumerate(blocks):
+        current_block = '```json\n{' + block.split('{', 1)[-1] if '{' in block else block + '\n```'
+        print(f"Testing parser on block {index + 1}/{len(blocks)} (length: {len(current_block)})...")
+        result = extract_json_from_response(current_block)
+        if result:
+            print("Success! Keys:", result.keys())
+        else:
+            print("Failed completely")
 else:
     print("No blocks found")
