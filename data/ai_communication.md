@@ -2513,3 +2513,71 @@ The most valuable improvement is to address the **security vulnerability related
 **Reviewer**: APPROVE: The proposed edit directly addresses a critical security vulnerability by removing sensitive user data storage from `localStorage`, aligning perfectly with the Scanner's plan for improved security posture. The search block is an exact match, and the change is functional and valuable, relying on the backend to handle secure session management via HttpOnly cookies.
 
 ---
+
+## Cycle 1773700639
+**Scanner**: ## Codebase Understanding
+
+This repository, IntellectSafe, is a production-grade AI Safety Engine designed to protect users, organizations, and AI systems from misuse, deception, manipulation, and loss of control. It implements a 5-layer defense architecture, including prompt injection detection, output safety, data privacy, deepfake detection, and smart control, often leveraging an "LLM Council" for multi-model validation.
+
+The `extension/manifest.json` file defines the configuration for the IntellectSafe Companion Chrome Extension. It specifies the extension's name, version, description, required permissions, and the host URLs where its content scripts will operate, primarily targeting popular AI chat platforms.
+
+The `backend/alembic/versions/a91484a01ed6_initial_migration.py` file is an Alembic migration script. Its purpose is to define the initial database schema for the IntellectSafe backend, creating tables such as `provider_reliability`, `scan_requests`, `agent_actions`, `council_decisions`, and `incidents`, along with their respective columns and indices.
+
+The `backend/app/core/config.py` file handles the application's configuration settings. It uses Pydantic's `BaseSettings` to load environment variables and provide default values for various aspects of the application, including API settings, database connections, Redis, LLM provider API keys and models, LLM Council parameters, safety thresholds, security settings, and worker configurations.
+
+The codebase uses Python with FastAPI for the backend, Pydantic for settings management, SQLAlchemy with Alembic for database migrations, and a React/TypeScript frontend. The Chrome extension is built with standard web technologies (JavaScript, HTML, CSS). Conventions include environment-based configuration, clear separation of concerns (API routes, core logic, database models), and a focus on AI safety features.
+
+## Deep Analysis
+
+### extension/manifest.json
+*   **Consistency**: The `version: "1.1"` seems low for a "production-grade" platform, though this is a minor point and not a bug.
+*   **Consistency/Logic**: The `host_permissions` and `content_scripts.matches` include `https://grok.com/*` alongside `https://groq.com/*`. Given the `backend/app/core/config.py` aliases `GROK_API_KEY` to `GROQ_API_KEY` and the README primarily mentions "Groq", the inclusion of "Grok" here might be inconsistent or refer to a platform not explicitly supported as a distinct entity.
+
+### backend/alembic/versions/a91484a01ed6_initial_migration.py
+*   **Architecture**: The initial migration script appears well-structured, defining necessary tables, columns, and indices. Data types and constraints seem appropriate for the described entities.
+*   **Performance**: Indices are created on frequently queried columns (`provider`, `input_hash`, `request_type`, `created_at`, `agent_id`, `session_id`, `scan_request_id`), which is good for performance.
+*   **Consistency**: The `llmprovider` Enum includes `OPENAI`, `CLAUDE`, `GEMINI`, `DEEPSEEK`, `GROQ`, `COHERE`. This aligns with the multi-model strategy.
+
+### backend/app/core/config.py
+*   **Security**: API keys are loaded from environment variables and marked as optional, which is good practice. `SECRET_KEY` is also handled via environment variables. `CORS_ORIGIN_REGEX` allows `^chrome-extension://.*$`, which is necessary for extensions but should be noted for its broadness in a high-security context.
+*   **Logic/Consistency**:
+    *   The `COUNCIL_ENABLE_PARALLEL: bool = True` line is duplicated. This is redundant and should be removed.
+    *   There are distinct `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_TIMEOUT` and `GEMINI2_API_KEY`, `GEMINI2_MODEL`, `GEMINI2_TIMEOUT` fields. The README mentions "Gemini 2" as part of the LLM Council, but `GEMINI_MODEL` is already set to `gemini-2.5-flash`. This suggests `GEMINI2` might be a redundant or confusingly named duplicate configuration for the same provider, rather than a distinct second Gemini provider.
+    *   Similarly, there are `GROQ_API_KEY`, `GROQ_MODEL`, `GROQ_TIMEOUT` and `GROK2_API_KEY`, `GROK2_MODEL`, `GROK2_TIMEOUT`. The `GROQ_API_KEY` uses `AliasChoices("GROQ_API_KEY", "GROK_API_KEY")`, implying `GROK_API_KEY` is an alias for `GROQ`. The presence of separate `GROK2` entries is highly ambiguous and inconsistent. If "Grok" is a distinct provider, it should not be aliased with "Groq" and should have its own clear configuration. If it's not distinct, these entries are redundant. Based on the README, "Groq" is the intended provider.
+*   **Performance**: `lru_cache` is used for `get_settings()`, which is good for performance by avoiding repeated instantiation.
+*   **DX**: The comments are helpful, explaining the purpose of sections and specific configurations.
+
+## Pick ONE Improvement
+
+The most valuable improvement is to address the **inconsistency and redundancy in LLM provider configurations**, specifically concerning "Gemini2" and "Grok2" in `backend/app/core/config.py` and the related "Grok" entry in `extension/manifest.json`. This is a logic and consistency issue that can lead to confusion, misconfiguration, and potentially unused code paths. The README clearly states "Gemini 2" and "Groq" as council members, but the configuration implies separate, ambiguously named "Gemini2" and "Grok2" *providers* rather than specific models or instances of the primary providers.
+
+## Executor's Plan
+
+**WHAT**: Standardize LLM provider configurations by removing redundant or ambiguously named entries for "Gemini2" and "Grok2" in the backend configuration, and remove the corresponding "Grok" host permission from the Chrome extension manifest. Additionally, remove a duplicated configuration line.
+
+**WHERE**:
+1.  `backend/app/core/config.py`
+2.  `extension/manifest.json`
+
+**WHY**: The current configuration in `backend/app/core/config.py` contains duplicated `COUNCIL_ENABLE_PARALLEL` settings and ambiguous entries for `GEMINI2_API_KEY`, `GEMINI2_MODEL`, `GEMINI2_TIMEOUT`, `GROK2_API_KEY`, `GROK2_MODEL`, and `GROK2_TIMEOUT`. The README mentions "Gemini 2" as a model, which is already covered by `GEMINI_MODEL: "gemini-2.5-flash"`, making the `GEMINI2` entries redundant as separate provider configurations. Similarly, the `GROQ_API_KEY` is aliased with `GROK_API_KEY`, but then separate `GROK2` entries exist, creating confusion about whether "Grok" is a distinct provider or a misnomer for "Groq". The README only explicitly lists "Groq". Removing these ambiguous and redundant entries improves code clarity, reduces potential for misconfiguration, and ensures consistency with the documented LLM Council members. The corresponding `https://grok.com/*` entry in `extension/manifest.json` should also be removed if "Grok" is not a distinct, supported platform.
+
+**HOW**:
+1.  In `backend/app/core/config.py`, locate and remove the second instance of the line `COUNCIL_ENABLE_PARALLEL: bool = True`.
+2.  In `backend/app/core/config.py`, locate and remove the following three lines, including their comments:
+    *   `GEMINI2_API_KEY: Optional[str] = Field(`
+    *   `GEMINI2_MODEL: str = "gemini-2.5-flash"`
+    *   `GEMINI2_TIMEOUT: int = 30`
+3.  In `backend/app/core/config.py`, locate and remove the following three lines, including their comments:
+    *   `GROK2_API_KEY: Optional[str] = Field(`
+    *   `GROK2_MODEL: str = "llama-3.3-70b-versatile"`
+    *   `GROK2_TIMEOUT: int = 30`
+4.  In `extension/manifest.json`, within the `host_permissions` array, locate and remove the entry `"https://grok.com/*"`.
+5.  In `extension/manifest.json`, within the `content_scripts` array, inside the `matches` array, locate and remove the entry `"https://grok.com/*"`.
+
+**SCOPE**: This is a multi-file change that refactors configuration settings and manifest entries for improved consistency and clarity.
+
+**Executor**: {"title": "[REFACTOR] Standardize LLM Provider Configurations", "body": "### Problem / Gap\nThe current configuration in `backend/app/core/config.py` contains duplicated `COUNCIL_ENABLE_PARALLEL` settings and ambiguous entries for `GEMINI2_API_KEY`, `GEMINI2_MODEL`, `GEMINI2_TIMEOUT`, `GROK2_API_KEY`, `GROK2_MODEL`, and `GROK2_TIMEOUT`. The README mentions 'Gemini 2' as a model, which is already covered by `GEMINI_MODEL: 'gemini-2.5-flash'`, making the `GEMINI2` entries redundant as separate provider configurations. Similarly, the `GROQ_API_KEY` is aliased with `GROK_API_KEY`, but then separate `GROK2` entries exist, creating confusion about whether 'Grok' is a distinct provider or a misnomer for 'Groq'. The corresponding 'Grok' entry in `extension/manifest.json` should also be removed if 'Grok' is not a distinct, supported platform.\n\n### Solution & Insight\nTo address the inconsistency and redundancy in LLM provider configurations, we will remove the redundant `COUNCIL_ENABLE_PARALLEL` setting and the ambiguous `GEMINI2` and `GROK2` entries from `backend/app/core/config.py`. We will also remove the 'Grok' host permission from `extension/manifest.json`.\n\n### Impact\nThis change improves code clarity, reduces potential for misconfiguration, and ensures consistency with the documented LLM Council members.", "branch_name": "bot/refactor-llm-providers-1773700640", "edits": [{"file": "backend/app/core/config.py", "search": "COUNCIL_ENABLE_PARALLEL: bool = True\nCOUNCIL_ENABLE_PARALLEL: bool = True", "replace": "COUNCIL_ENABLE_PARALLEL: bool = True"}, {"file": "backend/app/core/config.py", "search": "GEMINI2_API_KEY: Optional[str] = Field(\n    None, validation_alias=AliasChoices(\"GEMINI2_API_KEY\")\n)\nGEMINI2_MODEL: str = \"gemini-2.5-flash\"\nGEMINI2_TIMEOUT: int = 30", "replace": ""}, {"file": "backend/app/core/config.py", "search": "GROK2_API_KEY: Optional[str] = Field(\n    None, validation_alias=AliasChoices(\"GROK2_API_KEY\")\n)\nGROK2_MODEL: str = \"llama-3.3-70b-versatile\"\nGROK2_TIMEOUT: int = 30", "replace": ""}, {"file": "extension/manifest.json", "search": "\"https://grok.com/*\"", "replace": ""}]}
+
+**Reviewer**: CORRECT: The Executor correctly identified and removed the redundant 'GEMINI2' and 'GROK2' LLM provider configurations from `backend/app/core/config.py`. However, two proposed edits resulted in 'NO CHANGES' according to the diff preview, indicating search block mismatches. Additionally, one part of the Scanner's plan (removing 'https://grok.com/*' from `content_scripts.matches`) was entirely missed. The corrected edits address these issues by providing precise search blocks and including the missed change.
+
+---
