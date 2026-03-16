@@ -109,3 +109,4 @@ mayo , fix it!" — Mayo acknowledged and responded.
 - **REJECTED by Reviewer**: Executor's search block for `sysinfo.c` failed to match due to `printf` string difference and incorrect context, leading to destructive deletion of existing declarations and duplicate edits. Emphasize exact match and non-destructive changes.
 - **REJECTED by Reviewer**: Executor's search block was truncated and contained a placeholder, leading to a mismatch. Emphasize exact match including all characters and whitespace.
 - **Repo: HADNX**: [SEC] Secure User Data Storage in Registration. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/16) - *Status: PENDING REVIEW*
+- **Repo: IntellectSafe**: [REFACTOR] Standardize LLM Provider Configurations. (Ref: https://github.com/HOLYKEYZ/IntellectSafe/pull/14) - *Status: PENDING REVIEW*
