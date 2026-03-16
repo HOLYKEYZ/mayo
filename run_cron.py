@@ -201,10 +201,6 @@ def run_cron():
         except Exception as e:
             print(f"DEBUG: Phase 0.5 error: {e}")
 
-        # === PHASE 1: SCANNER - DEEP CODEBASE ANALYSIS ===
-        print("DEBUG: Phase 1 — Running SCANNER for deep codebase analysis")
-        query_gemini_newcrons(gh)
-
         # Get all repos via REST API
         headers = {
             'Authorization': f'token {token}',
