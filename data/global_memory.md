@@ -115,3 +115,4 @@ mayo , fix it!" — Mayo acknowledged and responded.
 - **REJECTED by Reviewer**: Executor's 'find next' logic for `editorFind` was flawed, failing to correctly advance to subsequent matches, and introduced a memory leak. Also, `initEditor` was defined but not called.
 - **REJECTED by Reviewer**: Executor repeated past mistakes: search block mismatch, flawed 'find next' logic, memory leaks, and failure to fully implement the plan (e.g., wrap-around, scrolling, highlighting, correct global state usage).
 - **REJECTED by Reviewer**: Executor failed to consistently manage search state (static vs. global struct), introduced memory leaks, and repeated the mistake of defining but not calling `initEditor` for `micro-edit`.
+- **Repo: ModelFang**: [SEC] Remove Insecure trustHost Configuration. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/10) - *Status: PENDING REVIEW*
