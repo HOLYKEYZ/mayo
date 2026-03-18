@@ -13,7 +13,7 @@ from index import (
     APP_ID, PRIVATE_KEY, GEMINI_API_URL, GEMINI_API_KEY, GROK_API_KEY, GROQ_API_URL, GEMINI2_API_KEY,
     audit_pending_reviews, get_repo_structure, read_file_content, query_gemini_scanner,
     query_groq, extract_json_from_response, apply_surgical_edits, query_gemini_reviewer,
-    commit_changes_via_api, update_ai_communication_log, query_gemini_newcrons
+    commit_changes_via_api, update_ai_communication_log
 )
 
 def run_cron():
