@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: micro-edit**: [LOGIC] Implement NULL Checks for Memory Allocation. (Ref: https://github.com/HOLYKEYZ/micro-edit/pull/6) - *Status: MERGED - Joseph approved! Comment: '@gemini-code-assist , good?'*
 - **Repo: model-unfetter**: [REFACTOR] Enhance ProgressBar Robustness in unfetter/utils/logging.py. (Ref: https://github.com/HOLYKEYZ/model-unfetter/pull/4) - *Status: MERGED - Joseph approved! Comment: '@gemini-code-assist , good?'*
 - **REJECTED by Reviewer**: Executor failed to delete a file using `search: ""`, `replace: ""` for `components/LogoMarquee.tsx`, resulting in 'NO CHANGES' in the diff preview.
 - **Repo: Joseph-Portfolio**: [DOCS] Clarify Purpose of generate_flowchart.py and mayo_flowchart.png in README.md. (Ref: https://github.com/HOLYKEYZ/Joseph-Portfolio/pull/6) - *Status: MERGED - Joseph approved! Comment: '[vc]: #IbN40FH+oCgAuzuNFNpNjtRR5jPIXA1BJPKA+UGwibw=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
