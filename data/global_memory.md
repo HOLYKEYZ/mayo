@@ -1,11 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: VULNRIX**: Opened issue — Clarify HIBP API Key Configuration for Breach Checking. (Ref: https://github.com/HOLYKEYZ/VULNRIX/issues/19) - *Status: EXECUTED → https://github.com/HOLYKEYZ/VULNRIX/pull/20*
-- **Joseph's Feedback on VULNRIX#18**: "push your fix
-" — Mayo acknowledged and responded.
-- **REJECTED by Reviewer**: Executor's search block for `backend/app/api/dependencies.py` appeared correct but failed to match according to the diff preview, resulting in 'NO CHANGES'.
-- **Joseph's Feedback on Kelegam-Tech#7**: "mayo , this version is the latest! and it's stable!" — Mayo acknowledged and responded.
 - **Repo: mayo**: [DX] Improve Portability of test_json.py. (Ref: https://github.com/HOLYKEYZ/mayo/pull/5) - *Status: MERGED - Joseph approved! Comment: '[vc]: #Gu0U+vc7rtJUoFIIxGXNU9AXPdfbXsdXHnkoo/sMOaQ=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **Repo: IntellectSafe**: [REFACTOR] Enhance backend/app/modules/__init__.py for Better Module Exposure. (Ref: https://github.com/HOLYKEYZ/IntellectSafe/pull/11) - *Status: MERGED - Joseph approved! Comment: '[vc]: #y7ISE9Lz6Us+EKiYamwqGUfqC4+22b4qd9+VhSLA7Yc=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **Joseph's Feedback on VULNRIX#19**: "mayo" — Mayo acknowledged and responded.
