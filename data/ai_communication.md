@@ -2644,90 +2644,7 @@ The most valuable improvement is to address the **security vulnerability introdu
 
 ---
 
-## Cycle 1773741687
-**Scanner**: ### Step 1: Codebase Understanding
-
-This repository, VULNRIX, is an all-in-one security platform offering both code vulnerability scanning and digital footprint analysis. It's built with Django and Python, utilizing C fallback modules for performance-critical tasks and integrating with various AI and OSINT APIs.
-
-The file `vuln_scan/main.py` acts as a simple launcher for two core components of the `vuln_scan` module: a web dashboard and a distributed node server. It takes command-line arguments to determine which component to start.
-
-The `render.yaml` file defines the deployment configuration for the `vulnrix-scanner` web service on Render, specifying the build and start commands, runtime, and environment variables.
-
-The file `vuln_scan/services/scan_limiter.py` is responsible for enforcing usage limits and quotas for scans. It tracks daily scan counts per user and validates project-specific limits such as file count and total size, raising exceptions if limits are exceeded.
-
-The codebase primarily uses Python with Django for the web application, and C for performance-critical modules. It follows standard Python module organization and Django project structure.
-
-### Step 2: Deep Analysis
-
--   **Security**:
-    -   In `vuln_scan/main.py`, the use of `os.system()` to launch other Python scripts (`web_dashboard/app.py` and `nodes/server.py`) is a significant security vulnerability. `os.system()` executes commands directly in the shell, making it susceptible to shell injection if any part of the command string were to become user-controlled (even indirectly). It's also less robust for process management compared to Python's `subprocess` module.
-    -   `scan_limiter.py` correctly bypasses limits for superusers, which is a common and acceptable pattern for administrative overrides.
-    -   No obvious hardcoded secrets were found in the analyzed files, but `render.yaml` correctly uses `generateValue: true` for `SECRET_KEY`.
-
--   **Logic**:
-    -   In `vuln_scan/main.py`, the `else` branch for unknown commands calls `print_help()` but does not `sys.exit(1)`, meaning the script would continue execution (though it would likely terminate shortly after). This is a minor inconsistency.
-    -   In `scan_limiter.py`, the logic for resetting daily scan counts and checking limits appears sound. The use of `timezone.now()` for date comparison is correct for Django applications.
-
--   **Performance**:
-    -   In `render.yaml`, the `startCommand` for Gunicorn explicitly sets `--workers 1`, while an environment variable `WEB_CONCURRENCY` is set to `2`. This is a potential performance bottleneck and configuration inconsistency. Gunicorn's `--workers` argument directly controls the number of worker processes, and setting it to `1` might underutilize resources if the intent was to use `WEB_CONCURRENCY` for scaling.
-
--   **Architecture**:
-    -   The `os.system()` calls in `vuln_scan/main.py` represent a loose and insecure way to integrate Python modules. A more robust and Pythonic approach would be to use `subprocess.run()` for launching external scripts, or direct imports if the components are designed as modules within the same process.
-    -   The hardcoded limits in `scan_limiter.py` (`MAX_SCANS_PER_DAY`, `MAX_FILES_PER_REPO_SCAN`, `MAX_PROJECT_SIZE_MB`) are a design choice. While functional, making these configurable via Django settings or environment variables would improve flexibility without requiring code changes for adjustments.
-
--   **Features**:
-    -   `vuln_scan/main.py` lacks robust error handling for the launched processes. If `web_dashboard/app.py` or `nodes/server.py` fail to start or exit with an error, `os.system()` provides limited feedback. `subprocess.run()` offers better error reporting.
-    -   The limits in `scan_limiter.py` could be made configurable, allowing administrators to adjust them without modifying the source code.
-
--   **Testing**:
-    -   The `main.py` launcher logic could benefit from unit tests to ensure correct command parsing and subprocess invocation.
-    -   `scan_limiter.py` has well-defined functions (`check_and_increment_usage`, `validate_project_limits`) that are suitable for unit testing, ensuring the limit enforcement logic works as expected.
-
--   **DX (Developer Experience)**:
-    -   The `main.py` script is not explicitly mentioned in the `README`'s "Quick Start" or "CLI" sections, which might lead to confusion about its intended use or how to run it.
-
--   **Consistency**:
-    -   The `os.system()` calls in `main.py` are inconsistent with modern Python practices for process management, especially within a larger Django application context.
-
--   **Dead Code**: No immediately apparent dead code was found in the analyzed files.
-
-### Step 3: Pick ONE Improvement
-
-The most critical improvement is to address the security vulnerability and architectural flaw presented by the use of `os.system()` in `vuln_scan/main.py`. Replacing these calls with `subprocess.run()` will significantly enhance the security, robustness, and error handling capabilities of the launcher. This directly addresses a security risk and improves the foundational architecture of how sub-processes are managed.
-
-### Step 4: Write the Executor's Plan
-
-**WHAT**:
-Replace the `os.system()` calls in `vuln_scan/main.py` with `subprocess.run()`. This change will enhance the security of the application by preventing potential shell injection vulnerabilities and provide more robust process management and error handling for the launched sub-components. Additionally, ensure that the script exits with an error code if an invalid command is provided.
-
-**WHERE**:
-In the `if __name__ == "__main__":` block of `vuln_scan/main.py`, specifically within the `if cmd == "dashboard":`, `elif cmd == "node":`, and the final `else:` branches.
-
-**WHY**:
-The current use of `os.system()` is a security anti-pattern in Python. It executes commands by passing them to the system's shell, which can lead to shell injection vulnerabilities if any part of the command string originates from untrusted input. `subprocess.run()` is the modern, recommended, and safer way to spawn new processes. It allows commands to be passed as a list of arguments, which bypasses the shell by default, thus mitigating injection risks. It also provides better control over the subprocess's execution, including capturing output, setting environment variables, and robust error handling through `check=True` and `CalledProcessError`. Making the script exit with a non-zero status for invalid commands improves its reliability and scriptability.
-
-**HOW**:
-1.  Add an import statement for the `subprocess` module at the top of `vuln_scan/main.py`.
-2.  At the beginning of the `if __name__ == "__main__":` block, define a `base_dir` variable using `os.path.dirname(__file__)` to ensure robust, absolute path construction for the scripts to be launched.
-3.  In the `if cmd == "dashboard":` block:
-    *   Construct the full path to `web_dashboard/app.py` using `os.path.join(base_dir, "web_dashboard", "app.py")`.
-    *   Replace the `os.system()` call with `subprocess.run([sys.executable, dashboard_script_path], check=True)`.
-    *   Wrap this `subprocess.run()` call in a `try...except subprocess.CalledProcessError` block. Inside the `except` block, print an informative error message and call `sys.exit(1)`.
-4.  In the `elif cmd == "node":` block:
-    *   Construct the full path to `nodes/server.py` using `os.path.join(base_dir, "nodes", "server.py")`.
-    *   Replace the `os.system()` call with `subprocess.run([sys.executable, node_script_path], check=True)`.
-    *   Wrap this `subprocess.run()` call in a `try...except subprocess.CalledProcessError` block. Inside the `except` block, print an informative error message and call `sys.exit(1)`.
-5.  In the final `else:` block (for unknown commands), after calling `print_help()`, add `sys.exit(1)` to ensure the script terminates with an error status.
-
-**Executor**: {"title": "[SEC] Replace os.system with subprocess.run in vuln_scan/main.py", "body": "### Problem / Gap\nThe current use of `os.system()` in `vuln_scan/main.py` poses a security risk due to potential shell injection vulnerabilities. It also lacks robust error handling and process management capabilities.\n\n### Solution & Insight\nReplacing `os.system()` with `subprocess.run()` enhances security by preventing shell injection attacks and provides better control over subprocess execution, including error handling and output capture. This change aligns with modern Python best practices for spawning new processes.\n\n### Impact\nThis update improves the security posture of the Vulnrix application by mitigating shell injection risks and enhances the reliability of subprocess management.", "branch_name": "bot/upgrade-1773741687", "edits": [{"file": "vuln_scan/main.py", "search": "\nimport sys\nimport os\n\ndef print_help():\n    print(\"Vulnrix Next-Gen Launcher\")\n    print(\"Usage:\")\n    print(\"  python main.py dashboard   # Start Web Dashboard\")\n    print(\"  python main.py node        # Start Distributed Node\")\n    print(\"  python main.py help        # Show this message\")\n\nif __name__ == \"__main__\":\n    if len(sys.argv) < 2:\n        print_help()\n        sys.exit(1)\n        \n    cmd = sys.argv[1]\n    \n    if cmd == \"dashboard\":\n        print(\"Starting Web Dashboard...\")\n        os.system(f\"{sys.executable} web_dashboard/app.py\")\n    elif cmd == \"node\":\n        print(\"Starting Node Server...\")\n        os.system(f\"{sys.executable} nodes/server.py\")\n    else:\n        print_help()\n", "replace": "\nimport sys\nimport os\nimport subprocess\n\ndef print_help():\n    print(\"Vulnrix Next-Gen Launcher\")\n    print(\"Usage:\")\n    print(\"  python main.py dashboard   # Start Web Dashboard\")\n    print(\"  python main.py node        # Start Distributed Node\")\n    print(\"  python main.py help        # Show this message\")\n\nif __name__ == \"__main__\":\n    if len(sys.argv) < 2:\n        print_help()\n        sys.exit(1)\n        \n    base_dir = os.path.dirname(__file__)\n    cmd = sys.argv[1]\n    \n    if cmd == \"dashboard\":\n        print(\"Starting Web Dashboard...\")\n        dashboard_script_path = os.path.join(base_dir, \"web_dashboard\", \"app.py\")\n        try:\n            subprocess.run([sys.executable, dashboard_script_path], check=True)\n        except subprocess.CalledProcessError as e:\n            print(f\"Error starting dashboard: {e}\")\n            sys.exit(1)\n    elif cmd == \"node\":\n        print(\"Starting Node Server...\")\n        node_script_path = os.path.join(base_dir, \"nodes\", \"server.py\")\n        try:\n            subprocess.run([sys.executable, node_script_path], check=True)\n        except subprocess.CalledProcessError as e:\n            print(f\"Error starting node server: {e}\")\n            sys.exit(1)\n    else:\n        print_help()\n        sys.exit(1)\n"}]}
-
-**Reviewer**: REJECTED x2: Please correct the edit for `vuln_scan/main.py`:
-1.  **Exact Match for Search Block**: The `search` block must precisely match the `ORIGINAL FILE CONTENT` that you intend to replace. Your current `search` block starts from `\nimport sys` and omits the initial docstring (`"""Vulnrix Next-Gen Launcher"""`). If the docstring is to be removed as part of the change, it must be included in the `search` block.
-2.  **Syntax Error in Replacement**: The `replace` block contains a duplicate `else: print_help()` statement at the very end. This will cause a `SyntaxError`. Ensure there is only one `else` branch correctly terminating the `if/elif` structure.
-
----
-
-## Cycle 1773745343
+1773745343
 **Scanner**: Codebase Understanding:
 This repository, `git-pulse`, is a monorepo designed to create a social layer for GitHub, presenting user activity in a Twitter-like feed format. It uses Next.js for the frontend, an Express.js API, Prisma for database interactions, and shared UI components.
 
@@ -2989,5 +2906,120 @@ The most valuable improvement is to enhance the `is_suspicious` logic within the
 **Executor**: {"title": "[LOGIC] Enhance KeywordFilter Logic for Suspicious Code Detection", "body": "### Problem / Gap\nThe current `is_suspicious` logic in the `KeywordFilter` class is overly simplistic, triggering an LLM scan for any code containing a single keyword from any category. This can lead to a high number of false positives and unnecessary, costly LLM calls.\n\n### Solution & Insight\nTo address this, we refine the `is_suspicious` determination by leveraging the calculated `risk_score`. We set a threshold where an LLM scan is only triggered if the `risk_score` exceeds a certain value (in this case, 35), indicating a higher likelihood of the code being malicious. Additionally, we remove the unused `total_matches` variable to clean up the code.\n\n### Impact\nThis improvement enhances the efficiency and cost-effectiveness of the scanning process by reducing unnecessary LLM calls while maintaining the ability to detect and flag potentially malicious code for deeper analysis.", "branch_name": "bot/enhance-keywordfilter-logic", "edits": [{"file": "vuln_scan/engine/filters.py", "search": "            total_matches = 0\n            for category, patterns in self.CATEGORIES.items():\n                for pattern in patterns:\n                    if re.search(pattern, code, re.IGNORECASE):\n                        found_categories.add(category)\n                        total_matches += 1\n                        # Optimization: Don't need to count every match, just presence\n                        break\n            \n            # Risk Calculation\n            risk_score = 0\n            if \"DANGEROUS_FUNC\" in found_categories:\n                risk_score += 40\n            if \"DATABASE\" in found_categories and \"USER_INPUT\" in found_categories:\n                risk_score += 40\n            if \"DATABASE\" in found_categories:\n                risk_score += 20\n            if \"CRYPTO\" in found_categories:\n                risk_score += 20\n            if \"FILESYSTEM\" in found_categories and \"USER_INPUT\" in found_categories:\n                risk_score += 30\n            if \"HARDCODED_SECRETS\" in found_categories:\n                risk_score += 50\n            if \"INJECTION\" in found_categories:\n                risk_score += 35\n            if \"DESERIALIZATION\" in found_categories:\n                risk_score += 40\n            if \"USER_INPUT\" in found_categories:\n                risk_score += 10\n            \n            risk_score = min(risk_score, 100)\n            \n            # Threshold for LLM - always scan if any category found\n            is_suspicious = len(found_categories) > 0", "replace": "            for category, patterns in self.CATEGORIES.items():\n                for pattern in patterns:\n                    if re.search(pattern, code, re.IGNORECASE):\n                        found_categories.add(category)\n                        # Optimization: Don't need to count every match, just presence\n                        break\n            \n            # Risk Calculation\n            risk_score = 0\n            if \"DANGEROUS_FUNC\" in found_categories:\n                risk_score += 40\n            if \"DATABASE\" in found_categories and \"USER_INPUT\" in found_categories:\n                risk_score += 40\n            if \"DATABASE\" in found_categories:\n                risk_score += 20\n            if \"CRYPTO\" in found_categories:\n                risk_score += 20\n            if \"FILESYSTEM\" in found_categories and \"USER_INPUT\" in found_categories:\n                risk_score += 30\n            if \"HARDCODED_SECRETS\" in found_categories:\n                risk_score += 50\n            if \"INJECTION\" in found_categories:\n                risk_score += 35\n            if \"DESERIALIZATION\" in found_categories:\n                risk_score += 40\n            if \"USER_INPUT\" in found_categories:\n                risk_score += 10\n            \n            risk_score = min(risk_score, 100)\n            \n            # Threshold for LLM based on risk score\n            is_suspicious = risk_score >= 35"}]}
 
 **Reviewer**: APPROVE: The Executor's proposed edits perfectly align with the Scanner's plan. The unused `total_matches` variable has been correctly removed, and the `is_suspicious` logic has been updated to use the `risk_score` threshold, which will improve the efficiency and cost-effectiveness of LLM calls. The search and replace blocks are accurate, and the diff preview confirms the intended, non-destructive changes.
+
+---
+
+## Cycle 1773809921
+**Scanner**: ## Codebase Understanding
+
+This repository, `HOLYKEYZ/micro-edit`, contains a minimal text editor written in C, designed for Windows. It leverages the Windows Console API for its functionality, aiming for a lightweight and self-hosting design.
+
+The `editor.c` file is the core of the project, implementing all editor functionalities. This includes terminal setup, screen rendering, basic text manipulation (inserting and deleting characters/rows), a rudimentary syntax highlighter for numbers and strings, and a basic search feature.
+
+The codebase uses a global `editorConfig` struct, named `E`, to manage the editor's entire state, such as cursor position, scroll offsets, file content, and status messages. This is a common convention for small C applications. Error handling for critical system failures (e.g., memory allocation, console API issues) is managed through a `die()` function.
+
+## Deep Analysis
+
+*   **Logic/Features - `editorFind` Functionality**: The current `editorFind` function is severely limited. It only finds the *first* occurrence of a search query and immediately jumps the cursor to that position. It lacks the crucial "find next" and "find previous" capabilities, which are fundamental for a usable search feature in any text editor. The search query is also freed immediately after the initial search, meaning the user must re-enter the query for subsequent searches. The scrolling mechanism (`E.rowoff = E.numrows;`) is a crude heuristic that doesn't guarantee optimal visibility of the found match. Furthermore, while an `HL_MATCH` enum exists, it is not currently used to visually highlight search results, making it difficult for the user to identify the found text. This area has been a recurring source of rejections in previous development cycles, indicating a persistent and critical functional gap.
+*   **Performance - `editorUpdateSyntax` Reallocation**: The `editorUpdateSyntax` function reallocates the `row->hl` (highlight) array every time a character is inserted or deleted within a row. While `realloc` can be efficient, frequent calls for minor size changes can introduce overhead. A more optimized approach might involve pre-allocating `row->hl` to the row's maximum expected size or only reallocating when the size change is substantial, otherwise updating the array in place. For a "minimal" editor, this might be acceptable for smaller files but could become noticeable with very long lines.
+*   **Features - Syntax Highlighting Discrepancy**: The `README.md` explicitly states "Syntax Highlighting (C/C++)" as a feature. However, the `editorUpdateSyntax` implementation only provides basic highlighting for numbers and strings. It does not include recognition or highlighting for C/C++ keywords, comments, or preprocessor directives. This creates a discrepancy between the advertised features and the actual functionality, potentially misleading users.
+*   **Memory Management - `editorPrompt` Leak**: In the `editorPrompt` function, if the user presses the Enter key while the input buffer is empty (`buflen == 0`), the dynamically allocated `buf` is not freed before the function returns. This constitutes a minor memory leak.
+*   **Developer Experience (DX) - Build Instructions**: The `README.md` provides build instructions that use a hardcoded path to the Tiny C Compiler (`tcc.exe`). This `C:\Program Files (x86)\tcc-0.9.27\tcc.exe` path is not portable and assumes a specific installation location, which can hinder setup for other developers or on different systems.
+*   **Consistency - Search State Management**: Previous rejections have highlighted issues with inconsistent search state management, particularly regarding the use of `static` local variables versus integrating search state into the global `editorConfig` struct. A robust search implementation requires persistent state that is correctly managed within `editorConfig`.
+
+## Pick ONE Improvement
+
+The single most valuable improvement is to enhance the `editorFind` functionality. This addresses a critical missing feature (find next/previous), resolves a recurring source of past rejections, and significantly improves the core usability of the editor. It encompasses fixing logical flaws, managing memory correctly, and integrating the search state consistently into the global `editorConfig` struct. This is a higher priority than minor performance optimizations or documentation updates, as it directly impacts a fundamental editor feature that is currently incomplete.
+
+## Executor's Plan
+
+**WHAT** to change:
+Implement a comprehensive search feature that includes "find next" and "find previous" capabilities. This requires extending the global `editorConfig` struct to store the active search query, its length, the last found match's row and column, and the current search direction. The editor must visually highlight the currently found match and ensure that the editor view scrolls to make the match visible on screen. Proper memory management for the search query buffer is also essential to prevent leaks.
+
+**WHERE** in the file(s):
+All primary changes will be concentrated within `editor.c`.
+1.  **`editorConfig` Struct**: Add new members to `struct editorConfig` to hold the search state:
+    *   `char *search_query`: A pointer to the dynamically allocated search string.
+    *   `int search_len`: The length of the search string.
+    *   `int search_last_match_row`: The row index of the last found match.
+    *   `int search_last_match_col`: The column index of the last found match.
+    *   `int search_direction`: An integer (e.g., `1` for forward, `-1` for backward) indicating the current search direction.
+    *   `int searching`: A flag (e.g., `0` or `1`) to indicate if a search operation is currently active.
+2.  **`editorPrompt` Function**: Refactor `editorPrompt` to be a more generic input function. It should return a dynamically allocated string, and the responsibility for freeing this string will fall to the caller. This will allow `editorFind` to manage the lifetime of the search query.
+3.  **`editorFind` Function**: Rewrite `editorFind` to manage the search state and implement the "find next" and "find previous" logic.
+    *   When `Ctrl+F` is pressed:
+        *   If a search is already active, reset the `search_last_match_row` and `search_last_match_col` to `-1` to restart the search from the beginning/end, and prompt for a new query.
+        *   If no search is active, prompt the user for a query using the refactored `editorPrompt`. Store the returned string in `E.search_query` and its length in `E.search_len`. If the user cancels (ESC), free `E.search_query` and exit.
+        *   Set `E.searching = 1` and `E.search_direction = 1` (forward).
+        *   Call a new helper function (e.g., `editorFindNext(1)`) to locate and jump to the first match.
+4.  **New Helper Function `editorFindNext(int direction)`**: Create this function to encapsulate the core search logic.
+    *   It should iterate through the `E.row` array, starting from `E.search_last_match_row` and `E.search_last_match_col` (or `E.cy`, `E.cx` if no previous match).
+    *   Implement wrap-around logic: if the search reaches the end of the file (forward search) or the beginning (backward search), it should continue from the opposite end.
+    *   Upon finding a match:
+        *   Update `E.cy` and `E.cx` to the match's starting position.
+        *   Update `E.search_last_match_row` and `E.search_last_match_col` to store the location of this match.
+        *   Adjust `E.rowoff` and `E.coloff` to ensure the found match is visible on the screen, ideally centering the line if possible.
+        *   Update `E.statusmsg` to inform the user that a match was found.
+        *   Refresh the screen to display the new cursor position and highlighting.
+    *   If no match is found after searching the entire file, update `E.statusmsg` to "No match found".
+5.  **`editorReadKey` Function**: Modify `editorReadKey` to handle key presses during an active search:
+    *   If `E.searching` is true:
+        *   If `Enter` or `Ctrl+N` is pressed, call `editorFindNext(1)` to find the next match.
+        *   If `Ctrl+P` is pressed, call `editorFindNext(-1)` to find the previous match.
+        *   If `ESC` is pressed, clear the search state (`E.searching = 0`, free `E.search_query`, reset `E.search_last_match_row/col` to `-1`), and clear the status message.
+6.  **Screen Drawing Logic (e.g., `editorDrawRows` or `editorRefreshScreen`)**: Integrate search highlighting.
+    *   When drawing each character, check if `E.searching` is true.
+    *   If the current character being drawn is part of the substring matching `E.search_query` at `E.search_last_match_row` and `E.search_last_match_col`, apply the `HL_MATCH` highlight color (e.g., yellow). This might involve temporarily overriding the existing `row->hl` value for the current match during drawing.
+7.  **Memory Management**: Ensure that `E.search_query` is properly `free`d when the search is cancelled, a new search is initiated, or the editor exits. Initialize `E.search_query` to `NULL` in the `initEditor` function.
+
+**WHY** this matters:
+The current `editorFind` is severely limited, only finding the first occurrence of a query. This makes the search feature largely impractical for real-world use. Implementing "find next" and "find previous" transforms it into a functional and expected text editor feature. Correctly managing the search state within `editorConfig` will prevent memory leaks and address past issues related to inconsistent state management. Highlighting the current match provides crucial visual feedback to the user. This improvement directly enhances the editor's core functionality and user experience, addressing a significant gap and a source of repeated rejections.
+
+**HOW** to do it:
+1.  **Update `editorConfig`**:
+    *   Add `char *search_query;`, `int search_len;`, `int search_last_match_row;`, `int search_last_match_col;`, `int search_direction;`, and `int searching;` to the `struct editorConfig` definition.
+    *   Initialize these new members in `initEditor` (e.g., `E.search_query = NULL; E.searching = 0; E.search_last_match_row = -1;`).
+2.  **Refactor `editorPrompt`**:
+    *   Modify `editorPrompt` to return the `char *buf` directly if `Enter` is pressed with content, and `free(buf)` and return `NULL` if `ESC` is pressed. If `Enter` is pressed with an empty buffer, `free(buf)` and return `NULL`. The caller will be responsible for freeing the returned string.
+3.  **Implement `editorFind`**:
+    *   In `editorFind`, if `E.searching` is true, free `E.search_query`, reset `E.searching` and `search_last_match_row/col`.
+    *   Call the refactored `editorPrompt` to get the `query`. If `query` is `NULL`, return.
+    *   Allocate memory for `E.search_query` and copy `query` into it. Set `E.search_len`, `E.searching = 1`, `E.search_direction = 1`.
+    *   Call a new helper function, `editorFindNext(1)`, to find the first match.
+    *   Free the local `query` variable obtained from `editorPrompt`.
+4.  **Create `editorFindNext(int direction)`**:
+    *   This function will contain the loop to search for `E.search_query` within `E.row`.
+    *   It will start searching from `E.search_last_match_row` and `E.search_last_match_col`, adjusting the starting point based on `direction`.
+    *   Implement logic for wrap-around (e.g., if `direction == 1` and end of file is reached, continue from row 0; if `direction == -1` and beginning of file is reached, continue from `E.numrows - 1`).
+    *   When `strstr` finds a match, update `E.cy`, `E.cx`, `E.search_last_match_row`, `E.search_last_match_col`.
+    *   Adjust `E.rowoff` and `E.coloff` to bring the found match into view.
+    *   Set `E.statusmsg` accordingly.
+5.  **Modify `editorReadKey`**:
+    *   Add a conditional block to handle key presses when `E.searching` is true.
+    *   Map `Enter` or `Ctrl+N` to `editorFindNext(1)`.
+    *   Map `Ctrl+P` to `editorFindNext(-1)`.
+    *   Map `ESC` to clear the search state (free `E.search_query`, set `E.searching = 0`, reset `E.search_last_match_row/col`, clear `E.statusmsg`).
+6.  **Update Screen Drawing**:
+    *   In the function responsible for drawing rows (e.g., `editorDrawRows`), iterate through the characters of each row.
+    *   If `E.searching` is true and the current row `i` is `E.search_last_match_row`, and the current character `j` falls within the range of the found match (`E.search_last_match_col` to `E.search_last_match_col + E.search_len - 1`), then apply the `HL_MATCH` color using ANSI escape codes. This should temporarily override any other highlighting for that specific segment.
+
+**SCOPE**: This plan involves significant modifications to `editor.c`, specifically to the `editorConfig` struct, `editorPrompt`, `editorFind`, `editorReadKey`, and the screen rendering logic. It is a multi-part change within a single file.
+
+**Executor**: {"title": "[LOGIC] Implement Comprehensive Search Feature in Text Editor", "body": "### Problem / Gap\nThe current search functionality in the text editor only finds the first occurrence of a query and lacks 'find next' and 'find previous' capabilities. It also fails to visually highlight the found match and does not manage the search state consistently.\n\n### Solution & Insight\nTo address this, we will enhance the `editorFind` function to include 'find next' and 'find previous' logic. We will also integrate the search state into the global `editorConfig` struct and ensure proper memory management for the search query. Additionally, we will modify the screen drawing logic to highlight the current match.\n\n### Impact\nThis improvement significantly enhances the usability of the text editor by providing a functional search feature that meets user expectations. It also addresses recurring issues related to search state management and memory leaks.", "branch_name": "bot/upgrade-1773809921", "edits": [{"file": "editor.c", "search": "void editorFind() {\n    char *query = editorPrompt(\"Search: %s (ESC to cancel)\");\n    if (query == NULL) return;\n    \n    int i;\n    for (i = 0; i < E.numrows; i++) {\n        erow *row = &E.row[i];\n        char *match = strstr(row->chars, query);\n        if (match) {\n            E.cy = i;\n            E.cx = match - row->chars;\n            E.rowoff = E.numrows; // Force scroll to bottom then back\n            break;\n        }\n    }\n    free(query);\n}", "replace": "void editorFind() {\n    char *query = editorPrompt(\"Search: %s (ESC to cancel)\");\n    if (query == NULL) return;\n    \n    if (E.search_query) {\n        free(E.search_query);\n    }\n    E.search_query = query;\n    E.search_len = strlen(query);\n    E.search_last_match_row = -1;\n    E.search_last_match_col = -1;\n    E.searching = 1;\n    E.search_direction = 1;\n    editorFindNext(1);\n}"}, {"file": "editor.c", "search": "int editorReadKey() {\n    int c = _getch();\n    if (c == '\u001b') {\n        // Handle escape sequences\n    }\n}", "replace": "int editorReadKey() {\n    int c = _getch();\n    if (c == '\u001b') {\n        // Handle escape sequences\n    } else if (E.searching) {\n        if (c == '\r' || c == CTRL_KEY('n')) {\n            editorFindNext(1);\n        } else if (c == CTRL_KEY('p')) {\n            editorFindNext(-1);\n        } else if (c == 27) { // ESC\n            E.searching = 0;\n            if (E.search_query) {\n                free(E.search_query);\n                E.search_query = NULL;\n            }\n            E.search_last_match_row = -1;\n            E.search_last_match_col = -1;\n        }\n    }\n}"}, {"file": "editor.c", "search": "", "replace": "void editorFindNext(int direction) {\n    if (direction == 1) {\n        // Find next\n        int i = E.search_last_match_row + 1;\n        if (i >= E.numrows) i = 0;\n        while (i < E.numrows) {\n            erow *row = &E.row[i];\n            char *match = strstr(row->chars, E.search_query);\n            if (match) {\n                E.cy = i;\n                E.cx = match - row->chars;\n                E.search_last_match_row = i;\n                E.search_last_match_col = E.cx;\n                break;\n            }\n            i++;\n        }\n    } else {\n        // Find previous\n        int i = E.search_last_match_row - 1;\n        if (i < 0) i = E.numrows - 1;\n        while (i >= 0) {\n            erow *row = &E.row[i];\n            char *match = strstr(row->chars, E.search_query);\n            if (match) {\n                E.cy = i;\n                E.cx = match - row->chars;\n                E.search_last_match_row = i;\n                E.search_last_match_col = E.cx;\n                break;\n            }\n            i--;\n        }\n    }\n}"}, {"file": "editor.c", "search": "", "replace": "void editorRefreshScreen() {\n    // ... existing code ...\n    for (i = 0; i < E.screenrows; i++) {\n        int filerow = i + E.rowoff;\n        if (filerow >= E.numrows) {\n            // ... existing code ...\n        } else {\n            erow *row = &E.row[filerow];\n            int j;\n            for (j = 0; j < row->size; j++) {\n                if (E.searching && filerow == E.search_last_match_row && j >= E.search_last_match_col && j < E.search_last_match_col + E.search_len) {\n                    // Highlight match\n                    printf(\"\\x1b[%dm\", 33); // Yellow\n                }\n                printf(\"%c\", row->chars[j]);\n                if (E.searching && filerow == E.search_last_match_row && j >= E.search_last_match_col && j < E.search_last_match_col + E.search_len) {\n                    printf(\"\\x1b[0m\"); // Reset color\n                }\n            }\n        }\n    }\n}"}, {"file": "editor.c", "search": "struct editorConfig {\n    // ... existing members ...\n};", "replace": "struct editorConfig {\n    // ... existing members ...\n    char *search_query;\n    int search_len;\n    int search_last_match_row;\n    int search_last_match_col;\n    int search_direction;\n    int searching;\n};"}, {"file": "editor.c", "search": "void initEditor() {\n    // ... existing initialization ...\n}", "replace": "void initEditor() {\n    // ... existing initialization ...\n    E.search_query = NULL;\n    E.search_last_match_row = -1;\n    E.search_last_match_col = -1;\n    E.searching = 0;\n}"}, {"file": "editor.c", "search": "char *editorPrompt(char *prompt) {\n    // ... existing code ...\n    if (c == '\\r') {\n        // ... existing code ...\n    }\n}", "replace": "char *editorPrompt(char *prompt) {\n    // ... existing code ...\n    if (c == '\\r') {\n        if (buflen != 0) {\n            editorSetStatusMessage(\"\");\n            return buf;\n        } else {\n            editorSetStatusMessage(\"\");\n            free(buf);\n            return NULL;\n        }\n    }\n}"}]}
+
+**Reviewer**: REJECTED x2: Your submission has significant issues that require a complete re-evaluation:
+
+1.  **Search Block Accuracy is Paramount:** You *must* use exact, literal code from the `original` file content (including all whitespace and comments) in your `search` blocks. Placeholders like `// ... existing members ...`, `// ... existing initialization ...`, or `// ... existing code ...` will *never* match and lead to destructive changes. This is a recurring issue for `micro-edit` and must be addressed.
+    *   **Edits 2, 5, 6, 7** all failed due to using these placeholder comments in their search blocks.
+
+2.  **Avoid Destructive Changes:** Your edits for `editorReadKey`, `struct editorConfig`, `initEditor`, and `editorPrompt` are highly destructive. They replace essential existing code with placeholders and prematurely close functions/structs, which would lead to immediate compilation errors and loss of core functionality. Edits should *insert* new code or *modify* specific existing lines, not delete large, unrelated blocks.
+
+3.  **Complete Plan Implementation:** The `editorFindNext` function and the search highlighting logic in `editorRefreshScreen` were not applied (indicated by 'NO CHANGES' in the diff preview). These are critical components of the comprehensive search feature outlined in the plan. Ensure all parts of the Scanner's plan are implemented.
+
+4.  **`editorReadKey` Logic:** The proposed replacement for `editorReadKey` (Edit 2) completely removed the existing arrow key handling and introduced an incorrect condition (`if (c == ' ')` instead of `if (c == '')` or `if (c == 27)` for escape sequences). You need to integrate the new search handling logic carefully *without* deleting existing, essential functionality.
+
+5.  **`editorPrompt` Refactoring:** The proposed change for `editorPrompt` (Edit 7) is destructive and incomplete. The plan requires refactoring it to return a `malloc`'d string, with the caller responsible for freeing it. Ensure the function correctly handles both empty input (freeing `buf` and returning `NULL`) and non-empty input (returning `buf` for the caller to manage), and that its initial setup (malloc, buflen, etc.) remains intact.
+
+**Action Required:** Review the original file content meticulously. Construct `search` blocks that precisely match the existing code. Design `replace` blocks that *insert* new code or *modify* existing lines non-destructively. Ensure all aspects of the Scanner's plan are implemented, including the new `editorFindNext` function and search highlighting.
 
 ---
