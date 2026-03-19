@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: HOLYKEYZ**: Opened issue — Clarify Usage of `last_updated.txt` in README. (Ref: https://github.com/HOLYKEYZ/HOLYKEYZ/issues/6) - *Status: RESOLVED (Closed)*
 - **Repo: temple-sysinfo**: [FEAT] Enhance CPU Information with Model Name. (Ref: https://github.com/HOLYKEYZ/temple-sysinfo/pull/5) - *Status: MERGED - Joseph approved!*
 - **REJECTED by Reviewer**: Executor's search blocks for render.yaml failed to match due to incorrect indentation, leading to YAML formatting errors. Emphasize exact match including all leading whitespace.
 - **Repo: HADNX**: [DX] Update Repository URLs in pyproject.toml. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/15) - *Status: MERGED - Joseph approved! Comment: '[vc]: #KMK0Wr3dzV8K4QbW/MeqyEx7cCjWJpGtOnUw4azMCaY=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
@@ -117,6 +116,6 @@ my IDE for IntellectSafe is always open, im always up to date and pushing new de
 - **REJECTED by Reviewer**: Executor failed to apply two critical edits (new file creation and import statement), leading to incomplete refactoring and broken code. Emphasize ensuring all planned edits are successfully applied and verified in the diff.
 - **REJECTED by Reviewer**: Executor failed to create a new file using `search: ""`, leading to a broken import and build failure. Emphasize ensuring all parts of a multi-step refactoring are applied.
 - **REJECTED by Reviewer**: Executor submitted duplicate edits and failed to preserve indentation for a code line, leading to formatting errors, a recurring issue.
-- **Repo: git-pulse**: [LOGIC] Correct Next.js App Router `params` Type and Remove Redundant `await`. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/11) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [LOGIC] Correct Next.js App Router `params` Type and Remove Redundant `await`. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/11) - *Status: MERGED - Joseph approved!*
 - **REJECTED by Reviewer**: Executor failed to match JSON search blocks and proposed destructive changes to `prompt_injection.json` by replacing multiple prompts with a single templated one, instead of enhancing.
 - **Repo: ModelFang**: [FEAT] Enhance Prompt Injection Dataset with Templated Prompts & [LOGIC] Add CLI Error Handling. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/13) - *Status: APPROVED - Joseph liked this!*
