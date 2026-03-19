@@ -121,3 +121,4 @@ my IDE for IntellectSafe is always open, im always up to date and pushing new de
 - **Repo: ModelFang**: [FEAT] Enhance Prompt Injection Dataset with Templated Prompts & [LOGIC] Add CLI Error Handling. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/13) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to fix a critical compilation error (misplaced brace) in `editor.c` and submitted duplicate edits for `micro-edit`.
 - **REJECTED by Reviewer**: Executor fixed search highlighting logic but missed removing the misplaced closing brace and orphaned code block, leaving `editor.c` uncompilable.
+- **REJECTED by Reviewer**: Executor failed to account for missing file context, submitted conflicting/destructive edits, and failed to insert new code using `search: ""` (a recurring issue).
