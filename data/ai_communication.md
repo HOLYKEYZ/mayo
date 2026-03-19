@@ -3237,3 +3237,92 @@ The most valuable improvement is to remove the unused import of `query_gemini_ne
 **Reviewer**: CORRECT: The proposed change to remove the unused import `query_gemini_newcrons` from `run_cron.py` is functionally correct, valuable for code cleanliness, and perfectly aligns with the Scanner's plan. The search and replace blocks accurately target the intended code. However, the Executor submitted two identical search/replace blocks for the same change, which is redundant and a recurring issue noted in global memory. I will provide the corrected edits with only one instance of the change.
 
 ---
+
+## Cycle 1773896203
+**Scanner**: ## Codebase Understanding
+
+This repository, HOLYKEYZ/model-unfetter, is a high-precision tool designed for "unalignment" of Large Language Models (LLMs). Its core function is to remove refusal behaviors from LLMs, particularly smaller models, by identifying and projecting out "refusal directions" from their weight matrices using a technique called Aggressive Repulsion Orthogonalization.
+
+The file `unfetter/models/registry.py` acts as the central intelligence for model architecture detection. It automatically identifies the specific family of a given LLM (e.g., Llama, Mistral, Gemma) based on its configuration or name, and then provides the appropriate handler class (`TransformerModel` subclass) for that model. This allows the core ablation logic to interact correctly with diverse LLM architectures.
+
+The file `unfetter/datasets/refusal_pairs.json` is a critical data asset containing curated lists of "refusal" prompts (designed to elicit unhelpful or harmful responses) and "compliance" prompts (standard, helpful queries). This dataset is used to compute the directional vectors that guide the model unalignment process.
+
+The `unfetter/__init__.py` file serves as the package's entry point, defining its version and author, and exposing key functions like `directional_ablation`, `ablate_layer`, and `compute_refusal_vector` for direct import.
+
+The codebase primarily uses Python, leveraging the HuggingFace `transformers` library for LLM interaction and PyTorch for underlying model operations. It follows standard Python package structuring and logging conventions.
+
+## Deep Analysis
+
+### unfetter/models/registry.py
+
+-   **Security**: No direct security vulnerabilities. The file focuses on model detection logic.
+-   **Logic**:
+    *   **Detection Order Robustness**: The `detect_model_family` function prioritizes checking a loaded model's configuration (`model.config.architectures`, `model.config.model_type`). However, if no model object is provided, it currently attempts name-based substring matching *before* trying to load the configuration remotely using `transformers.AutoConfig.from_pretrained`. `AutoConfig` is generally a more reliable source of truth than simple name matching. This order could lead to less accurate detection if a model name contains a generic substring that matches a family key, but its actual remote configuration would reveal a different or more specific architecture.
+    *   **Import Placement**: The `from transformers import AutoConfig` statement is currently placed inside the `if model is None:` block within `detect_model_family`. While functional, it's generally better practice to place all top-level imports at the beginning of the file for clarity and consistency.
+    *   **`GenericModel` Import Placement**: Similarly, `from unfetter.models.generic import GenericModel` is imported inside the `get_model_handler` function. This is also a minor consistency/readability point.
+-   **Performance**: The detection logic involves dictionary lookups and potentially a remote API call (for `AutoConfig`), which are efficient. No performance bottlenecks identified.
+-   **Architecture**: The registry pattern is sound and extensible. New model families can be added by creating a new handler class and updating the `MODEL_REGISTRY` and `ARCHITECTURE_PATTERNS` dictionaries.
+-   **Features**: The current detection covers a wide range of common LLM architectures.
+-   **Testing**: No dedicated test file for `registry.py` was provided in the `tests` directory. Unit tests for `detect_model_family` with various inputs (model names, mock configs) would enhance reliability.
+-   **DX (Developer Experience)**: The code is well-commented and logically structured. The minor import placement issues are the only points.
+-   **Consistency**: Naming conventions are consistent.
+-   **Dead Code**: None apparent.
+
+### unfetter/datasets/refusal_pairs.json
+
+-   **Security**: The content itself (lists of harmful prompts) is sensitive, but the file includes clear disclaimers ("For research use only," "AI SAFETY RESEARCH and RED TEAMING only") in its metadata and the repository's README. This is appropriate for the tool's stated purpose. No security flaws in the file format or structure.
+-   **Logic**: The refusal and compliance pairs are well-chosen for their intended purpose of eliciting specific model behaviors.
+-   **Performance**: As a static JSON file, it's loaded once and does not present performance issues.
+-   **Architecture**: Serves as a static data source, clearly structured with metadata.
+-   **Features**: The dataset is fundamental to the tool's core functionality. Expansion with more diverse pairs could further enhance the tool's effectiveness.
+-   **Testing**: The quality and effectiveness of this dataset would be implicitly tested by the `refusal_test.py` benchmark.
+-   **DX**: Clear and self-documenting JSON structure.
+-   **Consistency**: Standard JSON format.
+-   **Dead Code**: None.
+
+### unfetter/__init__.py
+
+-   **Security**: No security implications.
+-   **Logic**: Correctly defines package metadata and exposes core functions.
+-   **Performance**: Minimal impact.
+-   **Architecture**: Standard Python package initialization.
+-   **Features**: Serves its purpose.
+-   **Testing**: Not directly testable.
+-   **DX**: Clear version and author information, well-defined `__all__`.
+-   **Consistency**: Adheres to standard Python practices.
+-   **Dead Code**: None.
+
+## Pick ONE Improvement
+
+The most valuable improvement is to enhance the robustness and accuracy of the model family detection logic in `unfetter/models/registry.py`. Specifically, reordering the checks within `detect_model_family` to prioritize loading the model configuration remotely via `AutoConfig.from_pretrained` over simple name-based substring matching when a loaded model object is not initially provided. This is a logic improvement that directly impacts the reliability of the tool's core functionality.
+
+## Executor's Plan
+
+**WHAT to change:**
+Reorder the model family detection logic within the `detect_model_family` function. The current implementation attempts name-based substring matching before attempting to load the model configuration remotely using `AutoConfig.from_pretrained` when a loaded model object is not provided. The remote configuration check is generally more reliable and should be prioritized over simple name-based matching. Additionally, the `AutoConfig` import should be moved to the top of the file for better code organization.
+
+**WHERE in the file(s):**
+In the `unfetter/models/registry.py` file, specifically within the `detect_model_family` function and the file's import section.
+
+**WHY this matters:**
+The current detection order can lead to less accurate model family identification. Name-based substring matching is a heuristic and can produce false positives (e.g., a model named "my-custom-llama-variant" might be incorrectly classified as "llama" even if its actual architecture is different, if `AutoConfig` is not attempted first). Prioritizing `AutoConfig.from_pretrained` ensures that the most authoritative source (the model's actual configuration) is consulted before falling back to less reliable string matching, leading to more robust and accurate model detection. This reduces the chance of misclassifying a model and using the wrong handler, which could lead to incorrect ablation. Moving the import to the top improves code readability and adheres to standard Python best practices.
+
+**HOW to do it:**
+1.  Locate the `from transformers import AutoConfig` statement within the `detect_model_family` function.
+2.  Move this `from transformers import AutoConfig` statement from its current position inside the function to the top of the `unfetter/models/registry.py` file, placing it with the other existing imports (e.g., `import logging`, `import torch.nn as nn`).
+3.  Within the `detect_model_family` function, identify the block of code that performs remote configuration loading:
+    ```python
+    if model is None:
+        try:
+            # ... AutoConfig.from_pretrained logic ...
+        except Exception as e:
+            # ... logging ...
+    ```
+4.  Relocate this entire `if model is None:` block. It should be moved to execute *after* the initial checks on a provided `model` object (i.e., after the `if model and hasattr(model, "config"):` block), but *before* the section that performs name-based substring matching (`name_lower = model_name_or_path.lower()...`).
+5.  Ensure that the final fallback to `logger.warning` and `return "generic"` remains at the very end of the function, after all other detection attempts.
+
+**Executor**: {"title": "[REFACTOR] Reorder Model Family Detection Logic in registry.py", "body": "### Problem / Gap\nThe current model family detection logic in `unfetter/models/registry.py` prioritizes name-based substring matching over loading the model configuration remotely via `AutoConfig.from_pretrained`. This can lead to less accurate detection if a model name contains a generic substring that matches a family key but its actual remote configuration reveals a different architecture.\n\n### Solution & Insight\nTo improve the robustness and accuracy of model family detection, we will reorder the logic to prioritize loading the model configuration remotely. This involves moving the `AutoConfig` import to the top of the file and reordering the detection blocks within the `detect_model_family` function.\n\n### Impact\nThis change enhances the reliability of the tool's core functionality by ensuring that the most authoritative source (the model's actual configuration) is consulted before falling back to less reliable string matching.", "branch_name": "bot/upgrade-1773896203", "edits": [{"file": "unfetter/models/registry.py", "search": "            if model is None:\n                try:\n                    from transformers import AutoConfig\n                    config = AutoConfig.from_pretrained(model_name_or_path)\n                    if hasattr(config, \"architectures\") and config.architectures:\n                        for arch in config.architectures:\n                            if arch in ARCHITECTURE_PATTERNS:\n                                family = ARCHITECTURE_PATTERNS[arch]\n                                logger.info(f\"Detected model family '{family}' from remote config\")\n                                return family\n                    if hasattr(config, \"model_type\"):\n                        model_type = config.model_type.lower()\n                        if model_type in MODEL_REGISTRY:\n                            return model_type\n                except Exception as e:\n                    logger.debug(f\"Could not load config for detection: {e}\")", "replace": "            # Moved AutoConfig import to the top of the file\n            if model is None:\n                try:\n                    config = AutoConfig.from_pretrained(model_name_or_path)\n                    if hasattr(config, \"architectures\") and config.architectures:\n                        for arch in config.architectures:\n                            if arch in ARCHITECTURE_PATTERNS:\n                                family = ARCHITECTURE_PATTERNS[arch]\n                                logger.info(f\"Detected model family '{family}' from remote config\")\n                                return family\n                    if hasattr(config, \"model_type\"):\n                        model_type = config.model_type.lower()\n                        if model_type in MODEL_REGISTRY:\n                            return model_type\n                except Exception as e:\n                    logger.debug(f\"Could not load config for detection: {e}\")"}, {"file": "unfetter/models/registry.py", "search": "from unfetter.models.base import TransformerModel\nfrom unfetter.models.llama import LlamaModel\nfrom unfetter.models.mistral import MistralModel, MixtralModel\nfrom unfetter.models.gemma import GemmaModel", "replace": "from transformers import AutoConfig\nfrom unfetter.models.base import TransformerModel\nfrom unfetter.models.llama import LlamaModel\nfrom unfetter.models.mistral import MistralModel, MixtralModel\nfrom unfetter.models.gemma import GemmaModel"}, {"file": "unfetter/models/registry.py", "search": "    # 1. Check model config architectures\n    if model and hasattr(model, \"config\"):\n        config = model.config\n        if hasattr(config, \"architectures\") and config.architectures:\n            for arch in config.architectures:\n                if arch in ARCHITECTURE_PATTERNS:\n                    family = ARCHITECTURE_PATTERNS[arch]\n                    logger.info(f\"Detected model family '{family}' from architecture '{arch}'\")\n                    return family\n        \n        # Check model_type in config\n        if hasattr(config, \"model_type\"):\n        \\    model_type = config.model_type.lower()\n            if model_type in MODEL_REGISTRY:\n                logger.info(f\"Detected model family '{model_type}' from config.model_type\")\n                return model_type\n    \n    # 2. Try name-based detection\n    name_lower = model_name_or_path.lower().replace(\"-\", \"\").replace(\"_\", \"\")\n    \n    for key in MODEL_REGISTRY:\n        if key in name_lower:\n            logger.info(f\"Detected model family '{key}' from model name\")\n            return key\n    \n    # 3. Try loading config without model\n    if model is None:\n        try:\n            # ... (rest of the function remains the same)", "replace": "    # 1. Check model config architectures\n    if model and hasattr(model, \"config\"):\n        config = model.config\n        if hasattr(config, \"architectures\") and config.architectures:\n            for arch in config.architectures:\n                if arch in ARCHITECTURE_PATTERNS:\n                    family = ARCHITECTURE_PATTERNS[arch]\n                    logger.info(f\"Detected model family '{family}' from architecture '{arch}'\")\n                    return family\n        \n        # Check model_type in config\n        if hasattr(config, \"model_type\"):\n            model_type = config.model_type.lower()\n            if model_type in MODEL_REGISTRY:\n                logger.info(f\"Detected model family '{model_type}' from config.model_type\")\n                return model_type\n    \n    # 2. Try loading config without model\n    if model is None:\n        try:\n            config = AutoConfig.from_pretrained(model_name_or_path)\n            if hasattr(config, \"architectures\") and config.architectures:\n                for arch in config.architectures:\n                    if arch in ARCHITECTURE_PATTERNS:\n                        family = ARCHITECTURE_PATTERNS[arch]\n                        logger.info(f\"Detected model family '{family}' from remote config\")\n                        return family\n            if hasattr(config, \"model_type\"):\n                model_type = config.model_type.lower()\n                if model_type in MODEL_REGISTRY:\n                    return model_type\n        except Exception as e:\n            logger.debug(f\"Could not load config for detection: {e}\")\n    \n    # 3. Try name-based detection\n    name_lower = model_name_or_path.lower().replace(\"-\", \"\").replace(\"_\", \"\")\n    \n    for key in MODEL_REGISTRY:\n        if key in name_lower:\n            logger.info(f\"Detected model family '{key}' from model name\")\n            return key"}]}
+
+**Reviewer**: Reviewer response unparseable
+
+---
