@@ -3322,3 +3322,76 @@ This improvement involves making precise modifications to `printf` format string
 **Reviewer**: CORRECT: The Executor's proposed edit for `print_env_vars` correctly identifies the need to improve truncation and formatting. The chosen `snprintf` format specifiers (`%-24.24s...` and `%-24.24s`) are a valid approach to achieve the desired output. However, the `search` block provided in the Executor's JSON does not exactly match the original file content, which would cause the edit to fail. More critically, the `replace` block, as implied by the diff preview, destructively removes the closing brace for the `for` loop and the `print_footer()` call, leading to compilation errors and incorrect program structure. The Scanner's diagnosis of missing newlines in `print_uptime` and `print_power_info` appears to be incorrect based on the provided original file content, as those `printf` statements already include newlines.
 
 ---
+
+## Cycle 1773919472
+**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/HADNX
+
+### Step 1: Codebase Understanding
+
+This repository, HOLYKEYZ/HADNX, is a comprehensive web security posture analysis platform. It provides both offensive and defensive capabilities, including vulnerability scanning, security header analysis, compliance reporting, interactive pentesting tools, and an autonomous AI security agent.
+
+The file `backend/apps/scanner/services/core.py` contains the core `fetch_url` service function. This function is responsible for making HTTP requests to target websites, handling various network and SSL errors (including intentionally bypassing SSL verification for scanning purposes), and extracting key information like status codes, headers, cookies, and HTML content from the responses. It is a foundational component for any web-based scanning operation within the HADNX platform.
+
+The file `backend/apps/scanner/hadnx_ai/README.md` serves as documentation for the HADNX AI Pentester Module. It outlines the module's architecture, detailing components like the main agent, API adapter, prompt loader, and multi-stage pipeline, along with providing a clear Python usage example.
+
+The file `backend/apps/users/apps.py` is a standard Django `AppConfig` file for the `users` application. It configures the application's default auto field for models and sets its name and verbose name within the Django project.
+
+The codebase primarily uses Python with Django and Django REST Framework for the backend, leveraging libraries like `requests` for HTTP communication and `logging` for operational insights. It follows standard Python and Django conventions for application structure, error handling, and modularity.
+
+### Step 2: Deep Analysis
+
+**backend/apps/scanner/services/core.py:**
+
+*   **Security**: The intentional disabling of SSL verification (`verify_ssl=False`) and `urllib3` warnings is noted as a feature for a security scanner, not a flaw. However, the `User-Agent` is hardcoded, which could be detected by advanced WAFs; making it configurable might enhance stealth for certain scanning operations. There is no explicit input validation for the `url` parameter beyond what `requests` implicitly handles, which could lead to less graceful error handling for malformed URLs.
+*   **Logic**: The current implementation of `result['set_cookies'] = [c.name for c in response.cookies]` only captures the *names* of cookies set by the server. For a comprehensive security audit, all cookie attributes (e.g., `value`, `domain`, `path`, `expires`, `secure`, `httponly`, `samesite`) are critical for assessing security posture. This is a significant gap in the data collected for security analysis. The `UnboundLocalError` check is a good safety net but might indicate a slight redundancy if all error paths are explicitly handled.
+*   **Performance**: A new `requests.Session()` is created for every call to `_perform_request`. While acceptable for a single `fetch_url` call, if `fetch_url` is invoked many times for the same target, reusing a session could offer performance benefits by maintaining connection pooling and cookie handling. The `timeout` is fixed at 15 seconds; while reasonable, it might be too rigid for all scanning scenarios.
+*   **Architecture**: The `fetch_url` function is somewhat monolithic. It could benefit from further decomposition into smaller, more focused functions to handle specific aspects like initial SSL-verified requests, SSL-disabled retries, and HTTP fallbacks. This would improve testability and readability.
+*   **Features**: The lack of full cookie attribute capture is a missing feature that directly impacts the quality of security reports.
+*   **Testing**: The current structure makes isolated unit testing of specific error handling or retry logic slightly more complex due to the function's scope.
+*   **DX**: The docstring is clear and explains the intentional security scanner behavior. Logging is appropriately used.
+*   **Consistency**: The code within this file is consistent in style and approach.
+*   **Dead Code**: No dead code was identified.
+
+**backend/apps/scanner/hadnx_ai/README.md:**
+
+*   **DX (Developer Experience)**: The README is well-structured, provides a clear architectural overview, and includes a useful usage example. A minor improvement could be to briefly mention the role of `KeyManager` in the architecture section, as it appears in the usage example.
+
+**backend/apps/users/apps.py:**
+
+*   **Consistency**: This file adheres to standard Django conventions.
+*   **Dead Code**: No dead code was identified.
+
+### Step 3: Pick ONE Improvement
+
+The most valuable improvement is to enhance the `fetch_url` function in `backend/apps/scanner/services/core.py` to capture *all* relevant attributes of `Set-Cookie` headers, not just their names. This directly addresses a **logic/feature gap** that significantly impacts the quality and completeness of the security analysis provided by the HADNX platform. Comprehensive cookie details are fundamental for accurate security posture assessment.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT**: Modify the `fetch_url` function to extract and store full details of each cookie set by the server, including its name, value, domain, path, expiration, secure flag, HTTPOnly flag, and SameSite attribute. This will transform the `set_cookies` entry in the result dictionary from a list of cookie names into a list of dictionaries, where each dictionary represents a cookie with all its relevant security attributes.
+
+**WHERE**: In the file `backend/apps/scanner/services/core.py`, locate the `fetch_url` function. The specific line to be replaced is `result['set_cookies'] = [c.name for c in response.cookies]`. This line is found within the `try` block that processes the `response` object, typically after `result['html'] = response.text`.
+
+**WHY**: The current implementation only records the names of cookies, which is insufficient for a thorough security audit. To accurately assess cookie security, a scanner needs access to all attributes such as `Secure`, `HttpOnly`, `SameSite`, `Domain`, `Path`, and `Expires`. Capturing these details will enable HADNX to provide more granular and actionable insights into potential cookie-related vulnerabilities or misconfigurations, thereby significantly improving the platform's defensive analysis capabilities.
+
+**HOW**:
+1.  Open the file `backend/apps/scanner/services/core.py`.
+2.  Navigate to the `fetch_url` function.
+3.  Locate the line:
+    `        result['set_cookies'] = [c.name for c in response.cookies]`
+4.  Replace this single line with a block of code that initializes `result['set_cookies']` as an empty list and then iterates through `response.cookies`. For each `cookie` object in `response.cookies`, construct a dictionary containing the following keys and their corresponding values from the `cookie` object:
+    *   `'name'`: `cookie.name`
+    *   `'value'`: `cookie.value`
+    *   `'domain'`: `cookie.domain`
+    *   `'path'`: `cookie.path`
+    *   `'expires'`: `cookie.expires` (This will be a Unix timestamp or `None`)
+    *   `'secure'`: `cookie.secure` (This will be a boolean)
+    *   `'httponly'`: Check for the presence of `'httponly'` key within `cookie.rest` (e.g., `'httponly' in cookie.rest`).
+    *   `'samesite'`: Retrieve the value associated with the `'samesite'` key from `cookie.rest`, providing `None` as a default if the key is not present (e.g., `cookie.rest.get('samesite', None)`).
+5.  Append each constructed cookie detail dictionary to the `result['set_cookies']` list.
+6.  Ensure the new code block maintains the existing indentation level of the line it replaces, with subsequent lines correctly indented according to Python standards.
+
+**Executor**: {"title": "[FEAT] Enhance Cookie Attribute Capture in fetch_url", "body": "### Problem / Gap\nThe current implementation of `fetch_url` in `backend/apps/scanner/services/core.py` only captures the names of cookies set by the server. This is insufficient for a thorough security audit, as it misses critical attributes like `Secure`, `HttpOnly`, `SameSite`, `Domain`, `Path`, and `Expires`.\n\n### Solution & Insight\nTo address this gap, we will modify the `fetch_url` function to extract and store all relevant attributes of each cookie. This involves iterating through `response.cookies` and constructing a dictionary for each cookie that includes its name, value, domain, path, expiration, secure flag, HTTPOnly flag, and SameSite attribute.\n\n### Impact\nBy capturing comprehensive cookie details, HADNX significantly enhances its ability to assess cookie-related security vulnerabilities or misconfigurations, providing more granular and actionable insights for users.", "branch_name": "bot/enhance-cookie-attributes-1773919472", "edits": [{"file": "backend/apps/scanner/services/core.py", "search": "result['set_cookies'] = [c.name for c in response.cookies]", "replace": "\n      result['set_cookies'] = []\n      for c in response.cookies:\n        cookie_attributes = {\n          'name': c.name,\n          'value': c.value,\n          'domain': c.domain,\n          'path': c.path,\n          'expires': c.expires,\n          'secure': c.secure,\n          'httponly': 'httponly' in c.rest,\n          'samesite': c.rest.get('samesite', None)\n        }\n        result['set_cookies'].append(cookie_attributes)\n      "}, {"file": "backend/apps/scanner/services/core.py", "search": "result['set_cookies'] = [c.name for c in response.cookies]", "replace": "\nresult['set_cookies'] = []\nfor c in response.cookies:\n    cookie_details = {\n        'name': c.name,\n        'value': c.value,\n        'domain': c.domain,\n        'path': c.path,\n        'expires': c.expires,\n        'secure': c.secure,\n        'httponly': 'httponly' in c.rest,\n        'samesite': c.rest.get('samesite', None)\n    }\n    result['set_cookies'].append(cookie_details)\n"}]}
+
+**Reviewer**: Reviewer response unparseable
+
+---
