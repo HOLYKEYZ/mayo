@@ -119,3 +119,4 @@ my IDE for IntellectSafe is always open, im always up to date and pushing new de
 - **REJECTED by Reviewer**: Executor submitted duplicate edits and failed to preserve indentation for a code line, leading to formatting errors, a recurring issue.
 - **Repo: git-pulse**: [LOGIC] Correct Next.js App Router `params` Type and Remove Redundant `await`. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/11) - *Status: PENDING REVIEW*
 - **REJECTED by Reviewer**: Executor failed to match JSON search blocks and proposed destructive changes to `prompt_injection.json` by replacing multiple prompts with a single templated one, instead of enhancing.
+- **Repo: ModelFang**: [FEAT] Enhance Prompt Injection Dataset with Templated Prompts & [LOGIC] Add CLI Error Handling. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/13) - *Status: PENDING REVIEW*
