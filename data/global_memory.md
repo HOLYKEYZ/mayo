@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: micro-edit**: [REFACTOR] Remove Unused abuf Struct. (Ref: https://github.com/HOLYKEYZ/micro-edit/pull/7) - *Status: MERGED - Joseph approved!*
 - **Repo: VULNRIX**: [LOGIC] Remove Deprecated Breach Checking APIs from Health Checks. (Ref: https://github.com/HOLYKEYZ/VULNRIX/pull/21) - *Status: REJECTED - Joseph closed this*
 - **Repo: Joseph-Portfolio**: [DX] Improve Cross-Platform Font Loading in generate_flowchart.py. (Ref: https://github.com/HOLYKEYZ/Joseph-Portfolio/pull/7) - *Status: MERGED - Joseph approved! Comment: '[vc]: #ff/6wZPGnzDwHPbRyWemwSzCrsSvxHo96Pys/ymigrU=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **REJECTED by Reviewer**: Executor's search blocks failed to match due to incorrect representation of newlines/whitespace and missing docstrings/comments, leading to 'NO CHANGES'. Also, one replacement block was redundant and incorrectly structured.
