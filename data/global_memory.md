@@ -98,3 +98,4 @@ my IDE for IntellectSafe is always open, im always up to date and pushing new de
 - **Repo: Joseph-Portfolio**: [LOGIC] Correct Arrowhead Drawing in generate_flowchart.py. (Ref: https://github.com/HOLYKEYZ/Joseph-Portfolio/pull/9) - *Status: PENDING REVIEW*
 - **REJECTED by Reviewer**: Executor submitted duplicate edits and introduced a destructive change by removing a docstring, despite the JSON search block not explicitly targeting it. Emphasize exact search blocks and non-destructive changes.
 - **REJECTED by Reviewer**: Executor's search block failed to match due to missing docstring, leading to unintended deletion. Emphasize exact match including all comments/docstrings.
+- **Repo: model-unfetter**: [DX] Enhance Verify Script with Command-Line Arguments. (Ref: https://github.com/HOLYKEYZ/model-unfetter/pull/8) - *Status: PENDING REVIEW*
