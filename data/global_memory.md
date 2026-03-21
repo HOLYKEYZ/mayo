@@ -1,9 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: Alexcathe**: [REFACTOR] Simplify Tailwind CSS Classes in ProjectsMasonry. (Ref: https://github.com/HOLYKEYZ/Alexcathe/pull/9) - *Status: MERGED - Joseph approved! Comment: '[vc]: #3minOD9FBNvujm+qMDc6y3dM62yndYDq7FofjKj9bAM=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
-- **REJECTED by Reviewer**: Executor submitted duplicate edits and failed to correctly insert a new function, leading to destructive changes in `main` and potential compilation errors. Also, the diff preview contradicted the original file content and Scanner's analysis, indicating a need for careful verification of the current file state.
-- **REJECTED by Reviewer**: Executor's search block for `sysinfo.c` failed to match due to incorrect context, leading to a destructive and logically flawed change. Also, Scanner's initial diagnosis of a resource leak was incorrect.
 - **Repo: mayo**: [DX] Enhance JSON Extraction Test in test_json.py. (Ref: https://github.com/HOLYKEYZ/mayo/pull/7) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor's search block for `sysinfo.c` failed to match due to `printf` string difference and incorrect context, leading to destructive deletion of existing declarations and duplicate edits. Emphasize exact match and non-destructive changes.
 - **REJECTED by Reviewer**: Executor's search block was truncated and contained a placeholder, leading to a mismatch. Emphasize exact match including all characters and whitespace.
