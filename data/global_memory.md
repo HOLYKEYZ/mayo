@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: HADNX**: [SEC] Secure User Data Storage in Registration. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/16) - *Status: MERGED - Joseph approved! Comment: '[vc]: #ev07dyeoZeBxJV9I3ZHqpRbsEK0j1b3cuxBvb5J5ahY=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **Repo: IntellectSafe**: [REFACTOR] Standardize LLM Provider Configurations. (Ref: https://github.com/HOLYKEYZ/IntellectSafe/pull/14) - *Status: MERGED - Joseph approved! Comment: '[vc]: #RURiMtoyGl0X6WWbmztRDcuy6V5ouC/R0JG1pV0dcOg=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **REJECTED by Reviewer**: Executor failed to account for existing function calls in `main` and introduced redefinition/duplicate call issues, along with indentation errors. Also, `search: ""` for function definitions failed.
 - **Repo: temple-sysinfo**: [FEAT] Implement Missing Display and Power Information Modules. (Ref: https://github.com/HOLYKEYZ/temple-sysinfo/pull/7) - *Status: MERGED - Joseph approved!*
