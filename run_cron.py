@@ -373,11 +373,9 @@ Output ONLY JSON: {{"reasonableness_score": 70, "action": "fix|close|skip", "rea
         if should_run_timed_phase(current_memory, 'LAST_PROACTIVE_ISSUE', 24):
             print("DEBUG: Phase I — Proactive issue scan (24h cycle)")
             try:
-                EXCLUDED_REPOS = ['Square-farms', 'Jo-ayanda-real-estate', 'Backend-images-app', 'ecom-stor', 'private-storage', 'HOLYKEYZ']
+                # ONLY git-pulse
                 issue_candidates = [r for r in repos_data.get('repositories', [])
-                                    if not r.get('fork') and not r.get('archived')
-                                    and r.get('name') not in EXCLUDED_REPOS
-                                    and r.get('full_name') != bot_repo_name]
+                                    if r.get('name') == 'git-pulse']
                 
                 if issue_candidates:
                     import random
@@ -534,61 +532,17 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
                 print(f"DEBUG: REST fallback exception: {e2}")
                 global_memory = "No global memory found. Start with fresh excellence."
 
-        # === REPO SELECTION: Exclusions, Cooldown, Priority ===
-        EXCLUDED_REPOS = ['Square-farms', 'Jo-ayanda-real-estate', 'Backend-images-app', 'ecom-stor', 'private-storage', 'HOLYKEYZ']
-        
+        # === REPO SELECTION: ONLY git-pulse ===
         candidates = [r for r in repos_data.get('repositories', []) 
-                      if not r.get('fork') and not r.get('archived') 
-                      and r.get('name') not in EXCLUDED_REPOS]
+                      if r.get('name') == 'git-pulse']
         
         if not candidates:
-            print("No eligible repos found")
+            print("No eligible repos found (git-pulse not found)")
             return
         
-        # PRIORITY: Put git-pulse first for the next month
-        PRIORITY_REPO = 'git-pulse'
-        priority_candidates = [r for r in candidates if r.get('name') == PRIORITY_REPO]
-        other_candidates = [r for r in candidates if r.get('name') != PRIORITY_REPO]
-        
-        # Parse last 3 repos from memory for cooldown
-        recent_repos = []
-        import re as re_mod
-        for line in reversed(global_memory.split('\n')):
-            match = re_mod.search(r'\*\*Repo: ([^\*]+)\*\*', line)
-            if match:
-                r_name = match.group(1).strip()
-                if r_name not in recent_repos:
-                    recent_repos.append(r_name)
-                if len(recent_repos) >= 3:
-                    break
-        
-        # Filter out cooldown repos
-        def not_in_cooldown(r):
-            return r.get('name') not in recent_repos
-        
-        priority_available = [r for r in priority_candidates if not_in_cooldown(r)]
-        other_available = [r for r in other_candidates if not_in_cooldown(r)]
-        
-        # If git-pulse is available (not in cooldown), pick it 100%
-        if priority_available:
-            chosen = priority_available[0]
-            print(f"DEBUG: PRIORITY REPO {PRIORITY_REPO} selected (not in cooldown)")
-        elif other_available:
-            # Pick from other available repos with priority queue
-            other_available.sort(key=lambda r: global_memory.rfind(f"**Repo: {r.get('name')}**"))
-            top_k = max(1, len(other_available) // 3)
-            import random
-            chosen = random.choice(other_available[:top_k])
-        elif candidates:
-            # All in cooldown, pick random
-            import random
-            chosen = random.choice(candidates)
-        else:
-            print("DEBUG: No candidates available")
-            return
-        
+        chosen = candidates[0]
         target_repo = gh.get_repo(chosen['full_name'])
-        print(f"DEBUG: Targeting repo {target_repo.full_name} (cooldown/priority applied)")
+        print(f"DEBUG: Targeting repo {target_repo.full_name} (git-pulse only mode)")
 
         # Gather codebase context
         structure = get_repo_structure(target_repo, max_depth=3)
