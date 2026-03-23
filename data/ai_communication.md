@@ -4387,3 +4387,64 @@ This is a critical security vulnerability. As the code currently stands, anyone 
 **Reviewer**: CORRECT: The Executor's proposed edit correctly identifies the security vulnerability and the need to remove the 'admin' bypass, which aligns with the Scanner's plan. However, the `search` block is not an exact match to the original file content (missing newlines and incorrect indentation for comments), and the `replace` block is syntactically incomplete as it omits the closing brace `}` for the `if` statement. This would lead to a compilation error and broken code. The diff preview also shows incorrect indentation for the subsequent `try` block. I will provide corrected edits to ensure an exact match and syntactically valid code.
 
 ---
+
+## Cycle 1774302008
+**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
+
+### Step 1: Codebase Understanding
+
+*   **What this repository does**: The `git-pulse` repository appears to be a web application designed to visualize a user's GitHub contributions, similar to the contribution graph found on GitHub profiles. It likely fetches contribution data and renders it as a heatmap.
+*   **What the target files do within the repo**:
+    *   `package.json` (root): This file defines the workspace for a monorepo setup using `pnpm`. It specifies top-level scripts for development, building, and linting, delegating these tasks to the `web` application within the monorepo. It also sets the required Node.js engine version.
+    *   `apps/web/src/components/ContributionHeatmap.tsx`: This React client component is responsible for rendering the core contribution heatmap visualization. It takes an array of contribution weeks and a total contribution count, then calculates and displays individual contribution cells, month labels, and tooltips for each day. It also includes logic for auto-scrolling to the most recent contributions.
+    *   `apps/web/src/components/Skeletons.tsx`: This file contains various React components that serve as loading placeholders (skeletons) for different parts of the application, such as individual posts, sidebars, and entire feeds. These improve the perceived performance and user experience during data fetching.
+*   **Patterns, frameworks, or conventions**: The codebase uses a monorepo structure managed by `pnpm`. The frontend is built with React and Next.js, utilizing TypeScript for type safety. Styling is handled with Tailwind CSS, and components follow a standard React functional component pattern, with some using client-side directives.
+
+### Step 2: Deep Analysis
+
+*   **Security**: No immediate security vulnerabilities are apparent in the provided files. `package.json` specifies a Node.js version, and the React components are client-side rendering UI.
+*   **Logic**:
+    *   In `ContributionHeatmap.tsx`, the logic for calculating `monthPositions` (where month labels are placed) is overly complex and contains a potential bug. Specifically, the condition `if (new Date(dayToCheck.date).getDate() < 14)` within the `else if (lastMonth === -1)` block is a heuristic that might cause the label for the *first month* in the dataset to be omitted if the data starts after the 14th day of that month. This leads to an incomplete or incorrect visualization.
+    *   The `useEffect` for auto-scrolling is correctly implemented.
+*   **Performance**:
+    *   In `ContributionHeatmap.tsx`, `new Date()` objects are created multiple times within loops during the `monthPositions` calculation. While the dataset size (around 52 weeks * 7 days) is small enough that this is unlikely to cause a major performance bottleneck, it's a minor inefficiency that could be slightly optimized. However, the primary issue is the logical correctness.
+*   **Architecture**: The component-based architecture is standard for React/Next.js. The use of a monorepo with `pnpm` workspaces is a sound architectural choice for managing multiple related packages.
+*   **Features**: The heatmap provides essential features like tooltips and auto-scrolling. The skeleton components are a good addition for user experience.
+*   **Testing**: No test files were provided for analysis, so it's not possible to assess testing coverage or patterns.
+*   **DX (Developer Experience)**: The `monthPositions` calculation logic in `ContributionHeatmap.tsx` is difficult to read and understand due to its nested conditions and specific heuristics. Simplifying this logic would improve maintainability.
+*   **Consistency**:
+    *   Styling in `ContributionHeatmap.tsx` uses a mix of Tailwind classes and inline styles with hardcoded hex values (e.g., `LEVEL_COLORS`, `bg-[#24292f]`). The comment "not tailwind classes — so they survive jit purge" explains this choice, making it a deliberate, albeit mixed, approach.
+    *   Naming conventions and import patterns are consistent across the files.
+*   **Dead Code**: No obvious dead code was found in the provided files.
+
+### Step 3: Pick ONE Improvement
+
+The most valuable improvement is to fix the **logic bug** in `ContributionHeatmap.tsx` that can cause the first month's label to be missing from the heatmap. This directly impacts the correctness and completeness of the primary visualization feature.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT** to change:
+The logic responsible for calculating the positions and labels of months displayed above the contribution heatmap needs to be refactored. The current implementation can fail to display the label for the very first month in the dataset under certain conditions, specifically if the data for that month starts after the 14th day. The revised logic should accurately identify the first occurrence of each month within the provided contribution data and ensure its label is always displayed at the correct week column.
+
+**WHERE** in the file(s):
+The change will be made in the `apps/web/src/components/ContributionHeatmap.tsx` file, specifically within the `ContributionHeatmap` functional component, inside the block where `monthPositions` is calculated. This is the `weeks.forEach` loop that populates the `monthPositions` array.
+
+**WHY** this matters:
+This change is crucial because the current `monthPositions` calculation contains a logic flaw. If the contribution data for the initial month starts mid-month (e.g., on the 15th or later), the label for that month will not be rendered on the heatmap. This results in an incomplete and potentially confusing visualization for the user, as the first segment of the heatmap would lack a corresponding month label, hindering readability and data interpretation. Fixing this ensures the heatmap accurately represents the timeline of contributions.
+
+**HOW** to do it:
+1.  Locate the `monthPositions` array initialization and the subsequent `weeks.forEach` loop that populates it within the `ContributionHeatmap` component in `apps/web/src/components/ContributionHeatmap.tsx`.
+2.  Replace the entire existing `weeks.forEach` loop and its internal logic for calculating `monthPositions` with a new, simplified approach.
+3.  Initialize `lastMonth` to an invalid value (e.g., -1) before the loop to ensure the very first month encountered is always captured.
+4.  Iterate through each `week` in the `weeks` array, using its index as `weekIndex`.
+5.  Inside this loop, for each `week`, find the *first `ContributionDay`* within that `week` whose month is *different* from the `lastMonth` that was recorded. This can be done by iterating through `week.contributionDays` and comparing `new Date(day.date).getMonth()` with `lastMonth`.
+6.  If such a `ContributionDay` is found (meaning a new month has started within this `week`), extract its month.
+7.  Add an object to the `monthPositions` array containing the month's label (from `MONTH_LABELS`) and the current `weekIndex` as its `col` value.
+8.  Update `lastMonth` to the month that was just added to `monthPositions`.
+9.  This revised logic will ensure that a month label is added for every new month encountered in the dataset, positioned at the week where that month first appears, resolving the bug.
+
+**Executor**: {"title": "[LOGIC] Fix Month Label Calculation in ContributionHeatmap", "body": "### Problem / Gap\nThe current logic for calculating month labels in the ContributionHeatmap component contains a bug. It can fail to display the label for the first month in the dataset if the data for that month starts after the 14th day. This results in an incomplete visualization.\n\n### Solution & Insight\nTo fix this, we need to revise the logic for calculating `monthPositions`. The new approach should accurately identify the first occurrence of each month within the provided contribution data and ensure its label is always displayed at the correct week column. We achieve this by iterating through each week, finding the first day of each month, and adding its label to `monthPositions` accordingly.\n\n### Impact\nThis change ensures the contribution heatmap always correctly displays month labels, improving the overall accuracy and usability of the visualization.", "branch_name": "bot/fix-month-labels-1774302010", "edits": [{"file": "apps/web/src/components/ContributionHeatmap.tsx", "search": "weeks.forEach((week, i) => {\n        const monthStartDay = week.contributionDays.find(day => {\n            const dateObj = new Date(day.date);\n            return dateObj.getDate() >= 1 && dateObj.getDate() <= 7;\n        });\n        \n        const dayToCheck = monthStartDay || week.contributionDays[0];\n        if (dayToCheck) {\n            const month = new Date(dayToCheck.date).getMonth();\n            if (month !== lastMonth && i > 0) {\n                monthPositions.push({ label: MONTH_LABELS[month], col: i });\n                lastMonth = month;\n            } else if (lastMonth === -1) {\n                lastMonth = month;\n                if (new Date(dayToCheck.date).getDate() < 14) {\n                    monthPositions.push({ label: MONTH_LABELS[month], col: i });\n                }\n            }\n        }\n    });", "replace": "weeks.forEach((week, weekIndex) => {\n        const firstContributionDay = week.contributionDays.find((day) => {\n            const date = new Date(day.date);\n            return date.getDate() >= 1 && date.getDate() <= 7;\n        }) || week.contributionDays[0];\n        \n        if (firstContributionDay) {\n            const currentMonth = new Date(firstContributionDay.date).getMonth();\n            if (currentMonth !== lastMonth) {\n                monthPositions.push({ label: MONTH_LABELS[currentMonth], col: weekIndex });\n                lastMonth = currentMonth;\n            }\n        }\n    });"}]}
+
+**Reviewer**: APPROVE: The Executor's proposed edit directly addresses the logic bug identified by the Scanner in `ContributionHeatmap.tsx`. The search block is an exact match, and the replacement code is functional, cleaner, and correctly implements the fix for month label positioning. It simplifies the logic, removes the problematic heuristic, and ensures the first month's label is always displayed. This change is valuable, aligned with the plan, and avoids common pitfalls seen in past rejections for this repository.
+
+---
