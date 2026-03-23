@@ -4112,73 +4112,7 @@ This improvement focuses on `editor.c` and addresses critical compilation and lo
 
 ---
 
-## Cycle 1774233205
-**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
-
-### Step 1: Codebase Understanding
-
-This repository, `git-pulse`, is a developer-centric social platform that overlays a Twitter-like feed format onto the GitHub ecosystem. It allows users to share project releases ("Ships"), repository updates, and engage in discussions, all presented with a GitHub-inspired dark theme.
-
-The file `apps/web/src/lib/github.ts` serves as the primary service layer for interacting with the GitHub API. It defines various TypeScript interfaces for GitHub entities like users, repositories, and events, and provides functions to fetch this data using both GitHub's REST and GraphQL APIs, incorporating caching mechanisms.
-
-The file `apps/web/src/components/AiSummary.tsx` is a React client component responsible for fetching and displaying an AI-generated summary or "pitch" for a given GitHub repository. It manages its own loading and visibility state.
-
-The file `pnpm-workspace.yaml` defines the workspace configuration for the monorepo, indicating that both `apps/*` and `packages/*` directories contain pnpm workspaces.
-
-The codebase primarily uses Next.js 15 (App Router), React, TypeScript, Tailwind CSS for styling, Prisma for ORM, and NextAuth for authentication. It follows modern web development conventions for a full-stack application.
-
-### Step 2: Deep Analysis
-
-**apps/web/src/lib/github.ts:**
-
-*   **Logic (Critical Bug)**: The `getGitHubAllRepos` function has a truncated URL parameter. The line constructing the API endpoint ends with `&type` followed by `...[TRUNCATED FOR LENGTH]...`. This indicates an incomplete URL string, which will either lead to a malformed request, an API error, or incorrect data being returned. Based on the `getGitHubRepos` function, it is highly probable that `&type=owner` is the intended completion to filter for repositories owned by the user. This is a functional bug.
-*   **Performance**: The use of `withCache` and `next: { revalidate: ... }` headers is a good practice for performance and reducing API calls.
-*   **Error Handling**: Both `fetchWithAuth` and `fetchGraphQL` include robust error handling for network issues, HTTP status codes (including rate limiting for REST), and GraphQL-specific errors. GraphQL errors are logged, but data is still returned if available, which is a common pattern for partial responses.
-*   **Security**: Token slicing for cache keys and logs (`token.slice(-10)`, `token.slice(-6)`) is a good practice to prevent accidental full token exposure.
-*   **Consistency**: Type definitions are clear and comprehensive. Function naming is consistent.
-
-**apps/web/src/components/AiSummary.tsx:**
-
-*   **Logic**: The component correctly handles loading states, toggles visibility, and provides a fallback message for failed summary generation.
-*   **Features**: The "AI Summary" feature is a good enhancement for repository presentation.
-*   **DX**: The UI provides clear feedback to the user (loading, hide/show).
-*   **Consistency**: Uses standard React hooks and component structure.
-
-**pnpm-workspace.yaml:**
-
-*   **Consistency**: The workspace definition is standard and correctly formatted for a pnpm monorepo.
-*   **Dead Code**: None.
-
-### Step 3: Pick ONE Improvement
-
-The most valuable improvement is to fix the critical logic bug in `apps/web/src/lib/github.ts` where the `getGitHubAllRepos` function's URL parameter is truncated. This is a direct functional bug that will prevent the API call from working as intended or at all, making the "all repos" feature unreliable or broken.
-
-### Step 4: Write the Executor's Plan
-
-**WHAT** to change:
-The `getGitHubAllRepos` function in `apps/web/src/lib/github.ts` has an incomplete URL string for the GitHub API endpoint. The `type` query parameter is truncated. This needs to be completed to `&type=owner` to ensure the function correctly fetches repositories owned by the specified user, consistent with other repository fetching functions in the file.
-
-**WHERE** in the file(s):
-The change is located in the `apps/web/src/lib/github.ts` file, specifically within the `getGitHubAllRepos` asynchronous function. The exact line to modify is the one constructing the API endpoint string, which currently ends with `&type`.
-
-**WHY** this matters:
-This is a critical logic bug. The current truncation of the `type` parameter in the API endpoint string means that the GitHub API request will be malformed. This will likely result in either a failed API call, an incorrect response, or a default behavior from the GitHub API that does not align with the intended purpose of fetching a user's *owned* repositories. Fixing this ensures the "all repos" functionality works reliably and as expected, providing accurate data to the application.
-
-**HOW** to do it:
-1.  Locate the `getGitHubAllRepos` asynchronous function in `apps/web/src/lib/github.ts`.
-2.  Find the line where the API endpoint string is constructed, which currently looks like:
-    ````
-            `/users/${username}/repos?sort=${sort}&per_page=${perPage}&page=${page}&type
-    ````
-3.  Modify this line to correctly append `type=owner` to the URL string. The corrected line should explicitly include `&type=owner` at the end of the URL string.
-
-**Executor**: {"title": "[LOGIC] Fix Malformed URL Parameter in getGitHubAllRepos", "body": "### Problem / Gap\nThe `getGitHubAllRepos` function in `apps/web/src/lib/github.ts` contains a truncated URL parameter. The line constructing the API endpoint string is incomplete, which will lead to a malformed request or incorrect data being returned.\n\n### Solution & Insight\nTo fix this issue, we need to complete the URL string by appending `&type=owner` to filter for repositories owned by the user. The corrected line should look like this: `/users/${username}/repos?sort=${sort}&per_page=${perPage}&page=${page}&type=owner`.\n\n### Impact\nFixing this bug ensures the 'all repos' functionality works reliably and as expected, providing accurate data to the application.", "branch_name": "bot/fix-1774233210", "edits": [{"file": "apps/web/src/lib/github.ts", "search": "/users/${username}/repos?sort=${sort}&per_page=${perPage}&page=${page}&type", "replace": "/users/${username}/repos?sort=${sort}&per_page=${perPage}&page=${page}&type=owner"}]}
-
-**Reviewer**: REJECTED x2: The 'ACTUAL DIFF PREVIEW' shows that your edit would change `/users/${username}/repos?sort=${sort}&per_page=${perPage}&page=${page}&type=owner` to `/users/${username}/repos?sort=${sort}&per_page=${perPage}&page=${page}&type=owner=owner`. This introduces a malformed URL parameter and is a critical functional bug. Your JSON `search` block (`/users/${username}/repos?sort=${sort}&per_page=${perPage}&page=${page}&type`) does not precisely match the 'original' line shown in the diff preview (`...&type=owner`). You must ensure your `search` block *exactly* matches the current content of the file you intend to modify. If the file already contains `&type=owner`, then the truncation bug identified by the Scanner is no longer present, and no change is needed. Please re-verify the *actual* content of `apps/web/src/lib/github.ts` and propose an edit that is non-destructive and accurately addresses any existing issues, or makes no change if the line is already correct.
-
----
-
-## Cycle 1774250142
+1774250142
 **Scanner**: ## Codebase Understanding
 
 This repository, GitPulse, is a social platform for developers, mimicking a Twitter-like feed but built on the GitHub ecosystem. It allows users to share project releases ("Ships"), repository updates, and engage in discussions, all presented with a GitHub-inspired dark theme.
@@ -4446,5 +4380,87 @@ This change is crucial because the current `monthPositions` calculation contains
 **Executor**: {"title": "[LOGIC] Fix Month Label Calculation in ContributionHeatmap", "body": "### Problem / Gap\nThe current logic for calculating month labels in the ContributionHeatmap component contains a bug. It can fail to display the label for the first month in the dataset if the data for that month starts after the 14th day. This results in an incomplete visualization.\n\n### Solution & Insight\nTo fix this, we need to revise the logic for calculating `monthPositions`. The new approach should accurately identify the first occurrence of each month within the provided contribution data and ensure its label is always displayed at the correct week column. We achieve this by iterating through each week, finding the first day of each month, and adding its label to `monthPositions` accordingly.\n\n### Impact\nThis change ensures the contribution heatmap always correctly displays month labels, improving the overall accuracy and usability of the visualization.", "branch_name": "bot/fix-month-labels-1774302010", "edits": [{"file": "apps/web/src/components/ContributionHeatmap.tsx", "search": "weeks.forEach((week, i) => {\n        const monthStartDay = week.contributionDays.find(day => {\n            const dateObj = new Date(day.date);\n            return dateObj.getDate() >= 1 && dateObj.getDate() <= 7;\n        });\n        \n        const dayToCheck = monthStartDay || week.contributionDays[0];\n        if (dayToCheck) {\n            const month = new Date(dayToCheck.date).getMonth();\n            if (month !== lastMonth && i > 0) {\n                monthPositions.push({ label: MONTH_LABELS[month], col: i });\n                lastMonth = month;\n            } else if (lastMonth === -1) {\n                lastMonth = month;\n                if (new Date(dayToCheck.date).getDate() < 14) {\n                    monthPositions.push({ label: MONTH_LABELS[month], col: i });\n                }\n            }\n        }\n    });", "replace": "weeks.forEach((week, weekIndex) => {\n        const firstContributionDay = week.contributionDays.find((day) => {\n            const date = new Date(day.date);\n            return date.getDate() >= 1 && date.getDate() <= 7;\n        }) || week.contributionDays[0];\n        \n        if (firstContributionDay) {\n            const currentMonth = new Date(firstContributionDay.date).getMonth();\n            if (currentMonth !== lastMonth) {\n                monthPositions.push({ label: MONTH_LABELS[currentMonth], col: weekIndex });\n                lastMonth = currentMonth;\n            }\n        }\n    });"}]}
 
 **Reviewer**: APPROVE: The Executor's proposed edit directly addresses the logic bug identified by the Scanner in `ContributionHeatmap.tsx`. The search block is an exact match, and the replacement code is functional, cleaner, and correctly implements the fix for month label positioning. It simplifies the logic, removes the problematic heuristic, and ensures the first month's label is always displayed. This change is valuable, aligned with the plan, and avoids common pitfalls seen in past rejections for this repository.
+
+---
+
+## Cycle 1774305455
+**Scanner**: This repository, `git-pulse`, functions as a social media or content aggregation platform centered around GitHub activity. It allows users to create posts, which can include embedded GitHub repository information, and interact with content. It leverages GitHub for user authentication and to fetch repository and user data.
+
+The file `apps/web/src/app/api/search/route.ts` defines an API endpoint for searching. It concurrently queries the application's database for posts and the GitHub API for users and repositories, returning aggregated results. The file `apps/web/src/app/api/posts/route.ts` defines an API endpoint for creating new posts. It handles user authentication (via session or API key), applies rate limiting, validates post content, extracts hashtags, and can enrich posts with GitHub repository embed data before saving them to the database. The `package.json` file is the root package configuration for this pnpm monorepo, defining scripts for development, building, and linting the `web` application, and specifying Node.js engine requirements.
+
+The codebase primarily uses the Next.js App Router for API routes, Prisma ORM for database interactions, and integrates with NextAuth.js (or a similar solution) for authentication. It makes direct `fetch` calls to the GitHub API, often utilizing user access tokens for higher rate limits. A custom `rateLimit` utility is employed for API protection. The project is written in TypeScript, indicating a focus on type safety.
+
+---
+
+### Deep Analysis
+
+**Security:**
+*   In `apps/web/src/app/api/search/route.ts`, the search query `q` is trimmed and then used in Prisma's `contains` clause and `encodeURIComponent` for GitHub API calls. While `contains` with `mode: "insensitive"` is generally safe, explicit input validation beyond length check could be considered for robustness, though not a direct vulnerability here.
+*   In `apps/web/src/app/api/posts/route.ts`, the API key authentication (`Bearer gp_`) directly maps an API key to a username. If an API key is compromised, it grants full posting rights as that user. This is a standard pattern for API keys, but highlights the importance of key security.
+*   The `content` field in `apps/web/src/app/api/posts/route.ts` is stored directly. If this content is rendered on the frontend without proper sanitization, it could lead to Cross-Site Scripting (XSS) vulnerabilities. This is primarily a frontend concern, but the API is the data source.
+*   `owner` and `repoName` extracted from `repoUrl` are used in a GitHub API call. The regex `([^\/]+)` helps prevent path traversal, but explicit encoding or validation of these parts before constructing the URL is a good defensive practice, especially if the `repoUrl` could be fully user-controlled.
+
+**Logic:**
+*   In `apps/web/src/app/api/search/route.ts`, the use of `Promise.all` for parallel fetching is efficient. Error handling for `fetch` calls with `.catch(() => null)` and subsequent `if (res?.ok)` checks is robust. The use of `any` for GitHub API response types works but could be improved with specific TypeScript interfaces for better type checking and developer experience.
+*   In `apps/web/src/app/api/posts/route.ts`, there's a minor redundancy: after determining the `username` (either from session or API key), the code performs another `prisma.user.findUnique({ where: { username } })` call. If the API key authentication path is taken, `tokenUser` already contains the user object, making the subsequent `findUnique` call unnecessary.
+*   Hashtag and repository URL extraction logic appears sound. The fallback for `repoEmbed.lastPush` is comprehensive.
+
+**Performance:**
+*   `apps/web/src/app/api/search/route.ts` uses `Promise.all` and limits results (`take: 20`, `per_page: 10`), which are good performance practices.
+*   `apps/web/src/app/api/posts/route.ts` has a minor performance inefficiency: an unnecessary `prisma.user.findUnique` call is made after an API key authentication has already retrieved the user object. This adds a redundant database query to every post creation via API key. The GitHub API call for `repoEmbed` is synchronous, which is acceptable for a single external call but could be a bottleneck if more such calls were added.
+
+**Architecture:**
+*   Both API routes maintain consistent error response structures using `NextResponse.json({ error: "..." }, { status: ... })`.
+*   The rate limiting mechanism is externalized, promoting reusability.
+*   The dual authentication (session and API key) is a well-established pattern for supporting both interactive and programmatic access.
+
+**Features:**
+*   `apps/web/src/app/api/search/route.ts` could be enhanced with more advanced search filters (e.g., by hashtag, post type, date range) or pagination for larger result sets.
+*   `apps/web/src/app/api/posts/route.ts` uses a `type` field for posts, defaulting to "standard", but there's no explicit validation or enumeration of allowed types. The `shipDetails` field is stored but its structure and intended use are not defined within this file.
+
+**Testing:**
+*   No explicit test files are provided in the analysis context. The API routes would benefit from unit and integration tests to ensure correctness of logic, error handling, and API responses.
+
+**DX (Developer Experience):**
+*   The root `package.json` provides essential scripts. However, the use of `any` for GitHub API response types could be replaced with more specific TypeScript interfaces to improve type safety and developer understanding.
+
+**Consistency:**
+*   Import ordering and naming conventions appear generally consistent across the analyzed files. The `dynamic = "force-dynamic"` export is consistently applied.
+
+**Dead Code:**
+*   No obvious dead code was identified in the provided files.
+
+---
+
+### Pick ONE Improvement
+
+The most valuable improvement is to optimize the user lookup in `apps/web/src/app/api/posts/route.ts` to avoid a redundant database query when an API key is used for authentication. This is a performance improvement and a logical cleanup.
+
+---
+
+### Executor's Plan
+
+**WHAT to change:**
+Refactor the user authentication and lookup logic within the `POST` function in `apps/web/src/app/api/posts/route.ts`. The goal is to prevent an unnecessary `prisma.user.findUnique` database call when a user authenticates using an API key, as the user object is already retrieved during that process.
+
+**WHERE in the file(s):**
+The changes will be made in `apps/web/src/app/api/posts/route.ts`, specifically within the `POST` asynchronous function, affecting the initial authentication and user retrieval blocks.
+
+**WHY this matters:**
+This modification directly addresses a minor performance inefficiency. Currently, if a request is authenticated via an API key, the system first fetches the user to validate the key (`tokenUser`) and then immediately performs another database query (`prisma.user.findUnique`) to get the same user object again. Eliminating this redundant query reduces database load and improves the response time for API key-authenticated post creation requests, contributing to a more efficient backend.
+
+**HOW to do it:**
+1.  Inside the `POST` function, declare a mutable variable, for example, `let userInDb: User | null = null;` at the top of the function, after `let username: string | null = session?.user?.login || null;`.
+2.  Modify the API key authentication block: when `tokenUser` is successfully found, in addition to setting `username = tokenUser.username;`, also set `userInDb = tokenUser;`.
+3.  Locate the line `const user = await prisma.user.findUnique({ where: { username } });` which currently appears after the authentication blocks.
+4.  Replace this line with a conditional assignment: if `userInDb` is already populated (meaning the user was found via API key), use `userInDb`. Otherwise, perform the `prisma.user.findUnique` call to fetch the user based on `username` (this path will be taken for session-authenticated users).
+5.  Ensure all subsequent references to the `user` object (e.g., `user.id`) are updated to use `userInDb` instead.
+
+**SCOPE:**
+This improvement involves a targeted refactoring within the `POST` function of `apps/web/src/app/api/posts/route.ts`. It is a self-contained change that optimizes an existing logic flow without altering external dependencies or API contracts.
+
+**Executor**: {"title": "[REFACTOR] Optimize User Lookup in Post Creation", "body": "### Problem / Gap\nThe current implementation of post creation in `apps/web/src/app/api/posts/route.ts` performs a redundant database query to fetch the user object after authenticating via an API key. This inefficiency can be optimized.\n\n### Solution & Insight\nBy storing the user object retrieved during API key authentication in a variable and reusing it instead of performing another database query, we can eliminate the redundant query and improve performance.\n\n### Impact\nThis change reduces the number of database queries, improving the response time for post creation requests authenticated via API keys and contributing to a more efficient backend.", "branch_name": "bot/optimize-user-lookup-1774305455", "edits": [{"file": "apps/web/src/app/api/posts/route.ts", "search": "const user = await prisma.user.findUnique({\n      where: { username }\n    });", "replace": "let userInDb: any = null;\nif (tokenUser) {\n  userInDb = tokenUser;\n}\nconst user = userInDb || await prisma.user.findUnique({ where: { username } });"}]}
+
+**Reviewer**: CORRECT: The Executor's proposed edit correctly identifies the target line for optimization but introduces a `ReferenceError` because `tokenUser` is not in scope at the point of replacement. Furthermore, the underlying assumption from the Scanner's analysis that `tokenUser` already contains the full user object (including `id`) is incorrect, as it's currently fetched with `select: { username: true }`. To truly optimize and avoid a redundant DB query, `tokenUser` must be fetched with the necessary fields (or the full object) and then correctly passed via a higher-scoped variable. The corrected edits address these issues by modifying the `tokenUser` fetch, declaring `userInDb` at the correct scope, and then applying the conditional lookup.
 
 ---
