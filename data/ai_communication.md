@@ -4561,3 +4561,63 @@ The most valuable improvement to address is the **theming inconsistency between 
 **Reviewer**: REJECTED x2: The proposed edit for `apps/web/public/manifest.json` failed to apply because the `search` block did not exactly match the original file content. The `manifest.json` file is pretty-printed with newlines and indentation, but your `search` block is a single-line, minified JSON string. To fix this, your `search` block must be an *exact, character-for-character* match of the original content, including all newlines, spaces, and indentation. Please reconstruct both the `search` and `replace` blocks to precisely reflect the multi-line, formatted structure of the JSON file.
 
 ---
+
+## Cycle 1774328170
+**Scanner**: ## SCANNER ANALYSIS
+
+### Step 1: Codebase Understanding
+
+This repository, `git-pulse`, appears to be a web application built with Next.js that serves as a social platform centered around GitHub profiles. It allows users to view GitHub user profiles, their repositories, contribution data, and provides a "collab matching engine" to find similar developers. The target files are central to displaying user profiles and implementing the developer matching logic.
+
+*   `apps/web/src/app/profile/[username]/page.tsx`: This file is a Next.js App Router page component responsible for fetching and rendering a specific GitHub user's profile information, including their basic details, repositories, contribution heatmap, activity, and a README. It also handles logic for following users.
+*   `apps/web/src/lib/matching.ts`: This file contains the core logic for the "collab matching engine." It defines functions to build a user's tech stack profile based on their GitHub repositories and to find other users with similar tech stacks using cosine similarity.
+*   `tsconfig.json`: This is the TypeScript configuration file for the `apps/web` project, defining compiler options and project settings.
+
+The codebase uses Next.js for the web framework, Prisma for database interactions, and integrates with the GitHub API for fetching user and repository data. It employs a component-based architecture typical of React/Next.js applications.
+
+### Step 2: Deep Analysis
+
+**apps/web/src/app/profile/[username]/page.tsx**
+
+*   **Logic/Bugs**: The `ProfilePage` component's `params` prop is incorrectly typed as `Promise<{username: string;}>` and then `await params` is used. In Next.js App Router, `params` is a plain object, not a Promise. This is a critical bug that will likely cause a runtime error (e.g., `params.then is not a function`) or lead to `username` being an unresolved Promise, breaking the page's functionality.
+*   **Performance**: The use of `Promise.all` for parallel data fetching from GitHub is a good practice for performance.
+*   **Consistency**: The `eslint-disable-next-line @next/next/no-img-element` comment is a common pattern when using raw `<img>` tags instead of Next.js `Image` component.
+
+**apps/web/src/lib/matching.ts**
+
+*   **Performance**:
+    *   `findSimilarDevs` contains an N+1 query problem. Inside the loop iterating over `users`, `prisma.post.findMany` is called for each user to build their tech stack. If there are `N` users, this results in `N` additional database queries, which can severely degrade performance as the user base grows.
+    *   `getUserTechStack` uses `withCache` which is excellent for performance, preventing redundant GitHub API calls.
+*   **Logic**: The `similarity > 0.1` threshold in `findSimilarDevs` is a magic number. While functional, it could be made a configurable constant for better clarity and maintainability.
+*   **Architecture**: The `post.repoEmbed as Record<string, any>` type assertion is a bit broad. If `repoEmbed` has a consistent schema, a more specific type could improve type safety.
+
+**tsconfig.json**
+
+*   **Consistency**: The `target` is set to `ES2017`. Based on global memory, there was a previous attempt to update this to `ES2020` (PR #13) which was commented on by Joseph and not merged. Therefore, `ES2017` is the current intended state and should not be changed without further instruction.
+
+### Step 3: Pick ONE Improvement
+
+The most critical improvement is to fix the **incorrect handling of `params` in `apps/web/src/app/profile/[username]/page.tsx`**. This is a fundamental logic bug that will prevent the profile page from rendering correctly or even crashing the application. It takes precedence over the N+1 query problem in `matching.ts` because it's a direct functional error rather than a performance bottleneck that might only manifest under load.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT**: Correct the type definition for the `params` prop in the `ProfilePage` component signature and remove the `await` keyword when destructuring `username` from `params`.
+
+**WHERE**: In the file `apps/web/src/app/profile/[username]/page.tsx`.
+Specifically, the `ProfilePage` function signature and the line immediately following `const session = await auth();`.
+
+**WHY**: In Next.js App Router, the `params` object is passed directly to page components as a plain object, not as a Promise. The current code incorrectly types `params` as `Promise<{username: string;}>` and attempts to `await` it. This will cause a runtime error, such as `params.then is not a function`, or result in `username` being an unresolved Promise object, leading to incorrect data fetching and rendering. This is a critical logic bug that prevents the profile page from functioning as intended.
+
+**HOW**:
+1.  Locate the `ProfilePage` function definition in `apps/web/src/app/profile/[username]/page.tsx`.
+2.  Modify the function signature to change the type of `params` from `Promise<{username: string;}>` to `{username: string;}`.
+3.  Locate the line `const { username } = await params;`.
+4.  Remove the `await` keyword from this line, so it becomes `const { username } = params;`.
+
+**SCOPE**: This change is limited to a single file, `apps/web/src/app/profile/[username]/page.tsx`.
+
+**Executor**: {"title": "[LOGIC] Correct params type and await usage in ProfilePage", "body": "### Problem / Gap\nThe `params` prop in the `ProfilePage` component is incorrectly typed as `Promise<{username: string;}>` and then `await` is used when destructuring `username` from `params`. This will cause a runtime error because `params` is a plain object in Next.js App Router, not a Promise.\n\n### Solution & Insight\nTo fix this, we need to correct the type of `params` to `{username: string;}` and remove the `await` keyword when accessing `username`. This ensures that the code correctly handles the `params` object as intended by Next.js App Router.\n\n### Impact\nThis change fixes a critical logic bug that prevents the profile page from functioning correctly, potentially causing runtime errors or incorrect data rendering. By correcting the `params` type and usage, we ensure the application's stability and proper functionality.", "branch_name": "bot/fix-params-type-1774328170", "edits": [{"file": "apps/web/src/app/profile/[username]/page.tsx", "search": "export default async function ProfilePage({ params }: {params: Promise<{username: string;}>;}) {\n  const session = await auth();\n  const { username } = await params;", "replace": "export default async function ProfilePage({ params }: {params: {username: string;};}) {\n  const session = await auth();\n  const { username } = params;"}]}
+
+**Reviewer**: APPROVE: The Executor's proposed edit correctly addresses a critical bug in `apps/web/src/app/profile/[username]/page.tsx`. The `params` prop in Next.js App Router is a plain object, not a Promise. The edit correctly updates the type definition and removes the redundant `await` keyword, making the code functionally correct and compilable. The search block is exact, the change is valuable, and it aligns perfectly with the Scanner's recommendation.
+
+---
