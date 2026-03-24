@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: IntellectSafe**: [FEAT] Add Production Backend URL to Chrome Extension Permissions. (Ref: https://github.com/HOLYKEYZ/IntellectSafe/pull/16) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor submitted conflicting edits for the same file and failed to create a new file, a recurring issue. Emphasize atomic, non-conflicting edits and successful file creation.
 - **Repo: Alexcathe**: [SEC] Secure Payment Gate by Moving Status Check to Server-Side. (Ref: https://github.com/HOLYKEYZ/Alexcathe/pull/12) - *Status: MERGED - Joseph approved! Comment: '[vc]: #w06JH/9HvrgDp7dUQBl7iuoK3IU85WTsdLDYeucXoLs=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **REJECTED by Reviewer**: Executor submitted duplicate edits for `unfetter_proxy/providers/groq_web.py`, with one edit destructively removing `curl_cffi` impersonation.
 - **Repo: unfetter_proxy**: [FEAT] Implement Streaming Support in GroqWebProvider. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/10) - *Status: MERGED - Joseph approved!*
