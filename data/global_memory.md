@@ -1,10 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: Joseph-Portfolio**: [LOGIC] Correct Arrowhead Drawing in generate_flowchart.py. (Ref: https://github.com/HOLYKEYZ/Joseph-Portfolio/pull/9) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor submitted duplicate edits and introduced a destructive change by removing a docstring, despite the JSON search block not explicitly targeting it. Emphasize exact search blocks and non-destructive changes.
-- **REJECTED by Reviewer**: Executor's search block failed to match due to missing docstring, leading to unintended deletion. Emphasize exact match including all comments/docstrings.
-- **Repo: model-unfetter**: [DX] Enhance Verify Script with Command-Line Arguments. (Ref: https://github.com/HOLYKEYZ/model-unfetter/pull/8) - *Status: APPROVED - Joseph liked this!*
+- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
 - **Repo: Kelegam-Tech**: [REFACTOR] Standardize Dark Mode Background Colors. (Ref: https://github.com/HOLYKEYZ/Kelegam-Tech/pull/13) - *Status: REJECTED - Joseph closed this Comment: '[vc]: #F/l8zyfydDQ5V72x1Qb3vxeXj3glkeRtX1Hfsavmb18=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 - **REJECTED by Reviewer**: Executor failed to insert new variable definition using `search: ""` in `api/index.py`, leading to `NameError` due to an undefined variable. This highlights a recurring issue with imprecise `search: ""` for insertions.
 - **REJECTED by Reviewer**: Executor submitted duplicate edits and failed to use an exact search block for `temple-sysinfo/sysinfo.c`, specifically a mismatch in `if (` vs `if `.
@@ -86,4 +82,4 @@ is this g'*
 - **Repo: git-pulse**: [LOGIC] Enhance Error Handling in CollabWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/30) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Upgrade TypeScript Compiler Target to ES2020 in ui Package. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/32) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to insert a new utility function using `search: ""` and missed importing it, leading to a `ReferenceError` in `git-pulse`. This is a recurring issue with `search: ""` for insertions and incomplete changes.
-- **Repo: git-pulse**: [SEC] Validate URL in RepoCard Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/33) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Validate URL in RepoCard Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/33) - *Status: MERGED - Joseph approved!*
