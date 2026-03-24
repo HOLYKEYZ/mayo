@@ -4192,65 +4192,7 @@ Please review the original file content and the intended changes carefully to en
 
 ---
 
-## Cycle 1774266408
-**Scanner**: ## Codebase Understanding
-
-This repository, `git-pulse`, is a developer-centric social platform that mimics a Twitter-like feed format, built on top of the GitHub ecosystem. It allows users to share "Ships" (releases), repository updates, and engage in discussions.
-
-The `ReactionPicker.tsx` file is a client-side React component responsible for handling user reactions, specifically a "star" reaction, on posts. It manages the visual state and interaction for starring/unstarring a post and displaying the star count.
-
-The `tsconfig.json` file in `apps/api` configures the TypeScript compiler for the API application, defining module resolution, output directories, and strictness rules.
-
-The `FeedClient.tsx` file is the main client-side component for the social feed. It manages different tabs (Discover, Following, Activity), handles post composition (standard or "Ship It"), and fetches real-time post updates via Server-Sent Events (SSE).
-
-The codebase primarily uses Next.js 15 with the App Router, React for UI, Tailwind CSS for styling, and TypeScript for type safety. It follows a monorepo structure with `apps` and `packages` directories.
-
-## Deep Analysis
-
-### apps/web/src/components/ReactionPicker.tsx
-
-*   **Logic/Feature Bug**: The SVG `path` element for the star icon is identical whether `isStarred` is true or false. This means the star icon never visually changes between a filled and an outline state; only its color and opacity are altered by Tailwind classes. Users expect a clear visual distinction (e.g., a filled star for "starred" and an outline star for "unstarred").
-*   **Consistency**: The current `path` is a filled star icon. An outline version should be used when `isStarred` is false.
-
-### apps/api/tsconfig.json
-
-*   **Consistency/Architecture**: The `compilerOptions.module` is set to `CommonJS`. While functional, for a modern TypeScript project within a Next.js monorepo, `ESNext` or `NodeNext` might offer better module resolution, tree-shaking capabilities, and alignment with modern JavaScript module standards, especially if the API eventually adopts ES Modules. This is not a bug but a potential modernization/consistency improvement.
-
-### apps/web/src/components/FeedClient.tsx
-
-*   **Logic/Error Handling**: The `eventSource.onmessage` callback includes a `try...catch` block that silently swallows any errors during JSON parsing or post processing (`catch (err) { }`). This makes debugging difficult as runtime issues with the SSE stream or data format will go unnoticed, leading to silent failures in the feed update mechanism.
-*   **Performance (Minor)**: The deduplication logic `prev.find(p => p.id === data.post.id)` involves iterating through the `prev` array. For a very large number of live posts, this `find` operation could become less efficient. However, for typical social feed sizes, this is unlikely to be a significant bottleneck.
-*   **Consistency/Architecture (Minor)**: The `EventSource` URL (`"/api/feed/stream"`) is hardcoded. While it's a client-side component, using a shared constant or an environment variable for API endpoints can improve maintainability and consistency across different environments or if the API path changes.
-
-## Selected Improvement Plan
-
-The most valuable improvement is to fix the visual representation of the star icon in `ReactionPicker.tsx`. This is a direct user experience bug that impacts the clarity and intuitiveness of the reaction mechanism.
-
-### Executor's Plan
-
-**WHAT to change:**
-The star icon in the `ReactionPicker` component currently uses the same SVG path for both the "starred" and "unstarred" states. This results in the icon not visually changing its shape (filled vs. outline) when a user interacts with it, only its color and opacity. The improvement is to replace the SVG path for the "unstarred" state with an appropriate outline star icon path, ensuring a clear visual distinction between the two states.
-
-**WHERE in the file(s):**
-The change should be made in `apps/web/src/components/ReactionPicker.tsx`. Specifically, locate the `svg` element that conditionally renders two `path` elements based on the `isStarred` variable. The `path` element within the `else` block (the unstarred state) needs to be updated.
-
-**WHY this matters:**
-This is a user experience and functional clarity bug. When a user stars a post, they expect the icon to visually transform from an outline to a filled star, and vice-versa. Currently, the lack of this visual change can be confusing and diminishes the feedback provided by the UI. Implementing a distinct outline star icon for the unstarred state will significantly improve the intuitiveness and visual feedback of the reaction system.
-
-**HOW to do it:**
-1.  Navigate to the file `apps/web/src/components/ReactionPicker.tsx`.
-2.  Locate the `return` statement of the `ReactionPicker` component.
-3.  Find the `svg` element containing the conditional rendering for the `path` elements.
-4.  Identify the `path` element that is rendered when `isStarred` is `false` (i.e., the `else` branch of the ternary operator).
-5.  Replace the `d` attribute value of this `path` element with the SVG path for an outline star icon. The current filled star path is `M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z`. The new outline star path should be `M8 0a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 0Zm0 1.54L6.41 4.6l-3.26.47 2.36 2.3-.56 3.25L8 9.77l2.95 1.55-.56-3.25 2.36-2.3-3.26-.47L8 1.54Z`.
-
-**Executor**: {"title": "[FEAT] Enhance Star Icon Visual Feedback in ReactionPicker", "body": "### Problem / Gap\nThe star icon in the ReactionPicker component does not visually change between a filled and an outline state when a user interacts with it, only its color and opacity. This diminishes the feedback provided by the UI.\n\n### Solution & Insight\nTo improve the user experience, we will replace the SVG path for the unstarred state with an appropriate outline star icon path, ensuring a clear visual distinction between the two states.\n\n### Impact\nThis change will significantly enhance the intuitiveness and visual feedback of the reaction system, making it clearer to users when they have starred a post.", "branch_name": "bot/enhance-star-icon-1774266408", "edits": [{"file": "apps/web/src/components/ReactionPicker.tsx", "search": "                    ) : (\n                        <path d=\"M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z\"/>\n                    )}", "replace": "                    ) : (\n                        <path d=\"M8 0a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 0Zm0 1.54L6.41 4.6l-3.26.47 2.36 2.3-.56 3.25L8 9.77l2.95 1.55-.56-3.25 2.36-2.3-3.26-.47L8 1.54Z\"/>\n                    )"}]}
-
-**Reviewer**: APPROVE: The Executor's proposed edit precisely targets the identified UI bug in `ReactionPicker.tsx`. The search block is an exact match, and the replacement correctly introduces a distinct SVG path for the unstarred state, providing clear visual feedback to the user. This change is functional, valuable, and aligns perfectly with the Scanner's plan. It also avoids common pitfalls seen in past rejections for this repository, such as search block mismatches or destructive changes.
-
----
-
-## Cycle 1774298406
+1774298406
 **Scanner**: **Step 1: Codebase Understanding**
 
 *   **What does this repository do?**
@@ -4535,5 +4477,87 @@ The `ProfileReadme` component currently uses `rehype-raw`, which allows raw HTML
 **Executor**: {"title": "[SEC] Sanitize Markdown Content in ProfileReadme Component", "body": "### Problem / Gap\nThe `ProfileReadme` component is vulnerable to Cross-Site Scripting (XSS) attacks because it uses `rehype-raw` to render raw HTML from untrusted Markdown content.\n\n### Solution & Insight\nTo fix this, we introduce a sanitization step using `DOMPurify`. We first add `dompurify` as a dependency, then import and use it to sanitize the `content` prop before passing it to `ReactMarkdown`. This ensures that any malicious HTML or scripts are removed, preventing XSS attacks.\n\n### Impact\nThis change significantly improves the security of the application by preventing XSS attacks that could steal user data, deface the interface, or execute unauthorized actions.", "branch_name": "bot/fix-xss-1774308989", "edits": [{"file": "apps/web/package.json", "search": "\"dependencies\": {", "replace": "\"dependencies\": {\n    \"dompurify\": \"^2.3.8\","}, {"file": "apps/web/src/components/ProfileReadme.tsx", "search": "import ReactMarkdown from \"react-markdown\";", "replace": "import ReactMarkdown from \"react-markdown\";\nimport DOMPurify from \"dompurify\";"}, {"file": "apps/web/src/components/ProfileReadme.tsx", "search": "return (\n    <div className=\"w-full animate-fade-in\">", "replace": "const sanitizedContent = DOMPurify.sanitize(content);\nreturn (\n    <div className=\"w-full animate-fade-in\">"}, {"file": "apps/web/src/components/ProfileReadme.tsx", "search": ">{content}</ReactMarkdown>", "replace": ">{sanitizedContent}</ReactMarkdown>"}]}
 
 **Reviewer**: CORRECT: The Executor correctly identified the XSS vulnerability and proposed the right solution using `dompurify`. The first three edits (adding dependency, importing `DOMPurify`, and calling `DOMPurify.sanitize`) are correct and well-placed. However, the final edit to replace `{content}` with `{sanitizedContent}` within the `ReactMarkdown` component failed due to an incorrect search block. The proposed search string `>{content}</ReactMarkdown>` did not match the actual file content, resulting in 'NO CHANGES' for this critical step. This means the unsanitized content would still be rendered, negating the security fix. The corrected edits address this by using the precise search block for `{content}` including its leading whitespace.
+
+---
+
+## Cycle 1774319105
+**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
+
+### Step 1: Codebase Understanding
+
+This repository, `git-pulse`, functions as a social layer built on top of GitHub, aiming to enhance user interaction and experience. It provides features such as a personalized notification feed and dynamic theme switching.
+
+-   **`apps/web/public/manifest.json`**: This file defines the Web App Manifest for the `git-pulse` application. It provides metadata essential for Progressive Web App (PWA) functionality, such as the application's name, short name, description, start URL, display mode, and icon information. It also specifies default theme and background colors for the browser's PWA interface.
+-   **`apps/web/src/app/notifications/page.tsx`**: This is a Next.js App Router page component responsible for displaying a user's notifications. It fetches notifications from a database using Prisma, marks unread notifications as read upon page load, and renders them with type-specific icons and relative timestamps. It also handles redirection for unauthenticated users.
+-   **`apps/web/src/components/ThemeProvider.tsx`**: This React client component provides a theming context for the application. It allows users to switch between "github" (light) and "midnight" (dark) themes, persisting their preference in local storage. It applies the selected theme by setting a `data-theme` attribute on the document's root element and includes logic to prevent a flash of unstyled content (FOUC) during initial load.
+
+The codebase utilizes modern web development patterns and frameworks, including:
+-   **Next.js App Router**: For routing, server-side rendering capabilities, and API routes.
+-   **React**: For building user interfaces with components, hooks, and context API.
+-   **TypeScript**: For type safety and improved developer experience.
+-   **Tailwind CSS**: For utility-first styling (inferred from class names like `bg-git-bg`, `text-git-text`).
+-   **Prisma**: As an Object-Relational Mapper (ORM) for database interactions.
+-   **NextAuth.js (or similar)**: For authentication and session management.
+-   **Progressive Web App (PWA)**: Through the `manifest.json` file.
+
+### Step 2: Deep Analysis
+
+**Security**:
+-   In `notifications/page.tsx`, user ID (`session.user.id`) is correctly used in Prisma queries to ensure users only access their own notifications, preventing unauthorized data access.
+-   The `n.message` and `n.linkUrl` values are rendered directly. While `n.linkUrl` within a Next.js `Link` component is generally safe for internal navigation, if `n.message` or `n.linkUrl` can contain unsanitized user-generated content or external malicious URLs, it could pose a potential Cross-Site Scripting (XSS) or open redirect vulnerability. Assuming server-side sanitization or trusted data sources for notifications.
+
+**Logic**:
+-   In `notifications/page.tsx`, the logic for fetching notifications, marking them as read, and rendering them with relative times and icons appears sound. The `try...catch` block for database operations is a good practice.
+-   In `ThemeProvider.tsx`, the logic for reading/saving theme preferences from `localStorage` and applying them to `document.documentElement` is correct. The FOUC prevention mechanism using `mounted` state is also correctly implemented.
+
+**Performance**:
+-   In `notifications/page.tsx`, `take: 50` limits the number of fetched notifications, which is good for initial page load performance. However, the absence of pagination means users cannot access older notifications beyond the initial 50, which could become a performance bottleneck if the limit were increased significantly or if users frequently need to scroll through many notifications.
+-   The `dynamic = "force-dynamic"` export ensures the notifications page is always rendered fresh, which is appropriate for personalized content.
+
+**Architecture**:
+-   The use of Next.js App Router, React components, and Prisma follows a standard and maintainable architecture for a modern web application.
+-   Error handling in `notifications/page.tsx` is basic (`console.error`). For a production application, this could be enhanced with a more robust logging system or user-facing error messages.
+-   The `ThemeProvider` effectively centralizes theme management using React Context.
+
+**Features**:
+-   **Missing Pagination**: In `notifications/page.tsx`, there is no pagination mechanism for notifications. Users are limited to viewing the most recent 50 notifications.
+-   **Missing System Theme Preference**: `ThemeProvider.tsx` does not detect the user's system-wide dark/light mode preference (e.g., using `prefers-color-scheme` media query) to set an initial theme. It relies solely on `localStorage` or defaults to "github".
+-   **Theming Inconsistency**: The `manifest.json` hardcodes `background_color` and `theme_color` to a dark value (`#0D1117`). However, the `ThemeProvider` defaults to the "github" theme, which is typically a light theme. This creates an inconsistency where the PWA's browser UI (e.g., status bar, address bar) might appear dark even when the application content is light, leading to a jarring user experience.
+
+**Testing**:
+-   No explicit test files or testing patterns are visible within the provided code snippets.
+
+**DX (Developer Experience)**:
+-   The code is generally well-structured and readable.
+-   `TYPE_ICONS` in `notifications/page.tsx` is a clear mapping.
+-   The `getRelativeTime` utility is a good abstraction.
+
+**Consistency**:
+-   Naming conventions and import patterns appear consistent within the provided files.
+-   The most notable inconsistency is the theming mismatch between `manifest.json` and the default `ThemeProvider` state.
+
+**Dead Code**:
+-   No dead code was identified in the provided files.
+
+### Step 3: Pick ONE Improvement
+
+The most valuable improvement to address is the **theming inconsistency between the `manifest.json` and the application's default theme**. This is a direct conflict that impacts the user experience for PWA users, causing a visual disconnect between the browser's UI and the application's content. While missing features like pagination are important, this inconsistency is a bug in the overall theming strategy that should be resolved for a cohesive user experience.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT**: Update the `background_color` and `theme_color` properties in the `manifest.json` file to reflect a light theme, aligning with the application's default "github" theme.
+
+**WHERE**: In the file `apps/web/public/manifest.json`, specifically within the top-level JSON object, for the keys `background_color` and `theme_color`.
+
+**WHY**: The current `manifest.json` specifies dark theme colors (`"#0D1117"`) for the Progressive Web App (PWA) browser UI elements. However, the application's default theme, as established by `ThemeProvider.tsx`, is "github", which is typically a light theme. This discrepancy creates an inconsistent user experience where the browser's PWA chrome (e.g., status bar, address bar) might appear dark while the application content is light. By setting these manifest colors to light values, we ensure consistency with the default "github" theme, providing a more cohesive and less jarring visual experience for users who install the PWA. While a fully dynamic manifest based on user preference is complex for a static file, aligning it with the primary default theme is a practical and significant improvement for user experience.
+
+**HOW**:
+1.  Locate the file `apps/web/public/manifest.json`.
+2.  Find the line that defines the `background_color` property. It currently has a value of `"#0D1117"`. Change this value to `"#ffffff"` to represent a light background.
+3.  Find the line that defines the `theme_color` property. It currently has a value of `"#0D1117"`. Change this value to `"#f6f8fa"` to represent a light theme color, similar to GitHub's light mode background.
+
+**Executor**: {"title": "[REFACTOR] Align manifest.json theme with application default", "body": "### Problem / Gap\nThe `manifest.json` file specifies a dark theme for the PWA, which conflicts with the application's default light theme.\n\n### Solution & Insight\nUpdate the `background_color` and `theme_color` properties in `manifest.json` to reflect a light theme, ensuring consistency with the application's default theme.\n\n### Impact\nImproves user experience by providing a visually consistent theme across the application and PWA browser UI.", "branch_name": "bot/upgrade-1774319105", "edits": [{"file": "apps/web/public/manifest.json", "search": "{\"name\": \"GitPulse\",\"short_name\": \"GitPulse\",\"description\": \"GitHub's Social Layer\",\"start_url\": \"/\",\"display\": \"standalone\",\"background_color\": \"#0D1117\",\"theme_color\": \"#0D1117\",\"icons\": [{\"src\": \"/icon.png\",\"sizes\": \"1024x1024\",\"type\": \"image/png\"}]}\n", "replace": "{\"name\": \"GitPulse\",\"short_name\": \"GitPulse\",\"description\": \"GitHub's Social Layer\",\"start_url\": \"/\",\"display\": \"standalone\",\"background_color\": \"#ffffff\",\"theme_color\": \"#f6f8fa\",\"icons\": [{\"src\": \"/icon.png\",\"sizes\": \"1024x1024\",\"type\": \"image/png\"}]}\n"}]}
+
+**Reviewer**: REJECTED x2: The proposed edit for `apps/web/public/manifest.json` failed to apply because the `search` block did not exactly match the original file content. The `manifest.json` file is pretty-printed with newlines and indentation, but your `search` block is a single-line, minified JSON string. To fix this, your `search` block must be an *exact, character-for-character* match of the original content, including all newlines, spaces, and indentation. Please reconstruct both the `search` and `replace` blocks to precisely reflect the multi-line, formatted structure of the JSON file.
 
 ---
