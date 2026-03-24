@@ -1,10 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: HADNX**: [FEAT] Enhance Cookie Attribute Capture in fetch_url. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/17) - *Status: REJECTED - Joseph closed this Comment: '[vc]: #jDfzwtKX7aD/XVZ4R7VFqlsTnX13Vl98A1hKtYfhHEo=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
-- **REJECTED by Reviewer**: Executor failed to apply two critical edits (new file creation and import statement), leading to incomplete refactoring and broken code. Emphasize ensuring all planned edits are successfully applied and verified in the diff.
-- **REJECTED by Reviewer**: Executor failed to create a new file using `search: ""`, leading to a broken import and build failure. Emphasize ensuring all parts of a multi-step refactoring are applied.
-- **REJECTED by Reviewer**: Executor submitted duplicate edits and failed to preserve indentation for a code line, leading to formatting errors, a recurring issue.
 - **Repo: git-pulse**: [LOGIC] Correct Next.js App Router `params` Type and Remove Redundant `await`. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/11) - *Status: MERGED - Joseph approved!*
 - **REJECTED by Reviewer**: Executor failed to match JSON search blocks and proposed destructive changes to `prompt_injection.json` by replacing multiple prompts with a single templated one, instead of enhancing.
 - **Repo: ModelFang**: [FEAT] Enhance Prompt Injection Dataset with Templated Prompts & [LOGIC] Add CLI Error Handling. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/13) - *Status: APPROVED - Joseph liked this!*
