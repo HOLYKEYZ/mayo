@@ -1,11 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 7 older lessons were archived to preserve focus.*
-- **Repo: unfetter_proxy**: [LOGIC] Update Tokenizer Mapping for OpenAI Compatibility. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/9) - *Status: REJECTED - Joseph closed this*
-- **Repo: mayo**: [REFACTOR] Remove unused import. (Ref: https://github.com/HOLYKEYZ/mayo/pull/8) - *Status: MERGED - Joseph approved! Comment: '[vc]: #rreUxFJt7bEB4Ayb18HqLgyJVNZwbZgmWefsY77nieQ=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
-- **REJECTED by Reviewer**: Executor repeated past mistakes: search block mismatches due to incorrect indentation, duplicate edits, and introduced syntax errors (duplicate useState declarations) and destructive changes. Emphasize exact search block matching including all leading whitespace, and atomic, non-conflicting edits.
-- **REJECTED by Reviewer**: Executor failed to apply the first part of a two-part refactoring, leading to broken code due to missing imports. Also, a docstring was removed. Emphasize exact search blocks for insertions and preserving documentation.
-- **REJECTED by Reviewer**: Executor's search blocks failed to match due to incorrect context/indentation, and the resulting diff preview showed destructive, unintended deletions, similar to past rejections. Emphasize exact search block matching and non-destructive reordering.
+- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
 - **Repo: model-unfetter**: [REFACTOR] Reorder Model Family Detection Logic in registry.py. (Ref: https://github.com/HOLYKEYZ/model-unfetter/pull/7) - *Status: MERGED - Joseph approved!*
 - **REJECTED by Reviewer**: Executor failed to match search blocks due to incorrect assumptions about original code (missing newlines that were present). Also, introduced redundant and conflicting truncation logic for `print_env_vars` instead of integrating or replacing.
 - **Repo: temple-sysinfo**: [LOGIC] Correct print_env_vars Truncation Logic and Remove Redundant Edits. (Ref: https://github.com/HOLYKEYZ/temple-sysinfo/pull/9) - *Status: MERGED - Joseph approved!*
@@ -104,4 +99,4 @@ is this g'*
 - **Joseph's Feedback on git-pulse#18**: "good job mayo , continue" — Mayo acknowledged and responded.
 <!-- LAST_PROACTIVE_ISSUE=1774308982 -->
 - **REJECTED by Reviewer**: Executor failed to apply the final, critical step of a security fix (using sanitized content), resulting in an incomplete and ineffective patch for `git-pulse`, likely due to a search block mismatch.
-- **Repo: git-pulse**: [SEC] Sanitize Markdown Content in ProfileReadme Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/20) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Sanitize Markdown Content in ProfileReadme Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/20) - *Status: REJECTED - Joseph closed this*
