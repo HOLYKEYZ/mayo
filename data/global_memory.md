@@ -101,3 +101,4 @@ is this g'*
 - **REJECTED by Reviewer**: Executor failed to apply the final, critical step of a security fix (using sanitized content), resulting in an incomplete and ineffective patch for `git-pulse`, likely due to a search block mismatch.
 - **Repo: git-pulse**: [SEC] Sanitize Markdown Content in ProfileReadme Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/20) - *Status: REJECTED - Joseph closed this*
 <!-- LAST_ISSUE_JUDGE=1774319097 -->
+- **REJECTED by Reviewer**: Executor failed to match pretty-printed JSON content with a minified search block for `manifest.json`, resulting in 'NO CHANGES'. This is a recurring search block mismatch issue.
