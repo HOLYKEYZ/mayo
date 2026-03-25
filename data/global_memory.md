@@ -74,3 +74,4 @@ is this g'*
 - **REJECTED by Reviewer**: Executor failed to include leading whitespace/indentation in search blocks for `git-pulse`, a recurring issue leading to patching failures and indentation errors.
 - **REJECTED by Reviewer**: Executor failed to match pretty-printed JSON content with a minified search block for `manifest.json`, resulting in 'NO CHANGES'. This is a recurring search block mismatch issue for `git-pulse`.
 - **Repo: git-pulse**: [FEAT] Enhance PWA Manifest with Additional Icon Sizes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/42) - *Status: APPROVED - Joseph liked this!*
+- **REJECTED by Reviewer**: Executor repeated critical mistake: used placeholder comments in search blocks (e.g., `// ... existing code ...`) instead of exact code, leading to 'NO CHANGES' and patching failure for `git-pulse`. Also failed to follow prop passing instructions.
