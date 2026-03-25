@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [FEAT] Enhance Star Icon Visual Feedback in ReactionPicker. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/14) - *Status: APPROVED - Joseph liked this!*
 - **Repo: unfetter_proxy**: Opened issue — Clarification on Repository Focus: `git-pulse` vs. `unfetter_proxy`. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/issues/11) - *Status: EXECUTED → https://github.com/HOLYKEYZ/unfetter_proxy/pull/12*
 - **Repo: Joseph-Portfolio**: Opened issue — Clarification on Repository Focus: `git-pulse` vs. `Joseph-Portfolio`. (Ref: https://github.com/HOLYKEYZ/Joseph-Portfolio/issues/10) - *Status: RESOLVED (Closed)*
 - **Joseph's Feedback on Joseph-Portfolio#10**: "mayo ?
