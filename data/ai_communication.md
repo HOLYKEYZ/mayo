@@ -5185,3 +5185,94 @@ Specifically, modifications will occur in:
 **Reviewer**: CORRECT: The Executor correctly identified and addressed the critical logic bug regarding `params` type and `await` usage, and implemented robust error handling for the API call. These first three edits are functional, valuable, and align perfectly with the Scanner's plan and previous fixes in the repository. However, the fourth edit, which aims to refine the 'no repositories found' message, failed to apply because the provided search block did not precisely match the multi-line structure and indentation of the original JSX content. This is a recurring search block mismatch issue.
 
 ---
+
+## Cycle 1774439402
+**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
+
+### Step 1: Codebase Understanding
+
+*   **What does this repository do?**
+    The `git-pulse` repository hosts a web application designed for discovering and sharing GitHub repositories. It features a unique scoring algorithm to highlight "hidden gems" based on factors like technology stack novelty, activity, and author influence, rather than just raw popularity. Users can manage their account settings, including API integrations and privacy preferences.
+
+*   **What do the target files do within the repo?**
+    *   `apps/web/src/lib/algo.ts`: This file contains the core logic for calculating a "quality score" for a GitHub repository. It defines the `ScoreFactors` interface and the `calculatePostScore` function, which implements the custom algorithm to evaluate repositories for posts.
+    *   `apps/web/src/app/settings/page.tsx`: This file renders the user settings page. It allows users to configure various aspects of their account, including theme preferences, API token management (generation, revocation, preview), and privacy toggles for displaying activity and contributions on their profile. It also provides a GitHub Action YAML example for integration.
+    *   `packages/ui/tsconfig.json`: This is the TypeScript configuration file for the `ui` package within the monorepo. It extends the root `tsconfig.json` and specifies compiler options, include paths, and exclude paths relevant to the shared UI components.
+
+*   **What patterns, frameworks, or conventions does the codebase use?**
+    The codebase utilizes Next.js for its web application framework, leveraging its `app` directory structure and API routes. It employs React with hooks (`useState`, `useEffect`) for building interactive user interfaces. TypeScript is used throughout for strong type-safety. Styling is managed with Tailwind CSS, indicated by utility classes and configuration files. The project is structured as a pnpm monorepo, separating applications (`apps`) from shared packages (`packages/ui`). It also integrates with GitHub Actions for automated processes.
+
+### Step 2: Deep Analysis
+
+*   **Security**:
+    *   `apps/web/src/app/settings/page.tsx`: The GitHub Action YAML example correctly uses a `GITPULSE_TOKEN` from secrets, which is good practice. API key generation and revocation are handled via backend API routes, and only a preview of the key is shown on the frontend, which enhances security. However, the privacy toggles (`showActivity`, `showContributions`) are currently client-side only, meaning they don't enforce any actual privacy settings on the backend. This is a potential security/logic gap if these settings are intended to control data visibility.
+*   **Logic**:
+    *   `apps/web/src/lib/algo.ts`: The `calculatePostScore` algorithm's logic for language novelty, star/fork diminishing returns, recent activity, and follower bias is well-defined and appears intentional for its goal of surfacing "hidden gems." The time decay factor and ensuring a non-negative score are also logically sound. The hardcoded language lists might become outdated but are functionally correct for now.
+    *   `apps/web/src/app/settings/page.tsx`: The API key management flow (fetch, generate, revoke) appears logically correct. The copy-to-clipboard functionality is standard. The significant logic flaw is that the `showActivity` and `showContributions` privacy toggles only update local React state. Changes made by the user are not persisted to a backend, meaning they are lost on page refresh and do not actually affect the user's privacy settings on the platform.
+*   **Performance**:
+    *   `apps/web/src/lib/algo.ts`: The scoring algorithm involves simple array lookups and arithmetic operations, making it highly performant.
+    *   `apps/web/src/app/settings/page.tsx`: Initial data fetching in `useEffect` runs once on mount. State updates and UI rendering for a small number of tabs and settings are efficient. No obvious performance bottlenecks.
+*   **Architecture**:
+    *   `apps/web/src/app/settings/page.tsx`: The settings page is well-structured with tabs for different categories. The API key management logic is self-contained. The `ACTION_YAML` is hardcoded; for greater flexibility, it could be externalized or fetched, but this is a minor point for the current scope.
+    *   `apps/web/src/lib/algo.ts`: This file serves as a pure utility, which is good architectural practice, promoting reusability and testability.
+    *   `packages/ui/tsconfig.json`: The `tsconfig.json` correctly extends the root configuration, promoting consistent TypeScript settings across the monorepo.
+*   **Features**:
+    *   `apps/web/src/app/settings/page.tsx`: The theme switching and API integration example are valuable features. The privacy toggles are a presented feature, but their lack of backend persistence makes them incomplete and non-functional.
+*   **Testing**:
+    *   No test files were provided in the analysis context. `apps/web/src/lib/algo.ts` is a pure function and would benefit greatly from comprehensive unit tests. `apps/web/src/app/settings/page.tsx` would benefit from integration tests to ensure UI interactions correctly trigger API calls and update state.
+*   **DX (Developer Experience)**:
+    *   The monorepo structure, TypeScript usage, and consistent styling with Tailwind CSS generally contribute to a good DX. The `tsconfig.json` files are well-configured.
+*   **Consistency**:
+    *   Naming conventions, import patterns, and overall code style appear consistent across the analyzed files. The `tsconfig.json` in `packages/ui` correctly extends the root `tsconfig.json`, ensuring consistent TypeScript compiler options.
+*   **Dead Code**:
+    *   No strictly dead code was found. However, the `showActivity` and `showContributions` state variables in `apps/web/src/app/settings/page.tsx` are functionally incomplete as their changes are not persisted, making their current effect negligible beyond local UI updates.
+
+### Step 3: Pick ONE Improvement
+
+The most critical improvement is to address the **non-functional privacy toggles** in `apps/web/src/app/settings/page.tsx`. This is a significant logic flaw and a missing core feature, as users expect their privacy preferences to be saved and applied. Fixing this directly impacts user experience and the integrity of the application's settings.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT** to change:
+The privacy toggles for "Show activity on your profile" and "Show contributions on your profile" in the settings page currently only update local component state. This improvement will integrate these toggles with a backend API to persist the user's preferences, ensuring that their privacy settings are saved and applied across sessions. This involves adding new state for managing the saving process, extending the initial data fetch to retrieve current privacy settings, and creating new functions to update these settings via API calls.
+
+**WHERE** in the file(s):
+The changes will be made within `apps/web/src/app/settings/page.tsx`.
+Specifically, modifications will occur:
+1.  Near the existing `useState` declarations for `showActivity` and `showContributions`.
+2.  Within the `useEffect` hook that currently fetches the API token.
+3.  New asynchronous functions will be added to handle API calls for updating privacy settings.
+4.  The JSX for the privacy toggles will be updated to invoke these new functions and reflect the saving state.
+
+**WHY** this matters:
+Currently, the privacy settings presented in the user interface are purely cosmetic. Toggling "Show activity on your profile" or "Show contributions on your profile" has no lasting effect, as these changes are not communicated to or stored by the backend. This creates a broken user experience, as users naturally expect their preferences to be saved and respected. Implementing persistence for these settings is crucial for the application's functionality, user trust, and overall data privacy compliance, addressing a significant logic flaw and an incomplete feature.
+
+**HOW** to do it:
+1.  **Introduce a new state variable for saving status**: Add a `useState` variable named `savingPrivacy`, initialized to `false`, to indicate when a privacy setting update is in progress.
+2.  **Enhance the initial data fetching**:
+    *   Modify the existing `useEffect` hook (which fetches `/api/auth/token`) to also make a `fetch` call to a new or existing backend API endpoint (e.g., `/api/user/privacy-settings`) to retrieve the user's current `showActivity` and `showContributions` preferences.
+    *   Upon successful retrieval, update the `showActivity` and `showContributions` state variables with the values from the backend.
+    *   Ensure the `setLoading` state correctly reflects the completion of both the API token and privacy settings fetches.
+3.  **Create an asynchronous function to update privacy settings**:
+    *   Define a new `async` function, for example, `handlePrivacyToggle`, which accepts the setting name (e.g., "showActivity", "showContributions") and the new boolean value.
+    *   Inside this function, set `savingPrivacy` to `true` to disable the toggles during the API call.
+    *   Make a `fetch` call to a backend API endpoint (e.g., `PUT /api/user/privacy-settings`) with the setting name and its new value in the request body.
+    *   Include appropriate error handling for the API call.
+    *   In a `finally` block, set `savingPrivacy` back to `false`.
+4.  **Update the privacy toggle JSX**:
+    *   Modify the `onClick` handlers for both the "Show activity on your profile" and "Show contributions on your profile" toggles.
+    *   These handlers should now call the new `handlePrivacyToggle` function, passing the specific setting name and the inverse of the current state (`!showActivity` or `!showContributions`).
+    *   Add a `disabled` attribute to the toggle buttons, setting it to `savingPrivacy` to prevent multiple updates while an API call is in progress.
+    *   Consider adding a visual indicator (e.g., a small spinner or "Saving..." text) next to the toggles when `savingPrivacy` is `true`.
+
+**Executor**: {"title": "[LOGIC] Persist Privacy Settings", "body": "### Problem / Gap\nThe privacy toggles for 'Show activity on your profile' and 'Show contributions on your profile' in the settings page do not persist their state. Changes made by the user are lost on page refresh because they are not communicated to or stored by the backend.\n\n### Solution & Insight\nTo address this, we introduce a new state variable `savingPrivacy` to track when a privacy setting update is in progress. We enhance the initial data fetching to retrieve the user's current privacy settings from the backend and update the state accordingly. A new asynchronous function `handlePrivacyToggle` is created to handle API calls for updating these settings. The JSX for the privacy toggles is updated to invoke this function and reflect the saving state.\n\n### Impact\nThis change ensures that user preferences for privacy settings are saved and applied across sessions, enhancing the overall user experience and data privacy compliance.", "branch_name": "bot/persist-privacy-settings-1774439402", "edits": [{"file": "apps/web/src/app/settings/page.tsx", "search": "const [showActivity, setShowActivity] = useState(true);\nconst [showContributions, setShowContributions] = useState(true);", "replace": "const [showActivity, setShowActivity] = useState(true);\nconst [showContributions, setShowContributions] = useState(true);\nconst [savingPrivacy, setSavingPrivacy] = useState(false);"}, {"file": "apps/web/src/app/settings/page.tsx", "search": "useEffect(() => {\n    fetch(\"/api/auth/token\")\n      .then((r) => r.json())\n      .then((data) => {\n        setHasKey(data.hasKey);\n        setKeyPreview(data.keyPreview);\n      })\n      .finally(() => setLoading(false));\n}, []);", "replace": "useEffect(() => {\n    Promise.all([\n      fetch(\"/api/auth/token\").then((r) => r.json()),\n      fetch(\"/api/user/privacy-settings\").then((r) => r.json())\n    ])\n      .then(([tokenData, privacyData]) => {\n        setHasKey(tokenData.hasKey);\n        setKeyPreview(tokenData.keyPreview);\n        setShowActivity(privacyData.showActivity);\n        setShowContributions(privacyData.showContributions);\n      })\n      .finally(() => setLoading(false));\n}, []);"}, {"file": "apps/web/src/app/settings/page.tsx", "search": "const copy = (text: string, type: \"key\" | \"yaml\") => {\n    navigator.clipboard.writeText(text);\n    setCopied(type);\n    setTimeout(() => setCopied(null), 2000);\n};", "replace": "const copy = (text: string, type: \"key\" | \"yaml\") => {\n    navigator.clipboard.writeText(text);\n    setCopied(type);\n    setTimeout(() => setCopied(null), 2000);\n};\n\nconst handlePrivacyToggle = async (setting: \"showActivity\" | \"showContributions\", value: boolean) => {\n    setSavingPrivacy(true);\n    try {\n      await fetch(\"/api/user/privacy-settings\", {\n        method: \"PUT\",\n        headers: {\n          \"Content-Type\": \"application/json\"\n        },\n        body: JSON.stringify({ [setting]: value })\n      });\n    } finally {\n      setSavingPrivacy(false);\n    }\n};"}, {"file": "apps/web/src/app/settings/page.tsx", "search": "<div className=\"flex items-center mb-4\">\n  <label className=\"flex items-center gap-2 cursor-pointer\">\n    <input\n      type=\"checkbox\"\n      checked={showActivity}\n      onChange={() => setShowActivity(!showActivity)}\n      className=\"h-4 w-4 text-git-accent focus:ring-git-accent border-git-border rounded\"\n    />\n    <span className=\"text-sm font-medium text-git-text\">Show activity on your profile</span>\n  </label>\n</div>\n<div className=\"flex items-center mb-4\">\n  <label className=\"flex items-center gap-2 cursor-pointer\">\n    <input\n      type=\"checkbox\"\n      checked={showContributions}\n      onChange={() => setShowContributions(!showContributions)}\n      className=\"h-4 w-4 text-git-accent focus:ring-git-accent border-git-border rounded\"\n    />\n    <span className=\"text-sm font-medium text-git-text\">Show contributions on your profile</span>\n  </label>\n</div>", "replace": "<div className=\"flex items-center mb-4\">\n  <label className=\"flex items-center gap-2 cursor-pointer\">\n    <input\n      type=\"checkbox\"\n      checked={showActivity}\n      onChange={() => handlePrivacyToggle(\"showActivity\", !showActivity)}\n      disabled={savingPrivacy}\n      className=\"h-4 w-4 text-git-accent focus:ring-git-accent border-git-border rounded\"\n    />\n    <span className=\"text-sm font-medium text-git-text\">Show activity on your profile</span>\n    {savingPrivacy && <span className=\"text-sm text-git-muted\">Saving...</span>}\n  </label>\n</div>\n<div className=\"flex items-center mb-4\">\n  <label className=\"flex items-center gap-2 cursor-pointer\">\n    <input\n      type=\"checkbox\"\n      checked={showContributions}\n      onChange={() => handlePrivacyToggle(\"showContributions\", !showContributions)}\n      disabled={savingPrivacy}\n      className=\"h-4 w-4 text-git-accent focus:ring-git-accent border-git-border rounded\"\n    />\n    <span className=\"text-sm font-medium text-git-text\">Show contributions on your profile</span>\n    {savingPrivacy && <span className=\"text-sm text-git-muted\">Saving...</span>}\n  </label>\n</div>"}]}
+
+**Reviewer**: REJECTED x2: Your proposed changes for `apps/web/src/app/settings/page.tsx` are logically sound and align with the Scanner's plan to fix the privacy toggles. However, all four edits failed due to incorrect `search` blocks. You consistently omitted the leading whitespace (indentation) present in the original file content. This is a critical error that prevents the patch from applying correctly or introduces syntax errors.
+
+**Specific instructions for retry:**
+1.  **Review the `ORIGINAL FILE CONTENT` very carefully.** Pay close attention to the exact indentation of every line you intend to search for.
+2.  **Ensure your `search` block in the JSON exactly matches the original content, including all leading spaces and blank lines.** For example, if a line starts with 4 spaces in the original file, your `search` string for that line must also start with 4 spaces.
+3.  **Ensure your `replace` block also maintains correct indentation** relative to the surrounding code.
+4.  **Re-evaluate each of the four edits** with this precision in mind. The `corrected_edits` provided above demonstrate the correct way to format the `search` and `replace` blocks to include the necessary indentation.
+
+---
