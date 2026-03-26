@@ -44,7 +44,7 @@
 - **Repo: git-pulse**: [SEC] Fix Authentication Logic in Admin Digest API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/48) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Remove Hardcoded Secret from Admin Digest API Call. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/50) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Fix Case-Sensitivity in Bearer Token Authentication. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/52) - *Status: APPROVED - Joseph liked this!*
-- **Repo: git-pulse**: [REFACTOR] Upgrade TypeScript Compiler Target to ES2020. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/53) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [REFACTOR] Upgrade TypeScript Compiler Target to ES2020. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/53) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_DISCUSSION_REPLY=1774544743 -->
 - **Repo: git-pulse**: [LOGIC] Correct params type in reactions/route.ts. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/54) - *Status: PENDING REVIEW*
 <!-- LAST_PROACTIVE_ISSUE=1774525977 -->
