@@ -5389,77 +5389,7 @@ This change is confined to a single line in `apps/web/src/app/admin/digest/page.
 
 ---
 
-## Cycle 1774509255
-**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
-
-### Step 1: Codebase Understanding
-
-This repository, `git-pulse`, appears to be a social platform or content sharing application that integrates with GitHub. Users can post updates, share GitHub repositories, and interact with content, with authentication and repository data fetching handled via GitHub integration.
-
--   **`packages/ui/package.json`**: This file defines the dependencies and metadata for a shared UI component library within the `git-pulse` monorepo. It lists `react` and `react-dom` as development dependencies, along with styling utilities like `clsx` and `tailwind-merge`, indicating a component-driven UI approach using Tailwind CSS.
--   **`apps/web/src/app/api/posts/route.ts`**: This is a Next.js API route handler responsible for creating new posts. It manages user authentication (both session-based and API key-based), enforces rate limits, validates post content, extracts hashtags, and fetches additional details for GitHub repository embeds before persisting the post data to a database using Prisma.
--   **`apps/web/src/app/not-found.tsx`**: This file defines a custom 404 Not Found page for the Next.js application. It provides a user-friendly message and a link to navigate back to the home page, utilizing Tailwind CSS for styling.
-
-The codebase primarily uses **Next.js** (App Router), **TypeScript**, **Tailwind CSS**, and **Prisma** for database interactions. It follows a **monorepo** structure, likely managed with pnpm workspaces, and implements custom **rate limiting** and **authentication** mechanisms.
-
-### Step 2: Deep Analysis
-
-#### `packages/ui/package.json`
--   **Consistency**: `react` and `react-dom` are listed as `devDependencies`. This is a common pattern for UI libraries in monorepos, where the consuming application (e.g., `apps/web`) provides the primary React dependency. No immediate issues.
--   **Anti-Hallucination Check**: React version 19.0.0 is present. This is considered correct and stable within the context of this analysis.
-
-#### `apps/web/src/app/api/posts/route.ts`
--   **Security**:
-    -   **Authentication Bypass**: The API key authentication mechanism relies on a `Bearer gp_` prefix. The current check for "Bearer" is case-sensitive, which violates RFC 6750 for Bearer tokens, stating the "Bearer" scheme is case-insensitive. This could lead to legitimate API keys being rejected if the client sends "bearer" (lowercase).
-    -   **Input Validation**: `content` is checked for existence. Other fields like `type`, `shipDetails`, `images`, `repoUrl` are used directly from the request body without explicit type or content validation beyond their presence. While Prisma provides some type safety, more robust validation (e.g., for `type` against an enum, or `images` as an array of URLs) could prevent malformed data.
-    -   **SSRF Prevention**: The GitHub API call uses a regex to parse `github.com/owner/name` from `repoUrl` and constructs the API endpoint directly to `api.github.com`. This is a good measure against SSRF for the GitHub API.
--   **Logic**:
-    -   **GitHub API Error Handling**: When fetching repository embed data from GitHub, if the `fetch` response is not `ok` (e.g., 404 Not Found, 403 Forbidden, rate limit exceeded), the error is not logged or handled specifically. The `repoEmbed` simply remains `null`, and the process continues silently. This makes debugging issues with GitHub API integration difficult.
-    -   **User Lookup**: The logic for determining `username` and `userInDb` (session vs. API key) is functional but involves multiple conditional assignments. It correctly optimizes by storing `tokenUser` in `userInDb` to avoid a second database lookup.
--   **Performance**:
-    -   **Rate Limiting**: A `rateLimit` utility is used, configured for 10 requests per hour per user. This helps prevent abuse but might be too restrictive or have too long an interval for certain user behaviors, potentially impacting user experience. This is a design choice, not a bug.
-    -   **GitHub API Calls**: A `fetch` call is made to the GitHub API for each post that includes a `repoUrl`. Using the `session.user.accessToken` for authenticated requests is a good practice to leverage higher rate limits.
--   **Architecture**:
-    -   **API Route Structure**: Standard Next.js App Router API route.
-    -   **Error Handling**: Consistent use of `NextResponse.json` with appropriate HTTP status codes for various error conditions.
--   **Consistency**: Variable naming and import patterns are consistent.
-
-#### `apps/web/src/app/not-found.tsx`
--   **Consistency**: Uses Tailwind CSS classes, aligning with the likely styling conventions of the application.
--   **Features**: Provides a basic, user-friendly 404 page.
-
-### Step 3: Pick ONE Improvement
-
-The most valuable improvement is to address the **case-sensitivity issue in the Bearer token authentication check** within `apps/web/src/app/api/posts/route.ts`. This is a **Logic/Security** fix that directly impacts the functionality and robustness of the API key authentication, ensuring adherence to established standards and preventing legitimate programmatic access from being denied due to a common case mismatch.
-
-### Step 4: Write the Executor's Plan
-
-**WHAT to change**:
-Modify the authentication header processing logic for programmatic access to correctly handle the "Bearer" token prefix in a case-insensitive manner, while maintaining the case-sensitivity of the `gp_` prefix for the API key itself.
-
-**WHERE in the file(s)**:
-The change should be made in the `POST` function of `apps/web/src/app/api/posts/route.ts`. Specifically, locate the `if (!username)` block where the `authorization` header is retrieved and processed for API key authentication.
-
-**WHY this matters**:
-The current implementation uses `authHeader?.startsWith("Bearer gp_")`, which performs a case-sensitive comparison for the entire prefix "Bearer gp_". According to RFC 6750, the "Bearer" authentication scheme is case-insensitive. This means that if a client sends an Authorization header with "bearer" (lowercase) followed by a valid `gp_` API key, the current code will incorrectly reject it as unauthorized. Correcting this ensures the API key authentication mechanism is robust, adheres to standard specifications, and prevents legitimate programmatic users from encountering unexpected authentication failures.
-
-**HOW to do it**:
-1.  Navigate to the `POST` function within `apps/web/src/app/api/posts/route.ts`.
-2.  Locate the `if (!username)` block, and inside it, find the line `const authHeader = req.headers.get("authorization");`.
-3.  Identify the subsequent `if` condition that checks `authHeader?.startsWith("Bearer gp_")`.
-4.  Modify this conditional logic. The new logic should first check if `authHeader` exists.
-5.  Then, it should verify that the lowercase version of `authHeader` starts with "bearer " (note the space). This makes the "Bearer" part case-insensitive.
-6.  If this condition is met, proceed to extract the API key by slicing the *original* `authHeader` to remove the "bearer " prefix (which is 7 characters long).
-7.  Add a nested check to ensure that this extracted API key then starts with "gp_" (this check should remain case-sensitive, as `gp_` is part of the API key's format, not the "Bearer" scheme itself).
-8.  Only if both the case-insensitive "bearer " prefix and the case-sensitive "gp_" key prefix are validated should the `prisma.user.findUnique` call be executed with the extracted API key.
-
-**Executor**: {"title": "[SEC] Fix Case-Sensitivity in Bearer Token Authentication", "body": "### Problem / Gap\nThe current implementation of Bearer token authentication in `apps/web/src/app/api/posts/route.ts` is case-sensitive, which may lead to legitimate API keys being rejected if the client sends the 'bearer' prefix in lowercase.\n\n### Solution & Insight\nTo fix this issue, we need to modify the authentication header processing logic to correctly handle the 'Bearer' token prefix in a case-insensitive manner. We will achieve this by first checking if the lowercase version of the authorization header starts with 'bearer ', and then verifying that the extracted API key starts with 'gp_'.\n\n### Impact\nThis change will ensure that the API key authentication mechanism is robust and adheres to standard specifications, preventing legitimate programmatic users from encountering unexpected authentication failures.", "branch_name": "bot/fix-bearer-token-auth-1774509255", "edits": [{"file": "apps/web/src/app/api/posts/route.ts", "search": "if (authHeader?.startsWith(\"Bearer gp_\")) {", "replace": "if (authHeader && authHeader.toLowerCase().startsWith(\"bearer \") && authHeader.slice(7).startsWith(\"gp_\")) {"}]}
-
-**Reviewer**: CORRECT: The Executor's proposed logical change correctly addresses the case-insensitivity requirement for the 'Bearer' token prefix, aligning with RFC 6750 and the Scanner's recommendation. However, the `search` and `replace` blocks in the proposed edit are missing the leading whitespace, which would result in an indentation error in the patched file. This is a recurring issue for this Executor on the `git-pulse` repository.
-
----
-
-## Cycle 1774515675
+1774515675
 **Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
 
 ### Step 1: Codebase Understanding
@@ -5765,5 +5695,97 @@ This change is localized to a single component file (`apps/web/src/components/Re
 **Executor**: {"title": "[FEAT] Enhance Star Reaction Icon in ReactionPicker", "body": "### Problem / Gap\nThe ReactionPicker component uses the same SVG path for both starred and unstarred states, relying solely on color changes for distinction. This can lead to a less intuitive user experience.\n\n### Solution & Insight\nTo address this, the SVG path for the unstarred state will be updated to display an outline star, providing a clearer visual cue for the user. This enhancement improves the overall clarity and responsiveness of the UI.\n\n### Impact\nThe change will result in a more intuitive and engaging user interface, as the distinction between starred and unstarred posts will be more pronounced.", "branch_name": "bot/enhance-reaction-picker-1774537676", "edits": [{"file": "apps/web/src/components/ReactionPicker.tsx", "search": "          <path d=\"M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z\" />", "replace": "          <path d=\"M8 1.75a.75.75 0 0 0-.673.418L5.307 5.06l-3.89.565a.75.75 0 0 0-.416 1.279l2.814 2.742-.664 3.876a.75.75 0 0 0 1.088.791L8 12.347l3.473 1.827a.75.75 0 0 0 1.088-.79l-.664-3.876 2.814-2.742a.75.75 0 0 0-.416-1.28l-3.89-.565-1.882-3.815A.75.75 0 0 0 8 1.75ZM4.264 6.15l-.794-.115L2.21 4.75l1.625-3.292L4.264 6.15Zm3.736-4.4L9.736 6.15l.794.115 1.26-.183-1.625 3.292L8 12.347l-1.625-3.292-1.625 3.292 1.26.183.794-.115L8 1.75Z\" />"}]}
 
 **Reviewer**: APPROVE: The Executor's proposed edit correctly replaces the SVG path for the unstarred state of the reaction icon, providing a distinct outline star as recommended by the Scanner. The search block is precise, and the change is functional, valuable, and aligns perfectly with the improvement plan. This enhances visual feedback and user experience.
+
+---
+
+## Cycle 1774544750
+**Scanner**: ## Codebase Understanding
+
+This repository, `git-pulse`, is a web application designed to provide a "smart feed" of GitHub activity. It aggregates GitHub events from various users and repositories, filters out noise (like bot activity or minor pushes), and presents meaningful updates (such as new pull requests, issues, releases, or significant code pushes) in a social media-like feed format. It also allows for user-created posts and applies an algorithmic score to content for discovery.
+
+The `apps/web/src/app/page.tsx` file serves as the main home page for the `git-pulse` web application. It is responsible for fetching and processing both GitHub events and user-created posts from a database. It applies filtering logic to determine which GitHub events are significant enough to display, maps these events and database posts into a consistent `PostProps` format, and calculates an algorithmic score for posts. Finally, it renders these posts using a `FeedClient` component and includes a `RightSidebar` for additional content.
+
+The `apps/web/src/app/loading.tsx` file provides a loading skeleton for the home page. It displays placeholder UI elements for the navigation tabs, a post composition area, and the main feed, giving users visual feedback while the actual content is being fetched and rendered.
+
+The codebase primarily uses Next.js for its web framework, React for UI components, and Prisma for database interactions. It leverages TypeScript for type safety and Tailwind CSS for styling. Patterns include asynchronous server components, client-side components for interactivity, and utility functions for data processing and formatting.
+
+## Deep Analysis
+
+### Security
+No immediate security vulnerabilities were identified in the provided files. The data fetching from GitHub and Prisma is assumed to be handled securely by their respective libraries and API routes. Type assertions like `as any` could mask potential runtime issues if the underlying data structure from GitHub changes unexpectedly, but this is more of a type safety concern than a direct security flaw in this context.
+
+### Logic
+1.  **Magic Numbers and Duplication**: The `isWorthShowing` function and the `isTrending` calculation within `mapEventToPost` both use hardcoded numeric thresholds (e.g., `40` for PR/Issue comments, `25` for Discussion comments, `10` for PushEvent commits). These "magic numbers" are duplicated across these functions. This makes the code less readable, harder to maintain, and prone to inconsistencies if a threshold needs to be updated in one place but is missed in another.
+2.  **Timestamp Inconsistency**: GitHub events displayed via `mapEventToPost` use `new Date(event.created_at).toLocaleDateString(...)` for their timestamp, while Prisma posts displayed via `mapPrismaPostToProps` use `getRelativeTime(p.createdAt)`. This results in an inconsistent user experience on the feed, where some posts show absolute dates (e.g., "Jan 1") and others show relative times (e.g., "2 hours ago"). A consistent relative time format is generally preferred for dynamic feeds.
+3.  **`isTrending` Scope**: The `isTrending` flag in `mapEventToPost` is only set based on comment counts for PRs, Issues, and Discussions. However, `isWorthShowing` also considers `CreateEvent` (new repositories) and `PushEvent` (large pushes) as significant. This means a "worth showing" event like a new repository or a large push will never be marked as "trending" by the current logic, which might be an unintended limitation if "trending" is meant to encompass all significant activity.
+4.  **Weak Typing for Prisma Data**: The `mapPrismaPostToProps` function receives `repoEmbed: unknown` and `shipDetails: unknown` and then casts them using `as Record<string, any>` or `as PostProps["repoEmbed"]`. While this works, it bypasses TypeScript's type checking and could lead to runtime errors if the actual data structure from Prisma deviates from the assumed `PostProps` shape.
+
+### Performance
+1.  **Large `findMany` Query**: The `prisma.post.findMany({ take: 100 })` call fetches a fixed number of posts and then processes them in memory (mapping, scoring, sorting). While `100` posts might be acceptable for initial load, if the scoring logic becomes more complex or the number of posts grows significantly, performing all filtering and sorting client-side (or in the server component after fetching) could become a bottleneck. Pushing more of this logic to the database query (e.g., initial filtering by score range or more specific `where` clauses) could improve efficiency.
+2.  **GitHub Event Fetching**: `getGitHubReceivedEvents` is called without explicit pagination or limits in the provided snippet. While `isWorthShowing` filters events, the initial fetch could potentially retrieve a large number of raw events, impacting performance if the API response is very large.
+
+### Architecture
+1.  **Mixed Concerns in `mapEventToPost`**: The `mapEventToPost` function not only transforms GitHub event data into `PostProps` but also includes logic for determining `isTrending` and directly appends a `trendingTag` string (`\n\n#trending`) to the `content`. This mixes data transformation with UI presentation concerns (string formatting for a tag), which could be separated for better modularity.
+2.  **Centralized Feed Logic**: The `HomePage` component orchestrates fetching and processing for both GitHub events and Prisma posts. This centralization is reasonable for a home page, but if the "smart feed" logic needs to be reused elsewhere, extracting it into a dedicated service or hook could improve reusability.
+
+### Features
+1.  **Basic Trending Indicator**: The `trendingTag` is a simple string appended to the post content. A more sophisticated "trending" feature might involve a dedicated UI badge, a separate section for trending posts, or a more dynamic algorithm that considers factors beyond just comment counts.
+2.  **Limited "Discover" Depth**: The "discover" feed fetches only 100 posts and then sorts them by algorithmic score. For a truly diverse and engaging "discover" experience, a larger pool or more dynamic fetching based on user interaction/preferences might be beneficial.
+
+### Testing
+No explicit test files or testing patterns were observed in the provided code snippets. The complex filtering, scoring, and mapping logic in `page.tsx` would greatly benefit from unit tests to ensure correctness and prevent regressions.
+
+### DX (Developer Experience)
+1.  **Missing README**: The repository explicitly states "(No README found)". A comprehensive `README.md` is crucial for onboarding new developers, explaining the project's purpose, setup instructions, and how to contribute.
+2.  **Magic Numbers**: As noted in Logic, the use of magic numbers reduces code readability and makes it harder for developers to understand the intent behind specific thresholds without diving deep into the logic.
+
+### Consistency
+1.  **Timestamp Formatting**: Inconsistent timestamp formatting between GitHub events and Prisma posts.
+2.  **Threshold Definitions**: Duplication of threshold values for event significance and trending status.
+
+### Dead Code
+No dead code was identified in the provided snippets.
+
+## Pick ONE Improvement
+
+The most valuable improvement addresses the **Logic Duplication and Magic Numbers** combined with the **Timestamp Inconsistency**. These issues directly impact the correctness, maintainability, and user experience of the core feed functionality. Centralizing thresholds improves code quality and reduces potential bugs, while standardizing timestamps provides a more consistent and user-friendly interface.
+
+## Executor's Plan
+
+**WHAT**:
+The plan is to centralize the numeric thresholds used for determining "worth showing" and "trending" GitHub events into named constants, and to standardize the display of timestamps across all feed posts to use relative time.
+
+**WHERE**:
+The changes will be made within the `apps/web/src/app/page.tsx` file.
+1.  New constants will be introduced at the top of the file, after the existing import statements.
+2.  The `isWorthShowing` function will be modified to use these new constants.
+3.  The `mapEventToPost` function will be modified in two places:
+    *   To use the new constants for the `isTrending` calculation.
+    *   To update the `timestamp` property within the `basePost` object.
+
+**WHY**:
+1.  **Improved Maintainability and Readability**: Currently, several hardcoded "magic numbers" (e.g., `40`, `25`, `10`) are used in both the `isWorthShowing` and `mapEventToPost` functions to define criteria for event significance and trending status. This duplication makes the code harder to understand and maintain. If these thresholds need to change, they must be updated in multiple locations, increasing the risk of introducing inconsistencies or bugs. By defining these values as named constants, the code becomes more self-documenting, easier to read, and simpler to modify in the future.
+2.  **Consistent User Experience**: The current implementation displays timestamps for GitHub events using an absolute date format (`toLocaleDateString`), while user-created Prisma posts use a relative time format (`getRelativeTime`). This inconsistency creates a disjointed user experience on the feed. Standardizing all timestamps to use `getRelativeTime` will provide a uniform and more intuitive display, which is generally preferred in dynamic social feeds for better readability and context.
+
+**HOW**:
+1.  At the top of the `apps/web/src/app/page.tsx` file, after the import statements and before the `BOT_PATTERNS` array, introduce three new `const` declarations:
+    *   `MIN_PR_ISSUE_COMMENTS_FOR_SIGNIFICANCE` with a value of `40`.
+    *   `MIN_DISCUSSION_COMMENTS_FOR_SIGNIFICANCE` with a value of `25`.
+    *   `MIN_PUSH_COMMITS_FOR_SIGNIFICANCE` with a value of `10`.
+2.  In the `isWorthShowing` function:
+    *   Replace `40` with `MIN_PR_ISSUE_COMMENTS_FOR_SIGNIFICANCE` in both the `PullRequestEvent` and `IssuesEvent` cases.
+    *   Replace `25` with `MIN_DISCUSSION_COMMENTS_FOR_SIGNIFICANCE` in the `DiscussionEvent` case.
+    *   Replace `10` with `MIN_PUSH_COMMITS_FOR_SIGNIFICANCE` in the `PushEvent` case.
+3.  In the `mapEventToPost` function:
+    *   Within the `isTrending` calculation, replace `40` with `MIN_PR_ISSUE_COMMENTS_FOR_SIGNIFICANCE` for `PullRequestEvent` and `IssuesEvent`.
+    *   Replace `25` with `MIN_DISCUSSION_COMMENTS_FOR_SIGNIFICANCE` for `DiscussionEvent`.
+    *   Locate the `basePost` object. Change the `timestamp` property from `new Date(event.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })` to `getRelativeTime(new Date(event.created_at))`.
+
+**SCOPE**:
+This improvement is focused entirely within the `apps/web/src/app/page.tsx` file. It involves adding a few constant declarations, replacing hardcoded numbers with these constants in two functions, and modifying one line of code for timestamp formatting. The changes are self-contained and do not require modifications to other files or external dependencies.
+
+**Executor**: {"title": "[REFACTOR] Centralize Thresholds and Standardize Timestamps", "body": "### Problem / Gap\nThe current implementation of the `isWorthShowing` function and the `mapEventToPost` function in `page.tsx` contains duplicated magic numbers for determining event significance and trending status. Additionally, the display of timestamps is inconsistent between GitHub events and Prisma posts.\n\n### Solution & Insight\nTo address these issues, we will centralize the numeric thresholds into named constants and standardize the display of timestamps across all feed posts to use relative time. This improves maintainability, readability, and the user experience.\n\n### Impact\nBy centralizing thresholds, we reduce the risk of inconsistencies and make the code easier to modify in the future. Standardizing timestamps provides a uniform and more intuitive display, enhancing the overall user experience.", "branch_name": "bot/upgrade-1774544750", "edits": [{"file": "apps/web/src/app/page.tsx", "search": "const BOT_PATTERNS = [\n/bot$/i, /\\[bot\\]$/i, /^dependabot/i, /^renovate/i, /^copilot/i,\n/^github-actions/i, /^dmca/i, /^snyk/i, /^greenkeeper/i, /^imgbot/i,\n/^codecov/i, /^stale/i, /^mergify/i, /^allcontributors/i];", "replace": "const MIN_PR_ISSUE_COMMENTS_FOR_SIGNIFICANCE = 40;\nconst MIN_DISCUSSION_COMMENTS_FOR_SIGNIFICANCE = 25;\nconst MIN_PUSH_COMMITS_FOR_SIGNIFICANCE = 10;\nconst BOT_PATTERNS = [\n/bot$/i, /\\[bot\\]$/i, /^dependabot/i, /^renovate/i, /^copilot/i,\n/^github-actions/i, /^dmca/i, /^snyk/i, /^greenkeeper/i, /^imgbot/i,\n/^codecov/i, /^stale/i, /^mergify/i, /^allcontributors/i];"}, {"file": "apps/web/src/app/page.tsx", "search": "function isWorthShowing(event: GitHubEvent): boolean {\n  // filter bots first\n  if (isBot(event.actor.login)) return false;\n\n  switch (event.type) {\n    case \"PullRequestEvent\":{\n        if (event.payload.action === \"opened\") return true;\n        const comments = (event.payload.pull_request as any)?.comments ?? 0;\n        return comments >= 40;\n      }\n    case \"IssuesEvent\":{\n        if (event.payload.action === \"opened\") return true;\n        const comments = event.payload.issue?.comments ?? 0;\n        return comments >= 40;\n      }\n    case \"DiscussionEvent\":{\n        const comments = (event.payload as any).discussion?.comments ?? 0;\n        return comments >= 25;\n      }\n    case \"ReleaseEvent\":\n      return true;\n    case \"CreateEvent\":\n      return event.payload.ref_type === \"repository\";\n    case \"PushEvent\":\n      return (event.payload.size ?? event.payload.commits?.length ?? 0) >= 10;\n    default:\n      return false;\n  }\n}", "replace": "function isWorthShowing(event: GitHubEvent): boolean {\n  // filter bots first\n  if (isBot(event.actor.login)) return false;\n\n  switch (event.type) {\n    case \"PullRequestEvent\":{\n        if (event.payload.action === \"opened\") return true;\n        const comments = (event.payload.pull_request as any)?.comments ?? 0;\n        return comments >= MIN_PR_ISSUE_COMMENTS_FOR_SIGNIFICANCE;\n      }\n    case \"IssuesEvent\":{\n        if (event.payload.action === \"opened\") return true;\n        const comments = event.payload.issue?.comments ?? 0;\n        return comments >= MIN_PR_ISSUE_COMMENTS_FOR_SIGNIFICANCE;\n      }\n    case \"DiscussionEvent\":{\n        const comments = (event.payload as any).discussion?.comments ?? 0;\n        return comments >= MIN_DISCUSSION_COMMENTS_FOR_SIGNIFICANCE;\n      }\n    case \"ReleaseEvent\":\n      return true;\n    case \"CreateEvent\":\n      return event.payload.ref_type === \"repository\";\n    case \"PushEvent\":\n      return (event.payload.size ?? event.payload.commits?.length ?? 0) >= MIN_PUSH_COMMITS_FOR_SIGNIFICANCE;\n    default:\n      return false;\n  }\n}"}, {"file": "apps/web/src/app/page.tsx", "search": "let isTrending = false;\nif (event.type === \"PullRequestEvent\" && (event.payload.pull_request as any)?.comments >= 40) isTrending = true;\nif (event.type === \"IssuesEvent\" && (event.payload.issue?.comments ?? 0) >= 40) isTrending = true;\nif (event.type === \"DiscussionEvent\" && (event.payload as any).discussion?.comments >= 25) isTrending = true;", "replace": "let isTrending = false;\nif (event.type === \"PullRequestEvent\" && (event.payload.pull_request as any)?.comments >= MIN_PR_ISSUE_COMMENTS_FOR_SIGNIFICANCE) isTrending = true;\nif (event.type === \"IssuesEvent\" && (event.payload.issue?.comments ?? 0) >= MIN_PR_ISSUE_COMMENTS_FOR_SIGNIFICANCE) isTrending = true;\nif (event.type === \"DiscussionEvent\" && (event.payload as any).discussion?.comments >= MIN_DISCUSSION_COMMENTS_FOR_SIGNIFICANCE) isTrending = true;"}, {"file": "apps/web/src/app/page.tsx", "search": "timestamp: new Date(event.created_at).toLocaleDateString(\"en-US\", { month: \"short\", day: \"numeric\" })", "replace": "timestamp: getRelativeTime(new Date(event.created_at))"}]}
+
+**Reviewer**: CORRECT: The Executor successfully applied the first three edits, centralizing magic numbers into named constants as planned. However, the fourth edit, intended to standardize timestamp formatting, failed to apply due to a search block mismatch. The original code's `toLocaleDateString` arguments were split across multiple lines with indentation, which the Executor's single-line search block did not capture. I have provided the corrected search block for this specific edit.
 
 ---
