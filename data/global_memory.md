@@ -1,10 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Sanitize Markdown Content in ProfileReadme Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/20) - *Status: REJECTED - Joseph closed this*
-<!-- LAST_ISSUE_JUDGE=1774515667 -->
-- **REJECTED by Reviewer**: Executor failed to match pretty-printed JSON content with a minified search block for `manifest.json`, resulting in 'NO CHANGES'. This is a recurring search block mismatch issue.
-- **REJECTED by Reviewer**: Executor failed to match `manifest.json` search block due to formatting (minified vs. pretty-printed JSON), a recurring issue with exact search block matching for `git-pulse`.
 - **Repo: git-pulse**: [LOGIC] Correct params type and await usage in ProfilePage. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/21) - *Status: MERGED - Joseph approved!*
 <!-- LAST_PR_JUDGE=1774531404 -->
 - **Repo: git-pulse**: [SEC] Enhance SSRF Prevention in Image Proxy. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/22) - *Status: MERGED - Joseph approved!*
