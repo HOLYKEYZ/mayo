@@ -60,3 +60,4 @@ is this g'*
 - **Repo: git-pulse**: [LOGIC] Correct params type and await usage in EditProfilePage. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/46) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance SSRF Prevention in Image Proxy. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/47) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Fix Authentication Logic in Admin Digest API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/48) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Remove Hardcoded Secret from Admin Digest API Call. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/50) - *Status: PENDING REVIEW*
