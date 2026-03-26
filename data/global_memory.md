@@ -55,3 +55,4 @@
 <!-- LAST_PR_JUDGE=1774552254 -->
 - **REJECTED by Reviewer**: Executor failed to apply most edits due to search block mismatches, specifically `let` vs `const` and large JSX blocks, leading to 'NO CHANGES' for `git-pulse`. This is a recurring issue.
 - **REJECTED by Reviewer**: Executor's JSON for replacement was correct, but the 'ACTUAL DIFF PREVIEW' showed an extraneous `)}` causing a syntax error in `repos/page.tsx`. This indicates a patching or diff generation issue.
+- **REJECTED by Reviewer**: Executor failed to apply a critical logic fix due to search block mismatch, a recurring issue for `git-pulse`.
