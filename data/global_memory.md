@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [LOGIC] Fix Incorrect Type Definition and Await Usage for Params in FollowersPage. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/29) - *Status: MERGED - Joseph approved!*
 - **Repo: git-pulse**: [LOGIC] Enhance Error Handling in CollabWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/30) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Upgrade TypeScript Compiler Target to ES2020 in ui Package. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/32) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to insert a new utility function using `search: ""` and missed importing it, leading to a `ReferenceError` in `git-pulse`. This is a recurring issue with `search: ""` for insertions and incomplete changes.
