@@ -5989,88 +5989,7 @@ This function is crucial for enhancing the user interface, particularly for comp
 
 ---
 
-## Cycle 1774609172
-**Scanner**: ## Codebase Understanding
-
-This repository, `git-pulse`, appears to be a web application designed to interact with GitHub, likely for managing or displaying user repositories and related activities. It includes authentication, API key management, and fetching of GitHub user data.
-
-The `packages/ui/tsconfig.json` file defines the TypeScript configuration for the shared UI component library within the monorepo. It extends the base `tsconfig.json` and specifies compiler options suitable for a React/Next.js UI package, including targeting ES2020 and enabling JSX.
-
-The `apps/web/src/app/api/auth/token/route.ts` file handles API key management for authenticated users. It provides endpoints to check for an existing key, generate a new one (which is shown only once for security), and revoke an existing key.
-
-The `apps/web/src/app/api/github/repos/route.ts` file is an API route responsible for fetching a user's GitHub repositories. It authenticates the user via their GitHub access token and then makes a request to the GitHub API to retrieve repositories where the user is an owner or collaborator.
-
-The codebase uses Next.js for the web application, TypeScript for type safety, and Prisma for database interactions. It follows standard Next.js API route conventions and leverages `next/server` for API responses.
-
-## Deep Analysis
-
-### packages/ui/tsconfig.json
-
-*   **Consistency**: The `target: "ES2020"` aligns with a recent approved refactor (PR #53), indicating good consistency.
-*   **Architecture**: `noEmit: true` is appropriate for a UI package in a monorepo where the consuming application handles the build process.
-*   **Overall**: This configuration file is well-structured and appropriate for its purpose.
-
-### apps/web/src/app/api/auth/token/route.ts
-
-*   **Security**:
-    *   Authentication checks (`session?.user?.login`) are present for all operations.
-    *   API keys are generated using `crypto.randomBytes`, which is cryptographically secure.
-    *   The generated API key is returned only once, preventing future exposure, which is a good security practice.
-    *   The `keyPreview` mechanism for existing keys is also good, avoiding full key exposure.
-    *   **Potential Improvement**: While the current approach is reasonable for personal API keys, a more robust security measure for API keys (similar to passwords) would be to store a hashed version of the key in the database and compare hashes during validation, rather than storing the raw key. This protects against database compromises. However, given the "personal API key" context, this might be an acceptable trade-off for simplicity.
-*   **Logic**: All three routes (GET, POST, DELETE) appear to implement their intended logic correctly.
-*   **Consistency**: Uses `NextResponse.json` for all API responses.
-*   **Error Handling**: Basic unauthorized error handling is in place.
-
-### apps/web/src/app/api/github/repos/route.ts
-
-*   **Security**:
-    *   Authentication check (`session?.user?.accessToken`) is correctly performed.
-    *   The GitHub access token is used securely in the `Authorization` header.
-    *   No obvious injection vulnerabilities.
-*   **Logic**:
-    *   The `affiliation=owner,collaborator` parameter correctly filters repositories.
-    *   The `sort=updated` and `per_page=100` parameters are used.
-    *   **Critical Flaw**: The GitHub API uses pagination, and `per_page=100` only fetches the first 100 repositories. If a user has more than 100 repositories (as an owner or collaborator), the current implementation will only retrieve and return the first page of results, leading to an incomplete list of repositories. This is a significant functional limitation.
-*   **Performance**:
-    *   `cache: 'no-store'` is appropriate for dynamic user-specific data.
-    *   The single `fetch` call is efficient for the first page, but the missing pagination logic means it's not retrieving all necessary data.
-*   **Architecture**:
-    *   The API route structure is standard for Next.js.
-    *   Error handling for `res.ok` and `try-catch` block is present, but the generic "server error" could be more descriptive for debugging.
-*   **Consistency**: Uses `NextResponse.json` for API responses.
-
-## Pick ONE Improvement
-
-The most valuable improvement is to address the **critical pagination flaw** in the GitHub repositories API route. The current implementation only fetches the first 100 repositories, which is a significant functional limitation for users with many repositories. This directly impacts data completeness and user experience.
-
-## Executor's Plan
-
-**WHAT**: Modify the GitHub repositories API route to implement pagination, ensuring that all repositories (where the user is an owner or collaborator) are fetched from the GitHub API, not just the first page.
-
-**WHERE**: The changes will be made within the `GET` function of the `apps/web/src/app/api/github/repos/route.ts` file, specifically in the `try` block where the GitHub API call is made and the response is processed.
-
-**WHY**: The GitHub API returns paginated results for repository listings. The current `fetch` call with `per_page=100` only retrieves the first 100 repositories. For users who own or collaborate on more than 100 repositories, the application will display an incomplete list, leading to missing data and a degraded user experience. Implementing pagination will ensure that the application accurately retrieves and presents all relevant repositories, improving the completeness and reliability of the data.
-
-**HOW**:
-1.  Inside the `GET` function's `try` block, initialize an empty array, for example, `allRepos`, to accumulate all repositories across multiple pages.
-2.  Define a variable, for example, `nextPageUrl`, and initialize it with the initial GitHub API endpoint: `"https://api.github.com/user/repos?sort=updated&per_page=100&affiliation=owner,collaborator"`.
-3.  Create a `while` loop that continues as long as `nextPageUrl` is not null.
-4.  Inside the loop, make a `fetch` request to the `nextPageUrl` using the existing headers and `cache: 'no-store'` options.
-5.  After each `fetch` call, check if the response (`res`) is `ok`. If not, return an appropriate `NextResponse.json` error, similar to the existing error handling, and break the loop.
-6.  Parse the `Link` header from the `res.headers` to determine if there's a "next" page. If a "next" link is found, update `nextPageUrl` to the URL of the next page. If no "next" link is found, set `nextPageUrl` to `null` to terminate the loop.
-7.  Parse the JSON data from the current response.
-8.  Concatenate the fetched repositories from the current page to the `allRepos` array.
-9.  After the loop finishes (meaning all pages have been fetched), map the `allRepos` array to extract `name` and `full_name` for each repository.
-10. Finally, return the `NextResponse.json` with the complete list of mapped repositories.
-
-**Executor**: {"title": "[LOGIC] Fix GitHub Repositories API Route Pagination", "body": "### Problem / Gap\nThe current implementation of the GitHub repositories API route only fetches the first 100 repositories, leading to an incomplete list for users with more than 100 repositories.\n\n### Solution & Insight\nTo fix this issue, we need to implement pagination in the GitHub repositories API route. We will fetch all pages of repositories by parsing the `Link` header from the GitHub API response and making subsequent requests until there are no more pages.\n\n### Impact\nThis change will ensure that the application accurately retrieves and presents all relevant repositories, improving the completeness and reliability of the data.\n\n### BRANCH NAME\nbot/fix-pagination-1774609172\n\n### EDITS", "branch_name": "bot/fix-pagination-1774609172", "edits": [{"file": "apps/web/src/app/api/github/repos/route.ts", "search": "try {\n  const res = await fetch(\"https://api.github.com/user/repos?sort=updated&per_page=100&affiliation=owner,collaborator\", {\n    headers: {\n      Authorization: `Bearer ${session.user.accessToken}`,\n      Accept: \"application/vnd.github+json\",\n    },\n    // next 14 fetch options\n    cache: 'no-store'\n  });\n\n  if (!res.ok) {\n    return NextResponse.json({ error: \"failed to fetch repos\" }, { status: res.status });\n  }\n\n  const data = await res.json();\n  const repos = data.map((r: any) => ({\n    name: r.name,\n    full_name: r.full_name\n  }));\n\n  return NextResponse.json(repos);\n} catch (error: unknown) {\n  console.error(\"Error fetching GitHub repositories:\", error);\n  return NextResponse.json({ error: \"server error\" }, { status: 500 });\n}", "replace": "try {\n  let nextPageUrl = \"https://api.github.com/user/repos?sort=updated&per_page=100&affiliation=owner,collaborator\";\n  let allRepos = [];\n\n  while (nextPageUrl) {\n    const res = await fetch(nextPageUrl, {\n      headers: {\n        Authorization: `Bearer ${session.user.accessToken}`,\n        Accept: \"application/vnd.github+json\",\n      },\n      // next 14 fetch options\n      cache: 'no-store'\n    });\n\n    if (!res.ok) {\n      return NextResponse.json({ error: \"failed to fetch repos\" }, { status: res.status });\n    }\n\n    const data = await res.json();\n    const repos = data.map((r: any) => ({\n      name: r.name,\n      full_name: r.full_name\n    }));\n\n    allRepos = allRepos.concat(repos);\n\n    const linkHeader = res.headers.get('Link');\n    if (linkHeader) {\n      const nextPage = linkHeader.match(/<([^>]+)>;\\s*rel=\"next\"/);\n      if (nextPage) {\n        nextPageUrl = nextPage[1];\n      } else {\n        nextPageUrl = null;\n      }\n    } else {\n      nextPageUrl = null;\n    }\n  }\n\n  const mappedRepos = allRepos.map((repo) => ({\n    name: repo.name,\n    full_name: repo.full_name\n  }));\n\n  return NextResponse.json(mappedRepos);\n} catch (error: unknown) {\n  console.error(\"Error fetching GitHub repositories:\", error);\n  return NextResponse.json({ error: \"server error\" }, { status: 500 });\n}"}]}
-
-**Reviewer**: APPROVE: The Executor successfully implemented the pagination logic for fetching GitHub repositories, addressing a critical functional flaw identified by the Scanner. The solution correctly uses a `while` loop, `nextPageUrl`, `allRepos` accumulation, and parses the `Link` header to retrieve all pages of repositories. The `ACTUAL DIFF PREVIEW` confirms the patch will be applied correctly, including proper indentation. There is a minor redundancy in the final mapping step (`allRepos.map(...)`) as the repositories are already mapped to the desired shape within the loop, but this does not introduce a functional error.
-
----
-
-## Cycle 1774617219
+1774617219
 **Scanner**: ### Step 1: Codebase Understanding
 
 -   **What does this repository do?**
@@ -6347,5 +6266,72 @@ This improvement directly addresses a performance inefficiency. By embedding the
 **Executor**: {"title": "[LOGIC] Optimize User Identification in Authenticated API Routes", "body": "### Problem / Gap\nThe current implementation of authenticated API routes performs an additional database query to fetch the user's internal database ID (`userId`) based on their `session.user.login` (GitHub username).\n\n### Solution & Insight\nModify the NextAuth configuration to embed the `userId` directly into the session object during the authentication process. Update the `reactions/route.ts` file to utilize this pre-fetched `userId`, eliminating the redundant database lookup.\n\n### Impact\nThis improvement directly addresses a performance inefficiency, reducing database load, decreasing API response times, and simplifying the logic within API routes.", "branch_name": "bot/upgrade-1774630819", "edits": [{"file": "apps/web/src/lib/auth.ts", "search": "const { token, profile } = callbackInput;", "replace": "const { token, profile } = callbackInput;\nconst user = await prisma.user.findUnique({ where: { username: profile.login } });\ntoken.userId = user.id;"}, {"file": "apps/web/src/lib/auth.ts", "search": "session.user.id = token.userId;", "replace": "session.user.id = token.userId;"}, {"file": "apps/web/src/app/api/posts/[id]/reactions/route.ts", "search": "const user = await prisma.user.findUnique({ where: { username: session.user.login } });", "replace": ""}, {"file": "apps/web/src/app/api/posts/[id]/reactions/route.ts", "search": "userId: user.id", "replace": "userId: session.user.id"}]}
 
 **Reviewer**: Reviewer response unparseable
+
+---
+
+## Cycle 1774634298
+**Scanner**: ## Codebase Understanding
+
+This repository, `git-pulse`, appears to be a web application designed to provide a social or dashboard-like experience centered around GitHub user data. It likely allows users to view profiles, track contributions, follow other users, and receive notifications related to GitHub activities.
+
+The `apps/web/package.json` file defines the core dependencies and scripts for the Next.js web application, including React, Next.js itself, NextAuth for authentication, Prisma for database interaction, and various UI/utility libraries.
+The `apps/web/src/app/api/github/contributions/route.ts` file implements an API endpoint responsible for fetching a user's GitHub contribution data for a specified year. It requires user authentication and performs basic input validation for the username and year parameters.
+The `apps/web/src/components/FollowButton.tsx` file provides an interactive React component that enables users to follow or unfollow other GitHub users. It manages its own loading and following state and interacts with a backend API to perform the follow/unfollow action.
+
+The codebase utilizes the Next.js framework, following its `app` directory structure for routing and API routes. It employs React for building user interfaces, TypeScript for type safety, and likely Tailwind CSS for styling, given the presence of `tailwind.config.ts` in the repository structure and class names in components. Authentication is handled via NextAuth, and data persistence is managed with Prisma.
+
+## Deep Analysis
+
+### apps/web/package.json
+*   **Consistency**: The project uses `next@15.0.0`, `react@19.0.0`, `react-dom@19.0.0`, and `next-auth@5.0.0-beta.30`. These versions are consistent with each other within the project's current state.
+*   **Anti-Hallucination Check**: As per critical rules, these versions are considered stable and correct for this project. No changes are needed or allowed regarding dependency versions.
+
+### apps/web/src/app/api/github/contributions/route.ts
+*   **Security**: Input validation for `username` and `year` is present, including a reasonable range check for the year. The `accessToken` is correctly checked for authorization.
+*   **Logic**: The route correctly handles missing parameters, invalid year formats, and unauthorized access. It returns a 404 if `getContributionDataForYear` returns no data, which is a reasonable response for "not found."
+*   **Performance**: The `getContributionDataForYear` function likely makes an external API call to GitHub. This operation can be slow and is subject to GitHub's rate limits. Repeated requests for the same username and year will re-fetch the same static data, leading to unnecessary latency and API usage. This is a prime candidate for caching.
+*   **Architecture**: The API route follows standard Next.js conventions. Error responses are consistent in their structure (`{ error: "message" }`).
+*   **Features**: No immediate missing features, but enhanced logging for external API call failures could be beneficial for debugging.
+
+### apps/web/src/components/FollowButton.tsx
+*   **Security**: The `targetUsername` is used directly in the API path. Assuming the backend API (`/api/users/[username]/follow`) properly validates and sanitizes the username, this client-side usage is acceptable.
+*   **Logic**: The component correctly manages `isFollowing` and `isLoading` states. It makes an asynchronous call to the follow/unfollow API. The logic `setIsFollowing(data.action === 'followed')` tightly couples the component to the specific `action` field in the API response.
+*   **Performance**: The component makes a single API call on user interaction. No obvious performance bottlenecks.
+*   **Architecture**: Standard React functional component with `useState` hooks.
+*   **Features**:
+    *   **User Experience**: When the `fetch` call fails (e.g., network error, server error), the error is only logged to the console. The user receives no visual feedback that their action failed, and the button reverts to its previous state without explanation. Providing user-facing feedback (e.g., a temporary toast message) would significantly improve the user experience.
+*   **Consistency**: Uses Tailwind CSS classes for styling, consistent with other components in the repository.
+
+## Pick ONE Improvement
+
+The most valuable improvement is to address the **performance issue** in the `apps/web/src/app/api/github/contributions/route.ts` file by implementing an in-memory cache for GitHub contribution data. This directly tackles a potential bottleneck, reduces external API calls, and aligns with previously approved performance enhancements in this repository.
+
+## Executor's Plan
+
+**WHAT to change:**
+Introduce an in-memory caching mechanism for the GitHub contribution data fetched by the `getContributionDataForYear` function. This cache will store the data for a specific username and year for a defined period, preventing redundant external API calls for static data.
+
+**WHERE in the file(s):**
+This improvement will involve creating a new utility file, `apps/web/src/lib/contributionCache.ts`, and modifying the existing API route file, `apps/web/src/app/api/github/contributions/route.ts`.
+
+**WHY this matters:**
+The `getContributionDataForYear` function makes an external call to the GitHub API, which can be slow and is subject to rate limits. GitHub contribution data for a given user and year is largely static. By caching this data in memory, subsequent requests for the same user and year will be served much faster, significantly reducing latency, minimizing calls to the GitHub API, and improving the overall performance and reliability of the application. This approach has been successfully applied and approved in other parts of the `git-pulse` repository for similar performance gains.
+
+**HOW to do it:**
+1.  **Create a new cache utility file:**
+    *   Create a new file at `apps/web/src/lib/contributionCache.ts`.
+    *   Inside this new file, import the `LRUCache` class from the `@lru-cache` package (which is already a dependency in `apps/web/package.json`).
+    *   Instantiate and export a new `LRUCache` instance. Configure it with a reasonable `max` size (e.g., 500 entries) and a `ttl` (time-to-live) of several hours (e.g., 1000 * 60 * 60 * 6 milliseconds for 6 hours) to ensure data is fresh enough but not constantly refetched.
+2.  **Integrate the cache into the API route:**
+    *   In `apps/web/src/app/api/github/contributions/route.ts`, import the `contributionCache` instance from the newly created `apps/web/src/lib/contributionCache.ts` file.
+    *   At the beginning of the `GET` function, after extracting `username` and `year`, construct a unique cache key. A good key would be a string combining the username and year, for example, `${username}-${yearNum}`.
+    *   Before calling `getContributionDataForYear`, check if the data for the constructed key exists in the `contributionCache`.
+    *   If the data is found in the cache, immediately return it using `NextResponse.json(cachedData)`.
+    *   If the data is not in the cache, proceed to call `getContributionDataForYear(username, session.user.accessToken, yearNum)`.
+    *   After successfully fetching the data (i.e., `if (data)` check passes), store this `data` in the `contributionCache` using the constructed key before returning it via `NextResponse.json(data)`. Ensure that only successfully fetched data is cached, not error responses.
+
+**Executor**: {"title": "[PERF] Implement In-Memory Cache for GitHub Contributions", "body": "### Problem / Gap\nThe `getContributionDataForYear` function in `apps/web/src/app/api/github/contributions/route.ts` makes an external call to the GitHub API, which can be slow and is subject to rate limits. This can lead to performance issues and increased latency for users.\n\n### Solution & Insight\nTo address this issue, we will implement an in-memory caching mechanism using the `LRUCache` class from the `@lru-cache` package. This cache will store the contribution data for a specific username and year for a defined period, preventing redundant external API calls for static data.\n\n### Impact\nBy implementing this cache, we can significantly reduce the number of external API calls, minimize latency, and improve the overall performance and reliability of the application.", "branch_name": "bot/perf-1774634298", "edits": [{"file": "apps/web/src/lib/contributionCache.ts", "search": "", "replace": "import LRU from 'lru-cache';\n\nconst contributionCache = new LRU({\n  max: 500,\n  ttl: 1000 * 60 * 60 * 6,\n});\n\nexport default contributionCache;"}, {"file": "apps/web/src/app/api/github/contributions/route.ts", "search": "const data = await getContributionDataForYear(username, session.user.accessToken, yearNum);\n\n  if (!data) {\n    return NextResponse.json({ error: \"no contribution data found\" }, { status: 404 });\n  }", "replace": "const cacheKey = `${username}-${yearNum}`;\nconst cachedData = contributionCache.get(cacheKey);\nif (cachedData) {\n  return NextResponse.json(cachedData);\n}\n\nconst data = await getContributionDataForYear(username, session.user.accessToken, yearNum);\nif (!data) {\n  return NextResponse.json({ error: \"no contribution data found\" }, { status: 404 });\n}\ncontributionCache.set(cacheKey, data);\n"}]}
+
+**Reviewer**: CORRECT: The Executor's plan to implement caching is valuable and aligns with the Scanner's recommendation. The search block for the logic replacement in `route.ts` is accurate. However, there are two critical issues: 1) The Executor failed to add the necessary `import contributionCache from "@/lib/contributionCache";` statement to `apps/web/src/app/api/github/contributions/route.ts`, which would lead to a `ReferenceError`. 2) The replacement code block in `route.ts` has incorrect indentation, starting at column 0 instead of matching the surrounding 2-space indentation, which would cause linting errors and reduce readability.
 
 ---
