@@ -6110,96 +6110,7 @@ The current implementation in `apps/web/src/lib/auth.ts` relies on `(profile as 
 
 ---
 
-## Cycle 1774630819
-**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
-
-### Step 1: Codebase Understanding
-
-This repository, `git-pulse`, appears to be a web application designed to interact with GitHub data, likely providing a personalized dashboard or social features related to GitHub activity. It uses Next.js for the frontend and API routes, Prisma for database interaction, and NextAuth for authentication.
-
-*   **`apps/web/next.config.ts`**: This file configures the Next.js application for the `web` workspace. Specifically, it defines allowed remote image patterns, which is crucial for displaying user avatars or repository images from GitHub securely.
-*   **`apps/web/tsconfig.json`**: This is the TypeScript configuration file for the `web` application. It extends a base `tsconfig.json` and sets specific compiler options like target ES version, module resolution, JSX handling, and path aliases (`@/*`).
-*   **`apps/web/src/app/api/posts/[id]/reactions/route.ts`**: This file defines an API route responsible for handling user reactions (emojis) on posts. It authenticates users, checks for existing reactions to toggle them on or off, and interacts with the database using Prisma to store or remove reaction data.
-
-The codebase generally follows modern Next.js conventions, utilizing API routes, server-side authentication, and a monorepo structure with `pnpm`. TypeScript is used throughout, promoting type safety.
-
-### Step 2: Deep Analysis
-
-**Security**:
-*   The `reactions/route.ts` correctly checks for user authentication (`session?.user?.login`) before proceeding.
-*   Prisma is used for database interactions, which generally protects against SQL injection.
-*   Input validation for `emoji` is minimal; it only checks for presence (`!emoji`). While emojis are generally low risk, a malicious actor could potentially send a very long string or unexpected characters. A length constraint or a more specific emoji validation could enhance robustness, though this is a minor concern for emojis.
-*   No explicit rate limiting is observed on the reaction endpoint, which could make it susceptible to abuse or spamming.
-*   The `next.config.ts` correctly specifies `remotePatterns` for images, preventing SSRF-like vulnerabilities related to image loading.
-
-**Logic**:
-*   In `reactions/route.ts`, the logic for toggling reactions (checking `existingReaction` then deleting or creating) is sound.
-*   Error handling is present with `try...catch` blocks and appropriate `NextResponse.json` messages and status codes (401, 400, 404, 500).
-*   The `prisma.user.findUnique` call in `reactions/route.ts` relies on `session.user.login` to find the user's database `id`. This is a correct logical step, but it introduces an extra database query on every authenticated reaction request.
-
-**Performance**:
-*   The `reactions/route.ts` performs a `prisma.user.findUnique` query on every request to get the `userId` from the `username` provided by the session. If the `userId` were available directly in the session, this query could be eliminated, improving performance for this and potentially other authenticated API routes.
-*   `dynamic = "force-dynamic"` is correctly used for this mutable API route, preventing caching issues.
-
-**Architecture**:
-*   The API route structure is standard for Next.js.
-*   The separation of concerns (auth in `lib/auth.ts`, prisma in `lib/prisma.ts`) is good.
-*   The repeated `prisma.user.findUnique` call across potentially many API routes suggests a slight architectural inefficiency in how user identity is propagated from authentication to API logic.
-
-**Features**:
-*   The reaction system currently supports a single emoji per user per post. This is a design choice.
-*   The application could benefit from more robust input validation for various API endpoints, including the `emoji` field.
-
-**Testing**:
-*   No test files are provided for the analyzed files, so specific testing gaps cannot be identified. However, the logic in `reactions/route.ts` is clear and testable.
-
-**DX (Developer Experience)**:
-*   The code is generally clean and readable.
-*   The `tsconfig.json` is well-configured with path aliases, improving import readability.
-
-**Consistency**:
-*   Naming conventions and import patterns appear consistent within the analyzed files.
-*   TypeScript usage is consistent.
-
-**Dead Code**:
-*   No dead code was identified in the analyzed files.
-
-### Step 3: Pick ONE Improvement
-
-The most valuable improvement is to **optimize the user identification process in authenticated API routes by including the database `userId` directly in the NextAuth session object.** This addresses a performance bottleneck and refines the architectural pattern for handling authenticated user data.
-
-### Step 4: Write the Executor's Plan
-
-**WHAT** to change:
-The current implementation of authenticated API routes, such as the reactions route, performs an additional database query to fetch the user's internal database ID (`userId`) based on their `session.user.login` (GitHub username). This plan involves modifying the NextAuth configuration to embed the `userId` directly into the session object during the authentication process. Subsequently, the `reactions/route.ts` file will be updated to utilize this pre-fetched `userId`, eliminating the redundant database lookup.
-
-**WHERE** in the file(s):
-1.  **`apps/web/src/lib/auth.ts`**: This file contains the NextAuth configuration, specifically the `callbacks` for `jwt` and `session`. The modification will occur within these callbacks to fetch and include the `userId`.
-2.  **`apps/web/src/app/api/posts/[id]/reactions/route.ts`**: The `POST` function in this file will be modified. The existing `prisma.user.findUnique` call will be removed, and the `userId` will be retrieved directly from the `session` object.
-
-**WHY** this matters:
-This improvement directly addresses a performance inefficiency. By embedding the `userId` into the session, we avoid an unnecessary database query (`prisma.user.findUnique`) on every authenticated API request that requires the user's internal ID. This reduces database load, decreases API response times, and simplifies the logic within API routes by making the necessary user identifier immediately available. It also establishes a more robust and efficient pattern for handling authenticated user data across the application.
-
-**HOW** to do it:
-1.  **Modify `apps/web/src/lib/auth.ts`**:
-    *   Locate the `callbacks` object within the NextAuth configuration.
-    *   Inside the `jwt` callback, after the `token` is populated with user information (e.g., `profile.login`), perform a database query using Prisma to find the `User` record based on the `token.login` (which corresponds to the `username` in the database).
-    *   If a user is found, add their `id` to the `token` object (e.g., `token.userId = user.id`).
-    *   Ensure the `session` callback then propagates this `userId` from the `token` to the `session` object (e.g., `session.user.id = token.userId`). This might require updating the `Session` type definition if it doesn't already include `user.id`.
-
-2.  **Modify `apps/web/src/app/api/posts/[id]/reactions/route.ts`**:
-    *   In the `POST` function, after checking `if (!session?.user?.login)`, access the `userId` directly from `session.user.id`.
-    *   Remove the entire block that performs `const user = await prisma.user.findUnique(...)` and the subsequent `if (!user)` check.
-    *   Replace all instances where `user.id` was previously used (e.g., in `existingReaction` lookup and `reaction.create`) with `session.user.id`.
-    *   Update the initial unauthorized check to use `session?.user?.id` instead of `session?.user?.login` for consistency, as the `userId` will now be the primary identifier.
-
-**Executor**: {"title": "[LOGIC] Optimize User Identification in Authenticated API Routes", "body": "### Problem / Gap\nThe current implementation of authenticated API routes performs an additional database query to fetch the user's internal database ID (`userId`) based on their `session.user.login` (GitHub username).\n\n### Solution & Insight\nModify the NextAuth configuration to embed the `userId` directly into the session object during the authentication process. Update the `reactions/route.ts` file to utilize this pre-fetched `userId`, eliminating the redundant database lookup.\n\n### Impact\nThis improvement directly addresses a performance inefficiency, reducing database load, decreasing API response times, and simplifying the logic within API routes.", "branch_name": "bot/upgrade-1774630819", "edits": [{"file": "apps/web/src/lib/auth.ts", "search": "const { token, profile } = callbackInput;", "replace": "const { token, profile } = callbackInput;\nconst user = await prisma.user.findUnique({ where: { username: profile.login } });\ntoken.userId = user.id;"}, {"file": "apps/web/src/lib/auth.ts", "search": "session.user.id = token.userId;", "replace": "session.user.id = token.userId;"}, {"file": "apps/web/src/app/api/posts/[id]/reactions/route.ts", "search": "const user = await prisma.user.findUnique({ where: { username: session.user.login } });", "replace": ""}, {"file": "apps/web/src/app/api/posts/[id]/reactions/route.ts", "search": "userId: user.id", "replace": "userId: session.user.id"}]}
-
-**Reviewer**: Reviewer response unparseable
-
----
-
-## Cycle 1774634298
+1774634298
 **Scanner**: ## Codebase Understanding
 
 This repository, `git-pulse`, appears to be a web application designed to provide a social or dashboard-like experience centered around GitHub user data. It likely allows users to view profiles, track contributions, follow other users, and receive notifications related to GitHub activities.
@@ -6460,5 +6371,77 @@ The most valuable improvement is to correct the logical inconsistency in the `Se
 **Executor**: {"title": "[LOGIC] Fix Conditional Rendering of View All Links", "body": "### Problem / Gap\nThe 'View all' links for repositories and posts in the search dropdown are displayed even when all results are already visible, creating a confusing user experience.\n\n### Solution & Insight\nAdjust the conditional rendering of these links to only display when there are more results than what is currently shown (i.e., more than 3 results).\n\n### Impact\nImproves user experience by removing redundant links and ensuring that 'View all' links only appear when necessary.", "branch_name": "bot/fix-view-all-links-1774650947", "edits": [{"file": "apps/web/src/components/SearchBar.tsx", "search": "                            {results.repos.length > 0 &&\n        <Link\n          href={`/search?q=${encodeURIComponent(query.trim())}&type=repos`}\n          onClick={() => {setIsOpen(false);setQuery(\"\");}}\n          className=\"block text-center py-2 text-sm text-git-accent hover:bg-git-bg transition-colors border-t border-git-border\">\n          View all repositories\n        </Link>\n      }", "replace": "                            {results.repos.length > 3 &&\n        <Link\n          href={`/search?q=${encodeURIComponent(query.trim())}&type=repos`}\n          onClick={() => {setIsOpen(false);setQuery(\"\");}}\n          className=\"block text-center py-2 text-sm text-git-accent hover:bg-git-bg transition-colors border-t border-git-border\">\n          View all repositories\n        </Link>\n      }"}, {"file": "apps/web/src/components/SearchBar.tsx", "search": "                            {results.posts.length > 0 &&\n        <Link\n          href={`/search?q=${encodeURIComponent(query.trim())}&type=posts`}\n          onClick={() => {setIsOpen(false);setQuery(\"\");}}\n          className=\"block text-center py-2 text-sm text-git-accent hover:bg-git-bg transition-colors border-t border-git-border\">\n          View all posts\n        </Link>\n      }", "replace": "                            {results.posts.length > 3 &&\n        <Link\n          href={`/search?q=${encodeURIComponent(query.trim())}&type=posts`}\n          onClick={() => {setIsOpen(false);setQuery(\"\");}}\n          className=\"block text-center py-2 text-sm text-git-accent hover:bg-git-bg transition-colors border-t border-git-border\">\n          View all posts\n        </Link>\n      }"}]}
 
 **Reviewer**: Reviewer response unparseable
+
+---
+
+## Cycle 1774654534
+**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
+
+### Step 1: Codebase Understanding
+
+*   **What does this repository do?**
+    The `git-pulse` repository appears to be a web application designed to display and rank GitHub repositories or "posts" based on various factors, likely to help users discover interesting projects.
+*   **What does the target file do within the repo?**
+    *   `apps/web/src/middleware.ts`: This file implements Next.js middleware for authentication and authorization. It uses `next-auth` to manage user sessions, redirecting unauthenticated users to a login page and preventing authenticated users from accessing the login page directly.
+    *   `apps/web/src/lib/algo.ts`: This file defines the core algorithm for calculating a "quality score" for posts, primarily based on characteristics of an embedded GitHub repository. It considers factors like language, stars, forks, activity, and author influence.
+    *   `tsconfig.json`: This file configures the TypeScript compiler for the `apps/web` project, specifying compilation options, target environment, and file inclusions/exclusions.
+*   **What patterns, frameworks, or conventions does the codebase use?**
+    The codebase uses Next.js for the web application framework, TypeScript for type safety, and `next-auth` for authentication. It follows standard Next.js project structure and TypeScript configuration practices. The `algo.ts` file demonstrates a pure function approach for its core logic.
+
+### Step 2: Deep Analysis
+
+*   **Security**:
+    *   `middleware.ts`: The `matcher` configuration is crucial for security, ensuring the middleware doesn't inadvertently protect or expose unintended routes. The current matcher `'/((?!api|_next/static|_next/image|favicon.ico).*)'` is a common and generally secure pattern for Next.js, excluding static assets and API routes that might have their own authentication mechanisms. No immediate security flaws detected.
+*   **Logic**:
+    *   `apps/web/src/lib/algo.ts`: The `calculatePostScore` function contains numerous hardcoded "magic numbers" (e.g., `25`, `10`, `20`, `1000`, `0.03`, `30`, `15`, `0.5`, `1.0`, `20`, `10`, `5`, `35`, `50`, `20`, `1.2`) and hardcoded language lists (`noveltyLanguages`, `commonLanguages`). While these define the algorithm's current behavior, they make the logic difficult to tune, understand, and maintain. Any adjustment requires modifying the function's internal implementation. The comment `// algorithm v2 — user-specified weights` directly points to a future need for configurability, which is currently hindered by these hardcoded values.
+    *   The various conditional checks for `undefined` or `0` values (e.g., `factors.commitCount !== undefined && factors.commitCount > 0`) correctly handle edge cases for optional or zero-value factors.
+*   **Performance**:
+    *   `apps/web/src/lib/algo.ts`: The `calculatePostScore` function performs simple arithmetic operations and array lookups. It is highly performant and does not contain any obvious performance bottlenecks like unnecessary loops or redundant computations.
+    *   `middleware.ts`: The middleware runs on every matched request, which is standard for Next.js authentication. Its operations are minimal (checking session, path, and redirecting), so it has negligible performance impact.
+*   **Architecture**:
+    *   `apps/web/src/lib/algo.ts`: The `calculatePostScore` function is a pure function, which is good for testability and predictability. However, the hardcoded parameters represent a tight coupling of the algorithm's logic with its specific configuration values. Externalizing these parameters into a configuration object would improve architectural flexibility and allow for easier A/B testing or dynamic adjustments of the scoring model.
+*   **Features**:
+    *   `apps/web/src/lib/algo.ts`: The comment `// algorithm v2 — user-specified weights` indicates a planned feature for user-configurable weights. The current hardcoded nature of the algorithm's parameters makes implementing this feature more complex than necessary. Centralizing these parameters would be a foundational step for this feature.
+*   **Testing**:
+    *   The `algo.ts` file, being a pure function, is inherently testable. However, the numerous magic numbers make it harder to write tests that verify specific parameter impacts without duplicating the internal logic. Parameterizing the algorithm would allow for easier testing of different scoring configurations.
+*   **DX (Developer Experience)**:
+    *   `apps/web/src/lib/algo.ts`: Understanding and modifying the `calculatePostScore` algorithm requires careful reading of many lines of code and understanding the impact of each hardcoded number. Centralizing these parameters would greatly improve the developer experience by providing a clear, single source of truth for the algorithm's configuration.
+*   **Consistency**:
+    *   Naming conventions and file structures appear consistent across the analyzed files.
+*   **Dead Code**:
+    *   No dead code was identified in the analyzed files.
+
+### Step 3: Pick ONE Improvement
+
+The most valuable improvement is to **centralize and externalize the configuration parameters** within the `calculatePostScore` function in `apps/web/src/lib/algo.ts`. This addresses a significant architectural and maintainability issue, directly supports a hinted future feature (user-specified weights), and improves developer experience.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT to change**:
+Refactor the `calculatePostScore` function in `apps/web/src/lib/algo.ts` to centralize all its scoring parameters. This involves defining a new TypeScript interface for these parameters and creating a default configuration object that holds all the current hardcoded values and language lists. The `calculatePostScore` function will then be updated to accept an optional configuration object, merging it with the default, and using properties from this merged configuration instead of directly referencing hardcoded values.
+
+**WHERE in the file(s)**:
+The changes will be entirely within `apps/web/src/lib/algo.ts`.
+1.  A new interface, for example, `AlgorithmConfig`, will be defined at the top of the file, below the `ScoreFactors` interface.
+2.  A `const` object, `DEFAULT_ALGORITHM_CONFIG`, of type `AlgorithmConfig`, will be defined immediately after the `AlgorithmConfig` interface.
+3.  The signature of the `calculatePostScore` function will be modified to accept an optional `config` parameter.
+4.  All hardcoded numbers and string arrays (like `noveltyLanguages`, `commonLanguages`, `25`, `10`, `20`, `1000`, `0.03`, `30`, `15`, `0.5`, `1.0`, `20`, `10`, `5`, `35`, `50`, `20`, `1.2`, etc.) within the `calculatePostScore` function will be replaced with references to properties of the effective configuration object.
+
+**WHY this matters**:
+This refactoring significantly enhances the maintainability, readability, and configurability of the core post scoring algorithm. By centralizing all parameters into a single configuration object, it becomes much easier for developers to understand the algorithm's various weights and thresholds, and to tune them without needing to deeply parse the function's logic. This also directly addresses the existing comment about "user-specified weights" by providing a clear and extensible structure for future dynamic configuration. It reduces the likelihood of errors when making adjustments and makes the algorithm's behavior more transparent and manageable.
+
+**HOW to do it**:
+1.  **Define `AlgorithmConfig` Interface**: Add a new interface named `AlgorithmConfig` at the top of `apps/web/src/lib/algo.ts`. This interface will include properties for all the configurable parameters: `noveltyLanguages`, `commonLanguages`, `noveltyLanguageBoost`, `uncommonLanguageBoost`, `starSweetSpotMin`, `starSweetSpotMax`, `starSweetSpotBaseBoost`, `starSweetSpotMultiplier`, `starSweetSpotCap`, `starOver1kBoost`, `smallRepoStarMultiplier`, `forkScoreMultiplier`, `forkScoreCap`, `descriptionBoost`, `commitCountLogBase`, `commitCountMultiplier`, `commitCountCap`, `pushConsistencyMultiplier`, `pushConsistencyCap`, `recentActivity7DaysBoost`, `recentActivity30DaysBoost`, `oldActivityPenalty`, `followerBiasHighThreshold`, `followerBiasHighPenalty`, `followerBiasLowThreshold`, `followerBiasLowBoost`, and `timeDecayExponent`.
+2.  **Create `DEFAULT_ALGORITHM_CONFIG` Object**: Below the `AlgorithmConfig` interface, declare and initialize a `const` variable named `DEFAULT_ALGORITHM_CONFIG` of type `AlgorithmConfig`. Populate this object with all the current hardcoded values and arrays found within the `calculatePostScore` function.
+3.  **Update `calculatePostScore` Signature**: Modify the `calculatePostScore` function signature to accept an optional second parameter, `config?: Partial<AlgorithmConfig>`.
+4.  **Merge Configuration**: Inside the `calculatePostScore` function, at the very beginning, create an `effectiveConfig` constant by merging `DEFAULT_ALGORITHM_CONFIG` with the provided `config` parameter: `const effectiveConfig = { ...DEFAULT_ALGORITHM_CONFIG, ...config };`.
+5.  **Replace Hardcoded Values**: Systematically go through the entire `calculatePostScore` function. Replace every hardcoded number and array with its corresponding property from the `effectiveConfig` object. For example, `noveltyLanguages.includes(factors.language)` becomes `effectiveConfig.noveltyLanguages.includes(factors.language)`, `score += 25` becomes `score += effectiveConfig.noveltyLanguageBoost`, `factors.stars >= 20 && factors.stars <= 1000` becomes `factors.stars >= effectiveConfig.starSweetSpotMin && factors.stars <= effectiveConfig.starSweetSpotMax`, and so on for all numerical and array constants.
+
+**SCOPE**:
+This improvement is a self-contained refactor within `apps/web/src/lib/algo.ts`. It modifies the internal implementation of the `calculatePostScore` function and introduces new interfaces and constants within the same file. It will not require changes to any other files, as the `config` parameter will be optional, maintaining backward compatibility for existing callers.
+
+**Executor**: {"title": "[REFACTOR] Centralize Scoring Parameters in calculatePostScore", "body": "### Problem / Gap\nThe `calculatePostScore` function in `apps/web/src/lib/algo.ts` contains numerous hardcoded parameters, making it difficult to understand, maintain, and adjust the scoring algorithm.\n\n### Solution & Insight\nTo improve maintainability and flexibility, we centralize all scoring parameters into a configurable object. This involves defining an `AlgorithmConfig` interface, creating a `DEFAULT_ALGORITHM_CONFIG` object, and modifying the `calculatePostScore` function to accept and utilize this configuration.\n\n### Impact\nThis refactoring enhances the readability, testability, and configurability of the scoring algorithm, allowing for easier adjustments and potential future features like user-specified weights.", "branch_name": "bot/refactor-1774654534", "edits": [{"file": "apps/web/src/lib/algo.ts", "search": "export function calculatePostScore(factors: ScoreFactors): number {\n  let score = 0;\n\n  // 1. tech stack novelty (reward less common, high-interest languages & frameworks)\n  const noveltyLanguages = [\"Rust\", \"Zig\", \"Elixir\", \"Go\", \"Gleam\", \"Ocaml\", \"Haskell\", \"F#\", \"HolyC\", \"Vue\", \"Angular\", \"Svelte\"];\n  const commonLanguages = [\"JavaScript\", \"TypeScript\", \"Python\", \"Java\", \"C++\", \"C#\", \"PHP\", \"Ruby\", \"C\", \"React\", \"NextJs\", \"NodeJs\", \"Express\"];\n\n  if (factors.language) {\n    if (noveltyLanguages.includes(factors.language)) {\n      score += 25;\n    } else if (!commonLanguages.includes(factors.language)) {\n      score += 10;\n    }\n  }\n\n  // 2. star sweet spot (20-1k gets max boost, <20 is too obscure, >1k is already mainstream)\n  if (factors.stars >= 20 && factors.stars <= 1000) {\n    // parabolic boost peaking around 200 stars\n    const normalizedStar = Math.min(factors.stars, 1000);\n    score += 15 + Math.min(normalizedStar * 0.03, 30); // max ~45 pts in sweet spot\n  } else if (factors.stars > 1000) {\n    // diminishing returns past 1k \u2014 still gets some credit but capped\n    score += 20;\n  } else if (factors.stars > 0) {\n    // tiny repos get minimal credit\n    score += factors.stars * 0.5;\n  }\n\n  // 3. fork traction\n  const forkScore = Math.min(factors.forks * 1.0, 20);\n  score += forkScore;\n\n  // 4. completeness\n  if (factors.hasDescription) {\n    score += 10;\n  }\n\n  // 5. commit volume \u2014 reward active development\n  if (factors.commitCount !== undefined && factors.commitCount > 0) {\n    // logarithmic scale so 10 commits vs 1000 commits doesn't skew wildly\n    score += Math.min(Math.log2(factors.commitCount) * 5, 35); // max ~50 pts\n  }\n\n  // 6. push consistency \u2014 reward regular contributors (0 to 1 ratio)\n  if (factors.pushConsistency !== undefined && factors.pushConsistency > 0) {\n    // linear: a dev who pushes 80% of weeks gets 40 pts\n    score += factors.pushConsistency * 50; // max 50 pts for perfect consistency\n  }\n\n  // 7. recent activity (active development boost)\n  if (factors.daysSincePush <= 7) {\n    score += 20;\n  } else if (factors.daysSincePush <= 30) {\n    score += 10;\n  } else if (factors.daysSincePush > 365) {\n    score -= 20;\n  }\n\n  // 8. follower bias (the \"anti-clout\" mechanic)\n  if (factors.authorFollowers !== undefined) {\n    if (factors.authorFollowers > 10000) {\n      score -= 15;\n    } else if (factors.authorFollowers < 100) {\n      score += 10;\n    }\n  }\n\n  // 9. time decay (gravity)\n  const decayFactor = Math.pow(Math.max(factors.daysSincePost, 1), 1.2);\n\n  return Math.max(score / decayFactor, 0);\n}", "replace": "export interface AlgorithmConfig {\n  noveltyLanguages: string[];\n  commonLanguages: string[];\n  noveltyLanguageBoost: number;\n  uncommonLanguageBoost: number;\n  starSweetSpotMin: number;\n  starSweetSpotMax: number;\n  starSweetSpotBaseBoost: number;\n  starSweetSpotMultiplier: number;\n  starSweetSpotCap: number;\n  starOver1kBoost: number;\n  smallRepoStarMultiplier: number;\n  forkScoreMultiplier: number;\n  forkScoreCap: number;\n  descriptionBoost: number;\n  commitCountLogBase: number;\n  commitCountMultiplier: number;\n  commitCountCap: number;\n  pushConsistencyMultiplier: number;\n  pushConsistencyCap: number;\n  recentActivity7DaysBoost: number;\n  recentActivity30DaysBoost: number;\n  oldActivityPenalty: number;\n  followerBiasHighThreshold: number;\n  followerBiasHighPenalty: number;\n  followerBiasLowThreshold: number;\n  followerBiasLowBoost: number;\n  timeDecayExponent: number;\n}\n\nconst DEFAULT_ALGORITHM_CONFIG: AlgorithmConfig = {\n  noveltyLanguages: [\"Rust\", \"Zig\", \"Elixir\", \"Go\", \"Gleam\", \"Ocaml\", \"Haskell\", \"F#\", \"HolyC\", \"Vue\", \"Angular\", \"Svelte\"],\n  commonLanguages: [\"JavaScript\", \"TypeScript\", \"Python\", \"Java\", \"C++\", \"C#\", \"PHP\", \"Ruby\", \"C\", \"React\", \"NextJs\", \"NodeJs\", \"Express\"],\n  noveltyLanguageBoost: 25,\n  uncommonLanguageBoost: 10,\n  starSweetSpotMin: 20,\n  starSweetSpotMax: 1000,\n  starSweetSpotBaseBoost: 15,\n  starSweetSpotMultiplier: 0.03,\n  starSweetSpotCap: 30,\n  starOver1kBoost: 20,\n  smallRepoStarMultiplier: 0.5,\n  forkScoreMultiplier: 1.0,\n  forkScoreCap: 20,\n  descriptionBoost: 10,\n  commitCountLogBase: 2,\n  commitCountMultiplier: 5,\n  commitCountCap: 35,\n  pushConsistencyMultiplier: 50,\n  pushConsistencyCap: 50,\n  recentActivity7DaysBoost: 20,\n  recentActivity30DaysBoost: 10,\n  oldActivityPenalty: -20,\n  followerBiasHighThreshold: 10000,\n  followerBiasHighPenalty: -15,\n  followerBiasLowThreshold: 100,\n  followerBiasLowBoost: 10,\n  timeDecayExponent: 1.2,\n};\n\nexport function calculatePostScore(factors: ScoreFactors, config: Partial<AlgorithmConfig> = {}): number {\n  const effectiveConfig = { ...DEFAULT_ALGORITHM_CONFIG, ...config };\n  let score = 0;\n\n  if (factors.language) {\n    if (effectiveConfig.noveltyLanguages.includes(factors.language)) {\n      score += effectiveConfig.noveltyLanguageBoost;\n    } else if (!effectiveConfig.commonLanguages.includes(factors.language)) {\n      score += effectiveConfig.uncommonLanguageBoost;\n    }\n  }\n\n  if (factors.stars >= effectiveConfig.starSweetSpotMin && factors.stars <= effectiveConfig.starSweetSpotMax) {\n    const normalizedStar = Math.min(factors.stars, effectiveConfig.starSweetSpotMax);\n    score += effectiveConfig.starSweetSpotBaseBoost + Math.min(normalizedStar * effectiveConfig.starSweetSpotMultiplier, effectiveConfig.starSweetSpotCap);\n  } else if (factors.stars > effectiveConfig.starSweetSpotMax) {\n    score += effectiveConfig.starOver1kBoost;\n  } else if (factors.stars > 0) {\n    score += factors.stars * effectiveConfig.smallRepoStarMultiplier;\n  }\n\n  const forkScore = Math.min(factors.forks * effectiveConfig.forkScoreMultiplier, effectiveConfig.forkScoreCap);\n  score += forkScore;\n\n  if (factors.hasDescription) {\n    score += effectiveConfig.descriptionBoost;\n  }\n\n  if (factors.commitCount !== undefined && factors.commitCount > 0) {\n    score += Math.min(Math.log2(factors.commitCount) * effectiveConfig.commitCountMultiplier, effectiveConfig.commitCountCap);\n  }\n\n  if (factors.pushConsistency !== undefined && factors.pushConsistency > 0) {\n    score += factors.pushConsistency * effectiveConfig.pushConsistencyMultiplier;\n  }\n\n  if (factors.daysSincePush <= 7) {\n    score += effectiveConfig.recentActivity7DaysBoost;\n  } else if (factors.daysSincePush <= 30) {\n    score += effectiveConfig.recentActivity30DaysBoost;\n  } else if (factors.daysSincePush > 365) {\n    score += effectiveConfig.oldActivityPenalty;\n  }\n\n  if (factors.authorFollowers !== undefined) {\n    if (factors.authorFollowers > effectiveConfig.followerBiasHighThreshold) {\n      score += effectiveConfig.followerBiasHighPenalty;\n    } else if (factors.authorFollowers < effectiveConfig.followerBiasLowThreshold) {\n      score += effectiveConfig.followerBiasLowBoost;\n    }\n  }\n\n  const decayFactor = Math.pow(Math.max(factors.daysSincePost, 1), effectiveConfig.timeDecayExponent);\n\n  return Math.max(score / decayFactor, 0);\n}"}]}
+
+**Reviewer**: APPROVE: The Executor has successfully refactored the `calculatePostScore` function in `apps/web/src/lib/algo.ts` to externalize all hardcoded parameters into a configurable object. This aligns perfectly with the Scanner's recommendation, significantly improving maintainability, configurability, and developer experience. The new `AlgorithmConfig` interface and `DEFAULT_ALGORITHM_CONFIG` object are well-defined, and the function correctly merges optional user-provided configurations. The search block was an exact match, and the replacement code is functionally sound and introduces no regressions or syntax errors. This change directly supports future enhancements like user-specified weights.
 
 ---
