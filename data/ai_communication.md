@@ -6260,3 +6260,92 @@ The current implementation in `apps/web/src/lib/auth.ts` relies on `(profile as 
 **Reviewer**: CORRECT: The Executor's proposed changes are functionally correct and align perfectly with the Scanner's recommendation to enhance type safety. However, the search blocks for the modifications in `apps/web/src/lib/auth.ts` are imprecise, leading to 'NO CHANGES' in the diff preview. Specifically, the `@ts-ignore` comment is on a separate line from the code it ignores, and the `(profile as any)` replacements need more robust, full-line search blocks to ensure a successful match, given the Executor's history of search block mismatches on this repository.
 
 ---
+
+## Cycle 1774630819
+**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
+
+### Step 1: Codebase Understanding
+
+This repository, `git-pulse`, appears to be a web application designed to interact with GitHub data, likely providing a personalized dashboard or social features related to GitHub activity. It uses Next.js for the frontend and API routes, Prisma for database interaction, and NextAuth for authentication.
+
+*   **`apps/web/next.config.ts`**: This file configures the Next.js application for the `web` workspace. Specifically, it defines allowed remote image patterns, which is crucial for displaying user avatars or repository images from GitHub securely.
+*   **`apps/web/tsconfig.json`**: This is the TypeScript configuration file for the `web` application. It extends a base `tsconfig.json` and sets specific compiler options like target ES version, module resolution, JSX handling, and path aliases (`@/*`).
+*   **`apps/web/src/app/api/posts/[id]/reactions/route.ts`**: This file defines an API route responsible for handling user reactions (emojis) on posts. It authenticates users, checks for existing reactions to toggle them on or off, and interacts with the database using Prisma to store or remove reaction data.
+
+The codebase generally follows modern Next.js conventions, utilizing API routes, server-side authentication, and a monorepo structure with `pnpm`. TypeScript is used throughout, promoting type safety.
+
+### Step 2: Deep Analysis
+
+**Security**:
+*   The `reactions/route.ts` correctly checks for user authentication (`session?.user?.login`) before proceeding.
+*   Prisma is used for database interactions, which generally protects against SQL injection.
+*   Input validation for `emoji` is minimal; it only checks for presence (`!emoji`). While emojis are generally low risk, a malicious actor could potentially send a very long string or unexpected characters. A length constraint or a more specific emoji validation could enhance robustness, though this is a minor concern for emojis.
+*   No explicit rate limiting is observed on the reaction endpoint, which could make it susceptible to abuse or spamming.
+*   The `next.config.ts` correctly specifies `remotePatterns` for images, preventing SSRF-like vulnerabilities related to image loading.
+
+**Logic**:
+*   In `reactions/route.ts`, the logic for toggling reactions (checking `existingReaction` then deleting or creating) is sound.
+*   Error handling is present with `try...catch` blocks and appropriate `NextResponse.json` messages and status codes (401, 400, 404, 500).
+*   The `prisma.user.findUnique` call in `reactions/route.ts` relies on `session.user.login` to find the user's database `id`. This is a correct logical step, but it introduces an extra database query on every authenticated reaction request.
+
+**Performance**:
+*   The `reactions/route.ts` performs a `prisma.user.findUnique` query on every request to get the `userId` from the `username` provided by the session. If the `userId` were available directly in the session, this query could be eliminated, improving performance for this and potentially other authenticated API routes.
+*   `dynamic = "force-dynamic"` is correctly used for this mutable API route, preventing caching issues.
+
+**Architecture**:
+*   The API route structure is standard for Next.js.
+*   The separation of concerns (auth in `lib/auth.ts`, prisma in `lib/prisma.ts`) is good.
+*   The repeated `prisma.user.findUnique` call across potentially many API routes suggests a slight architectural inefficiency in how user identity is propagated from authentication to API logic.
+
+**Features**:
+*   The reaction system currently supports a single emoji per user per post. This is a design choice.
+*   The application could benefit from more robust input validation for various API endpoints, including the `emoji` field.
+
+**Testing**:
+*   No test files are provided for the analyzed files, so specific testing gaps cannot be identified. However, the logic in `reactions/route.ts` is clear and testable.
+
+**DX (Developer Experience)**:
+*   The code is generally clean and readable.
+*   The `tsconfig.json` is well-configured with path aliases, improving import readability.
+
+**Consistency**:
+*   Naming conventions and import patterns appear consistent within the analyzed files.
+*   TypeScript usage is consistent.
+
+**Dead Code**:
+*   No dead code was identified in the analyzed files.
+
+### Step 3: Pick ONE Improvement
+
+The most valuable improvement is to **optimize the user identification process in authenticated API routes by including the database `userId` directly in the NextAuth session object.** This addresses a performance bottleneck and refines the architectural pattern for handling authenticated user data.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT** to change:
+The current implementation of authenticated API routes, such as the reactions route, performs an additional database query to fetch the user's internal database ID (`userId`) based on their `session.user.login` (GitHub username). This plan involves modifying the NextAuth configuration to embed the `userId` directly into the session object during the authentication process. Subsequently, the `reactions/route.ts` file will be updated to utilize this pre-fetched `userId`, eliminating the redundant database lookup.
+
+**WHERE** in the file(s):
+1.  **`apps/web/src/lib/auth.ts`**: This file contains the NextAuth configuration, specifically the `callbacks` for `jwt` and `session`. The modification will occur within these callbacks to fetch and include the `userId`.
+2.  **`apps/web/src/app/api/posts/[id]/reactions/route.ts`**: The `POST` function in this file will be modified. The existing `prisma.user.findUnique` call will be removed, and the `userId` will be retrieved directly from the `session` object.
+
+**WHY** this matters:
+This improvement directly addresses a performance inefficiency. By embedding the `userId` into the session, we avoid an unnecessary database query (`prisma.user.findUnique`) on every authenticated API request that requires the user's internal ID. This reduces database load, decreases API response times, and simplifies the logic within API routes by making the necessary user identifier immediately available. It also establishes a more robust and efficient pattern for handling authenticated user data across the application.
+
+**HOW** to do it:
+1.  **Modify `apps/web/src/lib/auth.ts`**:
+    *   Locate the `callbacks` object within the NextAuth configuration.
+    *   Inside the `jwt` callback, after the `token` is populated with user information (e.g., `profile.login`), perform a database query using Prisma to find the `User` record based on the `token.login` (which corresponds to the `username` in the database).
+    *   If a user is found, add their `id` to the `token` object (e.g., `token.userId = user.id`).
+    *   Ensure the `session` callback then propagates this `userId` from the `token` to the `session` object (e.g., `session.user.id = token.userId`). This might require updating the `Session` type definition if it doesn't already include `user.id`.
+
+2.  **Modify `apps/web/src/app/api/posts/[id]/reactions/route.ts`**:
+    *   In the `POST` function, after checking `if (!session?.user?.login)`, access the `userId` directly from `session.user.id`.
+    *   Remove the entire block that performs `const user = await prisma.user.findUnique(...)` and the subsequent `if (!user)` check.
+    *   Replace all instances where `user.id` was previously used (e.g., in `existingReaction` lookup and `reaction.create`) with `session.user.id`.
+    *   Update the initial unauthorized check to use `session?.user?.id` instead of `session?.user?.login` for consistency, as the `userId` will now be the primary identifier.
+
+**Executor**: {"title": "[LOGIC] Optimize User Identification in Authenticated API Routes", "body": "### Problem / Gap\nThe current implementation of authenticated API routes performs an additional database query to fetch the user's internal database ID (`userId`) based on their `session.user.login` (GitHub username).\n\n### Solution & Insight\nModify the NextAuth configuration to embed the `userId` directly into the session object during the authentication process. Update the `reactions/route.ts` file to utilize this pre-fetched `userId`, eliminating the redundant database lookup.\n\n### Impact\nThis improvement directly addresses a performance inefficiency, reducing database load, decreasing API response times, and simplifying the logic within API routes.", "branch_name": "bot/upgrade-1774630819", "edits": [{"file": "apps/web/src/lib/auth.ts", "search": "const { token, profile } = callbackInput;", "replace": "const { token, profile } = callbackInput;\nconst user = await prisma.user.findUnique({ where: { username: profile.login } });\ntoken.userId = user.id;"}, {"file": "apps/web/src/lib/auth.ts", "search": "session.user.id = token.userId;", "replace": "session.user.id = token.userId;"}, {"file": "apps/web/src/app/api/posts/[id]/reactions/route.ts", "search": "const user = await prisma.user.findUnique({ where: { username: session.user.login } });", "replace": ""}, {"file": "apps/web/src/app/api/posts/[id]/reactions/route.ts", "search": "userId: user.id", "replace": "userId: session.user.id"}]}
+
+**Reviewer**: Reviewer response unparseable
+
+---
