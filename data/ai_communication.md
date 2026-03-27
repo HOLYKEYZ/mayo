@@ -5851,86 +5851,7 @@ This change is a focused modification within a single file, `apps/web/src/app/no
 
 ---
 
-## Cycle 1774588185
-**Scanner**: ## Codebase Understanding
-
-This repository, `git-pulse`, appears to be a web application designed to display and manage GitHub-related information, such as user profiles, repositories, and notifications. It likely serves as a personalized dashboard or social platform for GitHub users.
-
-The file `apps/web/tsconfig.json` configures TypeScript for the `web` application, defining compiler options, included files, and path aliases. The file `apps/web/src/app/api/notifications/route.ts` implements API endpoints for fetching and marking user notifications as read, handling authentication and database interactions. The file `apps/web/src/components/RepoCard.tsx` is a React component responsible for displaying a single repository's details, including its name, description, language, stars, forks, and last update time.
-
-The codebase uses Next.js as its framework, leveraging API routes for backend logic and React components for the frontend. It integrates with Prisma for database operations and NextAuth for authentication. Tailwind CSS is used for styling, indicated by `className` usage. TypeScript is consistently applied across the project for type safety.
-
-## Deep Analysis
-
-### Security
-- **`apps/web/src/app/api/notifications/route.ts`**: Authentication is correctly enforced using `auth()` and checking `session?.user?.id`. Authorization for notification access and updates is handled by filtering `where: { user: { username: session.user.login } }`. This relies on the `username` field matching the authenticated user's login. While functional, using a stable, immutable user ID (e.g., `session.user.id` if it maps to a `userId` foreign key in the `Notification` model) for authorization and data filtering is generally more robust than a potentially mutable username. However, without the Prisma schema, it's difficult to confirm the optimal approach.
-- **`apps/web/src/components/RepoCard.tsx`**: The `url` prop is validated using `isValidHttpUrl` before being used in an `<a>` tag, which is a good practice for preventing SSRF or XSS vulnerabilities if the URL source is untrusted. `target="_blank" rel="noopener noreferrer"` is correctly used for external links.
-
-### Logic
-- **`apps/web/src/app/api/notifications/route.ts`**:
-    - The `GET` endpoint fetches the latest 30 notifications. This fixed limit might not be ideal for users with many notifications, potentially hiding older unread ones. Pagination or a "load more" mechanism could be considered for a feature enhancement.
-    - The `PUT` endpoint correctly handles marking either a specific notification or all unread notifications as read.
-    - Error handling is present with `try...catch` blocks, returning `500 Internal Server Error` for exceptions.
-- **`apps/web/src/components/RepoCard.tsx`**: The component correctly renders an `<a>` tag for valid external URLs and a `<div>` otherwise. Conditional rendering for language, stars, and forks based on their values is appropriate. The `lastPush` prop is displayed as a raw string, which could be improved for user readability.
-
-### Performance
-- **`apps/web/src/app/api/notifications/route.ts`**: The `take: 30` clause in `findMany` limits the database load, which is good for performance. `updateMany` operations are generally efficient for bulk updates.
-- **`apps/web/src/components/RepoCard.tsx`**: No obvious performance bottlenecks in this component.
-
-### Architecture
-- **`apps/web/src/app/api/notifications/route.ts`**: Follows standard Next.js API route conventions. Uses centralized `auth` and `prisma` utilities from `@/lib`, indicating a good architectural pattern for shared functionality.
-- **`apps/web/src/components/RepoCard.tsx`**: A well-encapsulated functional React component.
-
-### Features
-- **`apps/web/src/app/api/notifications/route.ts`**: The notification API currently only supports fetching and marking as read. Functionality to delete notifications or mark them as unread is missing.
-- **`apps/web/src/components/RepoCard.tsx`**: The `lastPush` timestamp is displayed as a raw string. Converting this to a relative time format (e.g., "2 hours ago", "yesterday") would be a significant user experience improvement, consistent with other timestamp enhancements in the repository.
-
-### Testing
-- Not directly visible in the provided files.
-
-### DX (Developer Experience)
-- **`apps/web/tsconfig.json`**: Well-configured with path aliases and appropriate compiler options, enhancing DX.
-- The codebase generally follows clear conventions.
-
-### Consistency
-- **`apps/web/tsconfig.json`**: The `target: "ES2020"` is consistent with recent refactoring efforts across the repository.
-- **`apps/web/src/app/api/notifications/route.ts`**: Uses `NextResponse.json` for consistent API responses.
-- **`apps/web/src/components/RepoCard.tsx`**: Uses Tailwind CSS classes consistently.
-
-### Dead Code
-- **`apps/web/src/components/RepoCard.tsx`**: The `import Link from 'next/link';` statement is present but unused. Since the `url` prop is for external repository links, an `<a>` tag is correctly used instead of `next/link`. This import can be safely removed.
-
-## Pick ONE Improvement
-
-The most valuable improvement is to enhance the user experience by formatting the `lastPush` timestamp in `RepoCard.tsx` into a human-readable relative time. This aligns with previous approved changes in the repository focused on standardizing and improving timestamp displays (e.g., PR #28 and #58). It's a clear feature enhancement that directly benefits the end-user. Additionally, a minor cleanup of dead code can be bundled with this change.
-
-## Executor's Plan
-
-**WHAT:**
-The `lastPush` timestamp displayed in the `RepoCard` component should be converted from its current raw string format into a user-friendly relative time string (e.g., "5 minutes ago", "yesterday", "on Jan 15, 2024"). This will significantly improve the readability and immediate understanding of when a repository was last updated. As a minor cleanup, an unused import statement will also be removed.
-
-**WHERE:**
-The primary modification will occur within the `RepoCard` functional component in the file `apps/web/src/components/RepoCard.tsx`. Specifically, the `lastPush` variable used in the `div` element that displays "Updated {lastPush}" needs to be replaced with a formatted version. Additionally, an unused import at the top of the file will be removed.
-
-**WHY:**
-Currently, the `lastPush` timestamp is displayed as a raw date string, which can be difficult for users to quickly process and understand. Converting it to a relative time format provides immediate context and improves the overall user experience, making the application feel more modern and intuitive. This change is consistent with previous efforts in the `git-pulse` repository to enhance and standardize timestamp displays, which Joseph has approved. Removing the unused `Link` import contributes to code cleanliness and reduces unnecessary dependencies.
-
-**HOW:**
-1.  **Remove unused import:** At the top of `apps/web/src/components/RepoCard.tsx`, delete the line `import Link from 'next/link';`.
-2.  **Import utility function:** Inside `apps/web/src/components/RepoCard.tsx`, import an existing utility function for relative time formatting. Based on previous work in this repository, a function like `formatRelativeTime` or similar is expected to be available from `@/lib/utils` or a dedicated timestamp utility file.
-3.  **Parse and format `lastPush`:** Within the `RepoCard` component's function body, before the `return` statement, create a new constant variable, for example, `formattedLastPush`. This variable should be assigned the result of parsing the `lastPush` string prop into a `Date` object (e.g., `new Date(lastPush)`) and then passing this `Date` object to the imported relative time formatting utility function.
-4.  **Update JSX:** Locate the `div` element that contains `Updated {lastPush}`. Modify its content to display `Updated {formattedLastPush}` instead.
-
-**SCOPE:**
-This improvement will involve modifications solely within the file `apps/web/src/components/RepoCard.tsx`. It assumes the existence of a suitable relative time formatting utility function within the `@/lib` directory.
-
-**Executor**: {"title": "[FEAT] Enhance RepoCard with Relative Time Formatting", "body": "### Problem / Gap\nThe `lastPush` timestamp in the `RepoCard` component is displayed as a raw string, which can be difficult for users to quickly understand. \n\n### Solution & Insight\nTo improve the user experience, the `lastPush` timestamp will be converted into a relative time format (e.g., '5 minutes ago', 'yesterday', 'on Jan 15, 2024'). This change aligns with previous efforts to standardize and enhance timestamp displays across the `git-pulse` repository. Additionally, an unused import statement will be removed for code cleanliness.\n\n### Impact\nThis enhancement will significantly improve the readability and immediate understanding of when a repository was last updated, contributing to a better overall user experience.", "branch_name": "bot/enhance-repo-card-1774588190", "edits": [{"file": "apps/web/src/components/RepoCard.tsx", "search": "import Link from 'next/link';", "replace": ""}, {"file": "apps/web/src/components/RepoCard.tsx", "search": "import { isValidHttpUrl } from '@/lib/utils';", "replace": "import { isValidHttpUrl, formatRelativeTime } from '@/lib/utils';"}, {"file": "apps/web/src/components/RepoCard.tsx", "search": "const CardContent = (\n        <>\n            <div className=\"flex items-center justify-between mb-3\">\n                <h3 className=\"text-[#2f81f7] font-semibold text-[15px] hover:underline break-words break-all truncate\">\n                    {name}\n                </h3>\n                <span className=\"rounded-full border border-git-border/60 px-2.5 py-0.5 text-[10px] text-git-muted font-medium whitespace-nowrap ml-2 bg-[#161b22]/50\">\n                    Public\n                </span>\n            </div>\n            \n            <p className=\"text-xs text-git-muted mb-3 flex-1 line-clamp-2 leading-relaxed\">\n                {description}\n            </p>\n            \n            <div className=\"flex items-center gap-4 text-[11px] text-git-muted mt-auto\">\n                {language && (\n                    <div className=\"flex items-center gap-1.5\">\n                        <span className=\"w-2.5 h-2.5 rounded-full shrink-0\" style={{ backgroundColor: resolvedColor }} />\n                        <span>{language}</span>\n                    </div>\n                )}\n                {stars > 0 && (\n                    <div className=\"flex items-center gap-1 hover:text-git-accent\">\n                        <StarIcon size={16} className=\"fill-current w-3 h-3\" />\n                        <span>{stars.toLocaleString()}</span>\n                    </div>\n                )}\n                {forks > 0 && (\n                    <div className=\"flex items-center gap-1 hover:text-git-accent\">\n                        <RepoForkedIcon size={16} className=\"fill-current w-3 h-3\" />\n                        <span>{forks.toLocaleString()}</span>\n                    </div>\n                )}\n                <div className=\"ml-auto\">Updated {lastPush}</div>\n            </div>\n        </>\n    );", "replace": "const formattedLastPush = formatRelativeTime(new Date(lastPush));\n    const CardContent = (\n        <>\n            <div className=\"flex items-center justify-between mb-3\">\n                <h3 className=\"text-[#2f81f7] font-semibold text-[15px] hover:underline break-words break-all truncate\">\n                    {name}\n                </h3>\n                <span className=\"rounded-full border border-git-border/60 px-2.5 py-0.5 text-[10px] text-git-muted font-medium whitespace-nowrap ml-2 bg-[#161b22]/50\">\n                    Public\n                </span>\n            </div>\n            \n            <p className=\"text-xs text-git-muted mb-3 flex-1 line-clamp-2 leading-relaxed\">\n                {description}\n            </p>\n            \n            <div className=\"flex items-center gap-4 text-[11px] text-git-muted mt-auto\">\n                {language && (\n                    <div className=\"flex items-center gap-1.5\">\n                        <span className=\"w-2.5 h-2.5 rounded-full shrink-0\" style={{ backgroundColor: resolvedColor }} />\n                        <span>{language}</span>\n                    </div>\n                )}\n                {stars > 0 && (\n                    <div className=\"flex items-center gap-1 hover:text-git-accent\">\n                        <StarIcon size={16} className=\"fill-current w-3 h-3\" />\n                        <span>{stars.toLocaleString()}</span>\n                    </div>\n                )}\n                {forks > 0 && (\n                    <div className=\"flex items-center gap-1 hover:text-git-accent\">\n                        <RepoForkedIcon size={16} className=\"fill-current w-3 h-3\" />\n                        <span>{forks.toLocaleString()}</span>\n                    </div>\n                )}\n                <div className=\"ml-auto\">Updated {formattedLastPush}</div>\n            </div>\n        </>\n    );"}]}
-
-**Reviewer**: APPROVE: The Executor's proposed edits perfectly align with the Scanner's recommendation to enhance user experience by formatting the `lastPush` timestamp into a human-readable relative time and performing a minor cleanup by removing an unused import. The search blocks are precise, the new code is functional, and the overall change is valuable and non-destructive. This change is consistent with previous approved timestamp standardization efforts in the repository.
-
----
-
-## Cycle 1774595556
+1774595556
 **Scanner**: ### Step 1: Codebase Understanding
 
 This repository, `git-pulse`, appears to be a web application built with Next.js, React, and TypeScript, designed to interact with the GitHub API. It likely provides features related to user profiles, contributions, repositories, and potentially social interactions within the GitHub ecosystem. The application uses Prisma for database interactions and Tailwind CSS for styling.
@@ -6210,5 +6131,63 @@ The most valuable improvement is to address the **critical pagination flaw** in 
 **Executor**: {"title": "[LOGIC] Fix GitHub Repositories API Route Pagination", "body": "### Problem / Gap\nThe current implementation of the GitHub repositories API route only fetches the first 100 repositories, leading to an incomplete list for users with more than 100 repositories.\n\n### Solution & Insight\nTo fix this issue, we need to implement pagination in the GitHub repositories API route. We will fetch all pages of repositories by parsing the `Link` header from the GitHub API response and making subsequent requests until there are no more pages.\n\n### Impact\nThis change will ensure that the application accurately retrieves and presents all relevant repositories, improving the completeness and reliability of the data.\n\n### BRANCH NAME\nbot/fix-pagination-1774609172\n\n### EDITS", "branch_name": "bot/fix-pagination-1774609172", "edits": [{"file": "apps/web/src/app/api/github/repos/route.ts", "search": "try {\n  const res = await fetch(\"https://api.github.com/user/repos?sort=updated&per_page=100&affiliation=owner,collaborator\", {\n    headers: {\n      Authorization: `Bearer ${session.user.accessToken}`,\n      Accept: \"application/vnd.github+json\",\n    },\n    // next 14 fetch options\n    cache: 'no-store'\n  });\n\n  if (!res.ok) {\n    return NextResponse.json({ error: \"failed to fetch repos\" }, { status: res.status });\n  }\n\n  const data = await res.json();\n  const repos = data.map((r: any) => ({\n    name: r.name,\n    full_name: r.full_name\n  }));\n\n  return NextResponse.json(repos);\n} catch (error: unknown) {\n  console.error(\"Error fetching GitHub repositories:\", error);\n  return NextResponse.json({ error: \"server error\" }, { status: 500 });\n}", "replace": "try {\n  let nextPageUrl = \"https://api.github.com/user/repos?sort=updated&per_page=100&affiliation=owner,collaborator\";\n  let allRepos = [];\n\n  while (nextPageUrl) {\n    const res = await fetch(nextPageUrl, {\n      headers: {\n        Authorization: `Bearer ${session.user.accessToken}`,\n        Accept: \"application/vnd.github+json\",\n      },\n      // next 14 fetch options\n      cache: 'no-store'\n    });\n\n    if (!res.ok) {\n      return NextResponse.json({ error: \"failed to fetch repos\" }, { status: res.status });\n    }\n\n    const data = await res.json();\n    const repos = data.map((r: any) => ({\n      name: r.name,\n      full_name: r.full_name\n    }));\n\n    allRepos = allRepos.concat(repos);\n\n    const linkHeader = res.headers.get('Link');\n    if (linkHeader) {\n      const nextPage = linkHeader.match(/<([^>]+)>;\\s*rel=\"next\"/);\n      if (nextPage) {\n        nextPageUrl = nextPage[1];\n      } else {\n        nextPageUrl = null;\n      }\n    } else {\n      nextPageUrl = null;\n    }\n  }\n\n  const mappedRepos = allRepos.map((repo) => ({\n    name: repo.name,\n    full_name: repo.full_name\n  }));\n\n  return NextResponse.json(mappedRepos);\n} catch (error: unknown) {\n  console.error(\"Error fetching GitHub repositories:\", error);\n  return NextResponse.json({ error: \"server error\" }, { status: 500 });\n}"}]}
 
 **Reviewer**: APPROVE: The Executor successfully implemented the pagination logic for fetching GitHub repositories, addressing a critical functional flaw identified by the Scanner. The solution correctly uses a `while` loop, `nextPageUrl`, `allRepos` accumulation, and parses the `Link` header to retrieve all pages of repositories. The `ACTUAL DIFF PREVIEW` confirms the patch will be applied correctly, including proper indentation. There is a minor redundancy in the final mapping step (`allRepos.map(...)`) as the repositories are already mapped to the desired shape within the loop, but this does not introduce a functional error.
+
+---
+
+## Cycle 1774617219
+**Scanner**: ### Step 1: Codebase Understanding
+
+-   **What does this repository do?**
+    The `git-pulse` repository appears to be a web application, likely a social media or developer community platform, that integrates with GitHub. It allows users to view profiles, manage repositories, star content, create posts and comments, and receive notifications.
+
+-   **What does the target file do within the repo?**
+    -   `apps/web/src/components/ProfileTabs.tsx`: This component renders the interactive navigation tabs (Overview, Repositories, Stars) for a user's profile page, dynamically displaying counts for repositories and stars.
+    -   `apps/web/src/app/api/posts/[id]/comments/route.ts`: This file defines an API endpoint responsible for handling `POST` requests to create new comments on a specific post. It performs user authentication, input validation, and database operations to store the comment.
+    -   `README.md`: This file is intended to provide an overview, setup instructions, and other essential information about the `git-pulse` project. Currently, it is empty.
+
+-   **What patterns, frameworks, or conventions does the codebase use?**
+    The codebase uses Next.js (App Router), React for UI components, TypeScript for type safety, Prisma for ORM and database interactions, and Tailwind CSS for styling. It follows a component-based architecture for the frontend and API routes for backend logic. Authentication is handled via a custom `auth` utility, likely integrating with GitHub.
+
+### Step 2: Deep Analysis
+
+**General Repository Observations:**
+-   **DX:** The `README.md` file is empty. This is a significant barrier for new contributors or anyone trying to understand and set up the project.
+-   **Consistency:** The global memory indicates recurring issues with search block mismatches and indentation errors for the Executor, suggesting a need for extremely precise instructions and potentially subtle formatting variations within the codebase.
+
+**File: `apps/web/src/components/ProfileTabs.tsx`**
+-   **Accessibility:** The `outline-none` class on the `Link` components removes the default focus indicator. While this might be for aesthetic reasons, it can negatively impact keyboard navigation for users with accessibility needs. A more accessible approach would be to use `focus-visible` or provide a custom, visible focus style.
+-   **Features:** The current tabs are functional, but depending on the project's scope, additional profile-related tabs (e.g., "Posts", "Activity", "Followers/Following") could be considered as future enhancements.
+
+**File: `apps/web/src/app/api/posts/[id]/comments/route.ts`**
+-   **Logic/Consistency:** The `POST` function's second argument, `params`, is typed as `Promise<{ id: string }>` and then `await params` is used. In Next.js App Router API routes, the `params` object is a plain object, not a Promise. This is an incorrect type definition and an unnecessary `await` operation. It deviates from standard Next.js API route conventions and can be confusing.
+-   **Security:**
+    -   **Input Validation:** The `content` field is checked for existence (`if (!content)`), but there's no further validation like length constraints or sanitization against potential Cross-Site Scripting (XSS) if the content is rendered directly in the UI without proper escaping.
+    -   **Error Handling:** The `catch` block returns a generic "Internal Server Error". While this prevents exposing sensitive details, more specific internal logging could aid debugging without changing the client-facing message.
+-   **Architecture:** The use of `dynamic = "force-dynamic"` is explicit, which is good for ensuring server-side rendering behavior for this route.
+
+### Step 3: Pick ONE Improvement
+
+The most valuable improvement is to correct the type definition and usage of the `params` object in the `POST` handler for the comments API route. This addresses a fundamental logical inconsistency with Next.js App Router conventions, improves type safety, and removes an unnecessary `await` operation. While the empty `README.md` is a significant DX issue, and input validation is a security concern, the `params` issue is a direct logical flaw in how a core framework feature is being used, making it a higher priority bug/logic fix.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT to change:**
+The `POST` function's second argument, which contains the dynamic route parameters, is currently incorrectly typed as a `Promise<{ id: string }>` and an unnecessary `await` is used when accessing its properties. This needs to be corrected to reflect that `params` is a plain object provided by Next.js, and the `await` should be removed.
+
+**WHERE in the file(s):**
+The change will be in the `POST` asynchronous function within the file `apps/web/src/app/api/posts/[id]/comments/route.ts`. Specifically, it involves the function signature and the line where `postId` is destructured.
+
+**WHY this matters:**
+In Next.js App Router API routes, the `params` object is directly provided as a plain object containing the dynamic route segments, not a Promise. The current implementation's incorrect type definition and the use of `await` on a non-Promise object are misleading, deviate from standard Next.js conventions, and introduce unnecessary complexity. Correcting this improves type safety, code clarity, and adherence to framework best practices, making the code more robust and easier to understand for other developers.
+
+**HOW to do it:**
+1.  Locate the `POST` asynchronous function definition in `apps/web/src/app/api/posts/[id]/comments/route.ts`.
+2.  Modify the type definition of the second argument in the `POST` function signature. Change `params: Promise<{ id: string }>` to `params: { params: { id: string } }`. This correctly reflects that the `params` object is nested within the second argument.
+3.  Locate the line inside the `try` block where `postId` is destructured: `const { id: postId } = await params;`.
+4.  Remove the `await` keyword and adjust the access path to `params.params`. The line should become `const { id: postId } = params.params;`.
+
+**Executor**: {"title": "[LOGIC] Correct params type and await usage in comments API route", "body": "### Problem / Gap\nIncorrect type definition and await usage for params object in POST handler.\n\n### Solution & Insight\nCorrect type definition and remove unnecessary await operation to adhere to Next.js conventions.\n\n### Impact\nImproved type safety, code clarity, and adherence to framework best practices.", "branch_name": "bot/fix-1774617219", "edits": [{"file": "apps/web/src/app/api/posts/[id]/comments/route.ts", "search": "export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {", "replace": "export async function POST(req: Request, { params }: { params: { params: { id: string } } }) {"}, {"file": "apps/web/src/app/api/posts/[id]/comments/route.ts", "search": "const { id: postId } = await params;", "replace": "const { id: postId } = params.params;"}, {"file": "apps/web/src/app/api/posts/[id]/comments/route.ts", "search": "params: Promise<{ id: string }>", "replace": "params: { params: { id: string } }"}, {"file": "apps/web/src/app/api/posts/[id]/comments/route.ts", "search": "const { id: postId } = await params;", "replace": "const { id: postId } = params.params;"}]}
+
+**Reviewer**: CORRECT: The Executor correctly identified the logical inconsistency and type error in the `params` object usage for Next.js App Router API routes. The proposed functional changes are correct and align with the Scanner's plan. However, the Executor submitted duplicate edits and, more critically, the `replace` string for the second modification lacked the necessary leading whitespace, causing an indentation error as shown in the diff preview. This is a recurring issue for this repository.
 
 ---
