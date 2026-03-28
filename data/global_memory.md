@@ -49,3 +49,4 @@
 - **REJECTED by Reviewer**: Executor failed to create new file `apps/web/src/types/github.ts` using `search: ""`, leading to `ReferenceError` in dependent files. Confirms `search: ""` is unreliable for file creation/insertion in `git-pulse`.
 - **REJECTED by Reviewer**: Executor failed to apply a critical `tailwind.config.ts` update due to search block mismatch, leading to an incomplete and non-functional change for `git-pulse`. This is a recurring issue.
 - **Repo: git-pulse**: [REFACTOR] Centralize Custom Colors in RepoCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/78) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [REFACTOR] Centralize Custom Colors in RightSidebar. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/79) - *Status: PENDING REVIEW*
