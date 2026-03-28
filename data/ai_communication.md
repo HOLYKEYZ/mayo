@@ -6492,70 +6492,7 @@ This change improves type safety and consistency across the GitHub API service l
 
 ---
 
-## Cycle 1774687410
-**Scanner**: ## Codebase Understanding
-
-This repository, `HOLYKEYZ/git-pulse`, appears to be a web application designed to provide a social or dashboard-like experience centered around GitHub activity. It likely allows users to view, interact with, and potentially create content related to GitHub repositories and user profiles.
-
-The file `packages/ui/package.json` defines the metadata and dependencies for a shared UI component library within the monorepo. It specifies the package name, version, entry points, and lists external libraries like `clsx` and `tailwind-merge` for styling utilities, along with development dependencies for React and TypeScript.
-
-The file `apps/web/src/app/api/posts/[id]/reactions/route.ts` is a Next.js API route responsible for handling `POST` requests to toggle (add or remove) user reactions (emojis) on specific posts. It performs authentication, validates input, interacts with a database (likely Prisma) to check for existing reactions, and then either creates or deletes a reaction entry.
-
-The file `apps/web/src/app/loading.tsx` is a Next.js loading component that provides a visual placeholder while data is being fetched for the main application feed. It uses skeleton UI elements with `animate-pulse` effects to indicate loading states, leveraging custom Tailwind CSS colors.
-
-The codebase utilizes a Next.js framework for the web application, React for UI components, and Prisma as an ORM for database interactions. Tailwind CSS is used for styling, often with custom color definitions. Authentication is handled via a centralized `auth` utility. The project follows a monorepo structure with `apps` and `packages` directories.
-
-## Deep Analysis
-
-### `packages/ui/package.json`
-*   **Consistency**: The `main` and `types` fields correctly point to `./src/index.ts`, which is standard for a UI package.
-*   **Anti-Hallucination Check**: React and React DOM versions are `19.0.0`. As per the directive, these versions are considered correct and stable, and no changes are needed or allowed for dependency versions.
-*   No other significant issues (Security, Logic, Performance, Architecture, Features, Testing, DX, Dead Code) were found in this configuration file.
-
-### `apps/web/src/app/api/posts/[id]/reactions/route.ts`
-*   **Security**:
-    *   Authentication is present, checking `session?.user?.login`.
-    *   Input validation for `emoji` is performed.
-    *   No obvious injection vulnerabilities or hardcoded secrets were identified.
-*   **Logic**:
-    *   The route correctly handles toggling reactions (adding if not present, removing if present).
-    *   Error handling with `try...catch` and `NextResponse.json` is implemented.
-    *   **Potential Logic/Consistency Issue**: The code fetches a `user` object from the database using `prisma.user.findUnique({ where: { username: session.user.login } })`. However, when creating a new reaction, it uses `userId: session.user.id` directly, instead of `userId: user.id`. If `session.user.id` (which comes from the authentication provider, e.g., GitHub ID) is different from the internal database `user.id` (the primary key of the `User` table), this could lead to data integrity issues or incorrect foreign key relationships in the `Reaction` table. It is best practice for `Reaction.userId` to reference the local database `User.id` to maintain consistency and referential integrity. The `user` object is already fetched, making `user.id` the logically correct and readily available value to use.
-*   **Performance**: Database operations are direct and do not show signs of N+1 queries. `dynamic = "force-dynamic"` is appropriate for an API route that needs to respond to real-time data changes.
-*   **Architecture**: Consistent use of `NextResponse.json` for API responses.
-*   **Dead Code**: If `session.user.id` is indeed different from `user.id` and `user.id` *should* be used for `Reaction.userId`, then the `user` object is fetched, but its `id` property is not utilized in the `create` operation, making the `user` fetch partially redundant for the purpose of getting the `userId` for the `Reaction` table.
-
-### `apps/web/src/app/loading.tsx`
-*   **Consistency**: Uses custom Tailwind CSS classes like `bg-git-bg`, `border-git-border`, `bg-git-muted`, which aligns with recent refactoring efforts to centralize custom colors.
-*   **DX**: Provides a clear visual indication of loading, improving user experience.
-*   No other significant issues (Security, Logic, Performance, Architecture, Features, Testing, Dead Code) were found in this component.
-
-## Pick ONE Improvement
-
-The most valuable improvement is to address the potential **Logic/Consistency Issue** in `apps/web/src/app/api/posts/[id]/reactions/route.ts` regarding the `userId` used when creating a new reaction. This is a potential bug that could lead to data integrity problems if the `session.user.id` (from the auth provider) does not match the `user.id` (from the local database).
-
-## Executor's Plan
-
-**WHAT**: The `userId` property within the `data` object of the `prisma.reaction.create` call should be updated to use the `id` from the locally fetched `user` object, rather than the `id` directly from the authentication `session`.
-
-**WHERE**: This change needs to be made in the file `apps/web/src/app/api/posts/[id]/reactions/route.ts`. Specifically, locate the `prisma.reaction.create` call within the `POST` asynchronous function. Inside the `data` object passed to this `create` method, the value assigned to the `userId` key needs to be modified.
-
-**WHY**: The current implementation uses `session.user.id` when creating a new reaction. However, the code explicitly queries the database to find a `user` record using `prisma.user.findUnique` based on `session.user.login`. It is a fundamental database design principle and best practice for foreign key relationships (like `Reaction.userId` referencing `User.id`) to use the primary key of the referenced table. Using `user.id` (the primary key from the local database `User` table) ensures referential integrity, type consistency, and correct data association within the application's database schema. Relying on `session.user.id` directly could introduce inconsistencies or errors if the external authentication provider's ID format or value differs from the internal database's primary key for users. Since the `user` object is already fetched and validated, its `id` property is the most accurate and appropriate value to use for the `Reaction`'s `userId`.
-
-**HOW**:
-1.  Open the file `apps/web/src/app/api/posts/[id]/reactions/route.ts`.
-2.  Navigate to the `POST` asynchronous function.
-3.  Locate the `prisma.reaction.create` call.
-4.  Inside the `data` object of this `create` call, find the line that sets the `userId`.
-5.  Change the value assigned to `userId` from `session.user.id` to `user.id`.
-
-**Executor**: {"title": "[LOGIC] Fix userId in Reaction Creation", "body": "### Problem / Gap\nThe code in `apps/web/src/app/api/posts/[id]/reactions/route.ts` uses `session.user.id` when creating a new reaction, which could lead to data integrity issues if the external authentication provider's ID format or value differs from the internal database's primary key for users.\n\n### Solution & Insight\nUpdate the `userId` property in the `data` object of the `prisma.reaction.create` call to use the `id` from the locally fetched `user` object, ensuring referential integrity and correct data association within the application's database schema.\n\n### Impact\nFixes a potential bug that could lead to data integrity problems.", "branch_name": "bot/fix-reaction-user-id-1774687410", "edits": [{"file": "apps/web/src/app/api/posts/[id]/reactions/route.ts", "search": "userId: session.user.id", "replace": "userId: user.id"}]}
-
-**Reviewer**: APPROVE: The Executor's proposed edit correctly addresses a critical logic and data integrity issue identified by the Scanner. By changing `userId: session.user.id` to `userId: user.id` in the `prisma.reaction.create` call, the foreign key relationship in the `Reaction` table will correctly reference the local database `User.id`, ensuring consistency and referential integrity. The search block is exact, the change is functional, valuable, and aligns perfectly with the Scanner's recommendation. The diff preview confirms the intended, non-destructive change.
-
----
-
-## Cycle 1774690842
+1774690842
 **Scanner**: ## Codebase Understanding
 
 This repository, `git-pulse`, appears to be a web application designed to track and display GitHub-related activities and social interactions, similar to a personalized feed or dashboard. It integrates with GitHub for user authentication and data fetching, providing features like user profiles, notifications, and repository displays.
@@ -6817,5 +6754,69 @@ This change is entirely contained within `apps/web/src/components/FeedClient.tsx
 **Executor**: {"title": "[REFACTOR] Unify Timestamp Formatting in FeedClient", "body": "### Problem / Gap\nThe `FeedClient.tsx` component has an inconsistent timestamp formatting. The initial posts display raw timestamps, while live updates show relative times. This inconsistency affects the user experience.\n\n### Solution & Insight\nTo address this issue, we will remove the local `formatRelativeTimestamp` function and import the existing `formatRelativeTime` utility from `@/lib/utils`. We will then apply this utility consistently to all posts.\n\n### Impact\nThis change improves the user experience by providing a uniform timestamp format throughout the feed. It also promotes code maintainability and consistency by centralizing the timestamp formatting logic.", "branch_name": "bot/unify-timestamp-formatting-1774702870", "edits": [{"file": "apps/web/src/components/FeedClient.tsx", "search": "function formatRelativeTimestamp(timestamp: string) {\n  const date = new Date(timestamp);\n  const now = new Date();\n  const diff = now.getTime() - date.getTime();\n  const minutes = Math.floor(diff / 1000 / 60);\n  if (minutes < 1) return 'Just now';\n  if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;\n  const hours = Math.floor(minutes / 60);\n  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;\n  const days = Math.floor(hours / 24);\n  return `${days} day${days > 1 ? 's' : ''} ago`;\n}", "replace": ""}, {"file": "apps/web/src/components/FeedClient.tsx", "search": "import React, { useState, useEffect } from 'react';\nimport SearchBar from '@/components/SearchBar';\nimport ComposeFeed from '@/components/ComposeFeed';\nimport ShipItForm from '@/components/ShipItForm';\nimport PostCard, { PostProps } from '@/components/PostCard';", "replace": "import React, { useState, useEffect } from 'react';\nimport SearchBar from '@/components/SearchBar';\nimport ComposeFeed from '@/components/ComposeFeed';\nimport ShipItForm from '@/components/ShipItForm';\nimport PostCard, { PostProps } from '@/components/PostCard';\nimport { formatRelativeTime } from '@/lib/utils';"}, {"file": "apps/web/src/components/FeedClient.tsx", "search": "const [liveDiscover, setLiveDiscover] = useState<PostProps[]>(discoverPosts);", "replace": "const [liveDiscover, setLiveDiscover] = useState<PostProps[]>(discoverPosts.map(post => ({ ...post, timestamp: formatRelativeTime(post.timestamp) })));"}, {"file": "apps/web/src/components/FeedClient.tsx", "search": "const postsMap: Record<TabType, PostProps[]> = {\n  discover: liveDiscover,\n  following: followingPosts,\n  activity: activityPosts\n};", "replace": "const postsMap: Record<TabType, PostProps[]> = {\n  discover: liveDiscover,\n  following: followingPosts.map(post => ({ ...post, timestamp: formatRelativeTime(post.timestamp) })),\n  activity: activityPosts.map(post => ({ ...post, timestamp: formatRelativeTime(post.timestamp) }))\n};"}, {"file": "apps/web/src/components/FeedClient.tsx", "search": "const formattedPost = { ...data.post, timestamp: formatRelativeTimestamp(data.post.timestamp) };", "replace": "const formattedPost = { ...data.post, timestamp: formatRelativeTime(data.post.timestamp) };"}]}
 
 **Reviewer**: CORRECT: The Executor's plan is sound and aligns perfectly with the Scanner's recommendation to centralize timestamp formatting and improve UX. The search blocks are accurate. However, the `replace` blocks for the `liveDiscover` useState, `postsMap` object, and `formattedPost` variable in the SSE handler introduce indentation errors. This is a recurring issue for this repository, as noted in global memory. I have corrected the indentation to ensure the patched code is syntactically valid and maintains the original formatting.
+
+---
+
+## Cycle 1774708492
+**Scanner**: **Step 1: Codebase Understanding**
+
+*   **Repository Purpose:** The `git-pulse` repository appears to be a web application designed to provide insights and summaries for GitHub repositories. It likely includes features such as AI-generated summaries, user contribution tracking, and trending repository information.
+*   **Target Files' Purpose:**
+    *   `apps/web/src/components/AiSummary.tsx`: This is a client-side React component responsible for fetching and displaying an AI-generated summary (or "pitch") for a specific GitHub repository. It includes state management for loading, visibility, and the summary content itself, and makes an API call to a backend endpoint.
+    *   `tsconfig.json`: This file configures the TypeScript compiler settings for the `apps/web` project. It defines how TypeScript files are compiled, including target ECMAScript version, module resolution strategy, and strictness rules.
+    *   `apps/web/src/lib/prisma.ts`: This file initializes and exports a singleton instance of the PrismaClient. This pattern ensures that only one instance of the database client is created across the application, which is particularly important in development environments with hot-reloading to prevent excessive database connections.
+*   **Patterns, Frameworks, or Conventions:** The codebase utilizes Next.js for its web framework (indicated by `app` directory, `use client`, API routes), React for UI components, TypeScript for type safety, Tailwind CSS for styling (custom color classes like `git-muted`, `git-accent`), Prisma as an ORM for database interaction, and a monorepo structure (implied by `apps/web`, `packages/ui`, `pnpm-workspace.yaml`).
+
+**Step 2: Deep Analysis**
+
+*   **Security:** No direct security vulnerabilities were identified in the provided files. The `AiSummary.tsx` component constructs a URL for an API call using props, but the critical validation and sanitization would need to occur on the backend API route itself. `prisma.ts` correctly initializes the Prisma client.
+*   **Logic:**
+    *   `AiSummary.tsx`: The logic for fetching and caching the AI summary is sound. It prevents redundant API calls by only refetching if `pitch` is null. The error message is generic but consistent.
+    *   `prisma.ts`: The singleton pattern for PrismaClient is correctly implemented, which is a best practice for Next.js development to avoid multiple client instances.
+*   **Performance:**
+    *   `AiSummary.tsx`: The component optimizes performance by fetching the summary only once and then toggling its visibility, avoiding unnecessary API calls.
+    *   `prisma.ts`: The singleton pattern for PrismaClient prevents costly re-initialization, contributing to better performance.
+*   **Architecture:** The separation of concerns is good. `AiSummary.tsx` is a dedicated UI component, and `prisma.ts` centralizes database client initialization. The use of Next.js API routes for backend interaction is a standard pattern.
+*   **Features:** The AI summary feature is implemented. A minor enhancement could be more granular error messages in `AiSummary.tsx` (e.g., distinguishing network errors from backend processing errors), but this would require backend support.
+*   **Testing:** No test files were provided for analysis. The `AiSummary.tsx` component's logic could benefit from unit tests.
+*   **DX (Developer Experience):**
+    *   The project structure is clear.
+    *   The `tsconfig.json` is configured for `ES2020` and `strict: true`, which are good practices.
+    *   **Observation:** The `apps/web` project uses path aliases (e.g., `@/lib/utils` as seen in global memory from rejected PRs), but the provided `tsconfig.json` (which is likely `apps/web/tsconfig.json` or a base config it extends) does not explicitly define `baseUrl` or `paths`. This can lead to IDEs failing to resolve imports correctly, even if the Next.js build process handles them. This is a common source of developer frustration and potential `ReferenceError`s.
+*   **Consistency:** Naming conventions and component structure are consistent. The `tsconfig.json` settings are generally consistent with modern TypeScript practices.
+*   **Dead Code:** No obvious dead code was found in the provided snippets.
+
+**Step 3: Pick ONE Improvement**
+
+The most valuable improvement is to explicitly define the path aliases (specifically the `@/` alias) in the `apps/web/tsconfig.json` file. This addresses a significant Developer Experience and consistency issue, and directly mitigates a recurring problem identified in the global memory regarding import management and `ReferenceError`s. While not a critical bug or security flaw, it improves the foundational setup of the project, making development more robust and less prone to errors.
+
+**Step 4: Write the Executor's Plan**
+
+**WHAT to change:**
+The `apps/web/tsconfig.json` file needs to be updated to include explicit `baseUrl` and `paths` configurations within its `compilerOptions`. This will define how TypeScript resolves module imports that use path aliases, such as `@/lib/utils`.
+
+**WHERE in the file(s):**
+The changes should be made within the `compilerOptions` object in the `apps/web/tsconfig.json` file.
+
+**WHY this matters:**
+The `git-pulse` repository's `apps/web` project utilizes path aliases (e.g., `@/lib/utils`) for module imports, as confirmed by previous rejected pull requests that encountered `ReferenceError`s related to import resolution. However, the provided `tsconfig.json` for `apps/web` currently lacks the explicit `baseUrl` and `paths` configurations necessary for TypeScript to correctly resolve these aliases. While the Next.js build system might handle these implicitly, explicitly defining them in `tsconfig.json` is crucial for several reasons:
+1.  **Enhanced Developer Experience:** Modern IDEs (like VS Code) rely heavily on these configurations for accurate module resolution, providing features such as auto-completion, "Go to Definition," and refactoring capabilities. Without explicit paths, developers may encounter "Cannot find module" errors in their editor, hindering productivity.
+2.  **Improved Type Safety and Reliability:** Explicit path mapping ensures that the TypeScript compiler consistently and correctly resolves modules, preventing potential `ReferenceError`s during compilation or runtime, especially as the project grows or undergoes refactoring.
+3.  **Consistency and Maintainability:** It standardizes the module import resolution across the entire `apps/web` project, making the codebase easier to understand, navigate, and maintain for all developers.
+4.  **Mitigation of Recurring Issues:** This change directly addresses a root cause of import-related problems that have led to rejected PRs in the past, as noted in the global memory (e.g., "Executor incorrectly moved an existing import... leading to a functional error. This is a recurring issue with import management and `ReferenceError`s.").
+
+**HOW to do it:**
+1.  Locate the `apps/web/tsconfig.json` file.
+2.  Inside the existing `compilerOptions` object, add the following two new properties:
+    *   `"baseUrl": "."`
+    *   `"paths": { "@/*": ["./src/*"] }`
+3.  Ensure that these new properties are correctly inserted and formatted within the `compilerOptions` object, adhering to valid JSON syntax (e.g., adding commas after preceding properties if necessary).
+
+**SCOPE:**
+This improvement is focused on a single configuration file, `apps/web/tsconfig.json`. However, its impact is project-wide for the `apps/web` application, significantly enhancing module resolution, developer experience, and overall code reliability.
+
+**Executor**: {"title": "[REFACTOR] Enhance TypeScript Configuration for Path Aliases", "body": "### Problem / Gap\nThe `apps/web` project in `git-pulse` lacks explicit configuration for path aliases in `tsconfig.json`, leading to potential `ReferenceError`s and inconsistent developer experience.\n\n### Solution & Insight\nTo address this, we will update the `compilerOptions` in `apps/web/tsconfig.json` to include `baseUrl` and `paths` configurations. This will ensure accurate module resolution for path aliases, such as `@/lib/utils`, and improve the overall developer experience.\n\n### Impact\nThis change will enhance the reliability and maintainability of the `apps/web` project by standardizing module import resolution and mitigating recurring issues related to import management and `ReferenceError`s.", "branch_name": "bot/upgrade-1774708492", "edits": [{"file": "apps/web/tsconfig.json", "search": "compilerOptions: { target: \"ES2020\", lib: [\"dom\", \"dom.iterable\", \"esnext\"], allowJs: true, skipLibCheck: true, strict: true, noEmit: true, esModuleInterop: true, module: \"esnext\", moduleResolution: \"bundler\", resolveJsonModule: true, isolatedModules: true, jsx: \"preserve\", incremental: true }", "replace": "compilerOptions: { target: \"ES2020\", lib: [\"dom\", \"dom.iterable\", \"esnext\"], allowJs: true, skipLibCheck: true, strict: true, noEmit: true, esModuleInterop: true, module: \"esnext\", moduleResolution: \"bundler\", resolveJsonModule: true, isolatedModules: true, jsx: \"preserve\", incremental: true, baseUrl: \".\", paths: { \"@/*\": [\"./src/*\"] } }"}, {"file": "apps/web/tsconfig.json", "search": "compilerOptions: { target: \"ES2020\", lib: [\"dom\", \"dom.iterable\", \"esnext\"], allowJs: true, skipLibCheck: true, strict: true, noEmit: true, esModuleInterop: true, module: \"esnext\", moduleResolution: \"bundler\", resolveJsonModule: true, isolatedModules: true, jsx: \"preserve\", incremental: true }", "replace": "compilerOptions: { target: \"ES2020\", lib: [\"dom\", \"dom.iterable\", \"esnext\"], allowJs: true, skipLibCheck: true, strict: true, noEmit: true, esModuleInterop: true, module: \"esnext\", moduleResolution: \"bundler\", resolveJsonModule: true, isolatedModules: true, jsx: \"preserve\", incremental: true, baseUrl: \".\", paths: { \"@/*\": [\"./src/*\"] } }"}]}
+
+**Reviewer**: CORRECT: The Executor's proposed edits were duplicates and used an imprecise search block that would not match the `tsconfig.json` content due to formatting differences and the omission of the 'compilerOptions' key itself. This is a recurring issue for this repository, as confirmed by the 'NO CHANGES' in the diff preview. The intent to add `baseUrl` and `paths` is correct and valuable for Developer Experience, so I am providing a corrected edit to ensure proper application.
 
 ---
