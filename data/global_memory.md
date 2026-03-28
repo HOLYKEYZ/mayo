@@ -45,7 +45,7 @@
 - **Repo: git-pulse**: [REFACTOR] Centralize Custom Colors in RepoCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/78) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Centralize Custom Colors in RightSidebar. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/79) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Ensure Consistent Return Types for List-Fetching Functions. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/80) - *Status: APPROVED - Joseph liked this!*
-- **Repo: git-pulse**: [LOGIC] Fix userId in Reaction Creation. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/81) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [LOGIC] Fix userId in Reaction Creation. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/81) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed due to search block mismatch (indentation), introduced indentation errors, and submitted duplicate edits for `git-pulse`. This is a recurring issue.
 - **Repo: git-pulse**: [LOGIC] Consistent Styling for NotificationBell. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/82) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor introduced a functional error by not updating all references to a variable after changing its type, and submitted duplicate edits for `git-pulse`.
