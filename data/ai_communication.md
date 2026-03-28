@@ -6251,67 +6251,7 @@ The comment `// reuse the mapper from page.tsx` indicates that the `mapPrismaPos
 
 ---
 
-## Cycle 1774650947
-**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
-
-### Step 1: Codebase Understanding
-
-*   **Repository Purpose**: The `git-pulse` repository appears to be a web application designed to provide a personalized dashboard or social feed for GitHub users, displaying posts, user profiles, repositories, notifications, and other GitHub-related activities. It aims to offer a more engaging way to interact with GitHub data.
-*   **Target Files Purpose**:
-    *   `pnpm-workspace.yaml`: This file defines the monorepo structure, indicating that `apps/*` and `packages/*` directories contain separate projects managed by pnpm.
-    *   `apps/web/src/components/SearchBar.tsx`: This is a client-side React component that provides a search input field with debounced API calls and a dynamic dropdown for displaying real-time search results across posts, users, and repositories.
-    *   `apps/web/src/lib/cache.ts`: This utility file implements a global LRU (Least Recently Used) cache for API responses, designed to be a singleton in a Next.js server environment. It provides a `withCache` wrapper function to easily cache the results of asynchronous operations.
-*   **Patterns, Frameworks, or Conventions**: The codebase uses Next.js as its React framework, TypeScript for type safety, and pnpm for monorepo management. It leverages client-side data fetching with debouncing for search, and implements a custom LRU cache for server-side API responses. Tailwind CSS is implied by the class naming conventions.
-
-### Step 2: Deep Analysis
-
-*   **Security**:
-    *   `SearchBar.tsx`: Uses `encodeURIComponent` for search queries in API calls and URL navigation, which is good practice for preventing URL injection. External links (`repo.url`) use `target="_blank" rel="noopener noreferrer"` to mitigate tabnabbing. No obvious direct security vulnerabilities in the provided snippets.
-    *   `cache.ts`: No direct security concerns.
-*   **Logic**:
-    *   `SearchBar.tsx`:
-        *   The search debounce logic is correctly implemented to prevent excessive API calls.
-        *   The `query.length < 2` check is a good optimization.
-        *   The "View all repositories" and "View all posts" links are displayed if `results.repos.length > 0` or `results.posts.length > 0` respectively. However, the dropdown *truncates* these lists to `slice(0, 3)`. This means if there are 1, 2, or 3 results, the "View all" link still appears, even though all results are already visible. This creates a redundant and potentially confusing user experience. The "View all" link should only appear if there are *more* results than what is currently displayed (i.e., `length > 3`).
-        *   The "View all users" link does not have this issue, as the user list is not truncated in the dropdown.
-    *   `cache.ts`:
-        *   The singleton pattern for `apiCache` using `globalForCache` is correctly implemented for Next.js server environments.
-        *   The comment `// don't cache null/undefined or empty arrays to avoid poisoning the cache with bad responses` is misleading regarding empty arrays. The actual code `if (result !== null && result !== undefined)` *does* cache empty arrays (`[]`) because an empty array is neither `null` nor `undefined`. Caching empty arrays for "no results" is generally a desirable performance optimization, so the code's behavior is good, but the comment contradicts it, which could lead to future confusion or incorrect "fixes."
-*   **Performance**:
-    *   `SearchBar.tsx`: Debouncing search queries is a good performance practice. The `isLoading` state provides good UX feedback.
-    *   `cache.ts`: The LRU cache with a default TTL is a solid approach for improving API response times and reducing backend load. The current behavior of caching empty arrays (despite the misleading comment) is beneficial for performance, as it avoids repeated API calls for "no results" scenarios.
-*   **Architecture**:
-    *   `SearchBar.tsx`: The component directly handles data fetching. For more complex search logic or shared data fetching, abstracting this into a custom hook or service could improve modularity. The `SearchResult` interface could be moved to a shared `types` file if used elsewhere.
-    *   `cache.ts`: The `withCache` function provides a clean, reusable abstraction for caching, promoting a consistent caching pattern across the application.
-*   **Features**:
-    *   `SearchBar.tsx`: The "View all" links are a good feature, but their conditional rendering for truncated sections needs refinement (as noted in Logic). Keyboard navigation for selecting dropdown results is a common UX enhancement for search bars that is currently missing.
-*   **Testing**: No explicit tests are provided in the context, but both `SearchBar.tsx` (for its various states and interactions) and `cache.ts` (for cache hits/misses, TTL, and eviction) would benefit from unit tests.
-*   **DX (Developer Experience)**:
-    *   `SearchBar.tsx`: The component is well-structured and readable.
-    *   `cache.ts`: The `withCache` function is well-commented, but one comment is misleading (as noted in Logic).
-*   **Consistency**: Naming conventions and use of Tailwind CSS classes appear consistent within the provided files. Import patterns are standard for Next.js/React.
-*   **Dead Code**: No obvious dead code in the provided snippets.
-
-### Step 3: Pick ONE Improvement
-
-The most valuable improvement is to correct the logical inconsistency in the `SearchBar.tsx` component regarding the conditional rendering of "View all" links for truncated search results. This is a direct bug in the user interface logic that affects user experience.
-
-### Step 4: Executor's Plan
-
-*   **WHAT**: Adjust the conditional rendering of the "View all repositories" and "View all posts" links in the search results dropdown.
-*   **WHERE**: In `apps/web/src/components/SearchBar.tsx`, specifically within the `dropdown results` section, locate the `Link` components that display "View all repositories" and "View all posts".
-*   **WHY**: The search results dropdown truncates the display of repositories and posts to the first three items. However, the "View all" links for these categories are currently displayed if there are any results at all (`length > 0`), even if the total number of results is three or fewer. This means the "View all" link appears when all available results are already visible in the dropdown, creating a confusing user experience where clicking the link might not show any *additional* information. To improve logical consistency and user experience, these links should only appear when there are *more* results than what is currently displayed, indicating that there is indeed more to view on the dedicated search page.
-*   **HOW**:
-    1.  Locate the `Link` component that displays "View all repositories". Change its conditional rendering from `results.repos.length > 0` to `results.repos.length > 3`.
-    2.  Locate the `Link` component that displays "View all posts". Change its conditional rendering from `results.posts.length > 0` to `results.posts.length > 3`.
-
-**Executor**: {"title": "[LOGIC] Fix Conditional Rendering of View All Links", "body": "### Problem / Gap\nThe 'View all' links for repositories and posts in the search dropdown are displayed even when all results are already visible, creating a confusing user experience.\n\n### Solution & Insight\nAdjust the conditional rendering of these links to only display when there are more results than what is currently shown (i.e., more than 3 results).\n\n### Impact\nImproves user experience by removing redundant links and ensuring that 'View all' links only appear when necessary.", "branch_name": "bot/fix-view-all-links-1774650947", "edits": [{"file": "apps/web/src/components/SearchBar.tsx", "search": "                            {results.repos.length > 0 &&\n        <Link\n          href={`/search?q=${encodeURIComponent(query.trim())}&type=repos`}\n          onClick={() => {setIsOpen(false);setQuery(\"\");}}\n          className=\"block text-center py-2 text-sm text-git-accent hover:bg-git-bg transition-colors border-t border-git-border\">\n          View all repositories\n        </Link>\n      }", "replace": "                            {results.repos.length > 3 &&\n        <Link\n          href={`/search?q=${encodeURIComponent(query.trim())}&type=repos`}\n          onClick={() => {setIsOpen(false);setQuery(\"\");}}\n          className=\"block text-center py-2 text-sm text-git-accent hover:bg-git-bg transition-colors border-t border-git-border\">\n          View all repositories\n        </Link>\n      }"}, {"file": "apps/web/src/components/SearchBar.tsx", "search": "                            {results.posts.length > 0 &&\n        <Link\n          href={`/search?q=${encodeURIComponent(query.trim())}&type=posts`}\n          onClick={() => {setIsOpen(false);setQuery(\"\");}}\n          className=\"block text-center py-2 text-sm text-git-accent hover:bg-git-bg transition-colors border-t border-git-border\">\n          View all posts\n        </Link>\n      }", "replace": "                            {results.posts.length > 3 &&\n        <Link\n          href={`/search?q=${encodeURIComponent(query.trim())}&type=posts`}\n          onClick={() => {setIsOpen(false);setQuery(\"\");}}\n          className=\"block text-center py-2 text-sm text-git-accent hover:bg-git-bg transition-colors border-t border-git-border\">\n          View all posts\n        </Link>\n      }"}]}
-
-**Reviewer**: Reviewer response unparseable
-
----
-
-## Cycle 1774654534
+1774654534
 **Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
 
 ### Step 1: Codebase Understanding
@@ -6626,5 +6566,87 @@ This improvement may involve changes to two files: `apps/web/tailwind.config.ts`
 **Executor**: {"title": "[REFACTOR] Centralize Custom Colors in RightSidebar", "body": "### Problem / Gap\nThe `RightSidebar` component uses hardcoded hex color values for the titles of 'Upcoming Projects' and 'Most Active Today' sections. This contradicts the recent refactoring efforts to centralize custom colors in `tailwind.config.ts`, making it difficult to manage and update the visual theme consistently.\n\n### Solution & Insight\nTo address this inconsistency, we will replace the hardcoded hex color values with appropriate Tailwind CSS utility classes. First, we need to define these colors in `tailwind.config.ts` if they do not already exist. Then, we will update the `RightSidebar` component to use these classes instead of the hardcoded values.\n\n### Impact\nThis change improves the maintainability and consistency of the codebase by adhering to the established architectural patterns. It simplifies future adjustments to the color scheme, as changes can be made in a single, well-defined location.", "branch_name": "bot/upgrade-1774677571", "edits": [{"file": "apps/web/tailwind.config.ts", "search": "", "replace": "theme: {\n  extend: {\n    colors: {\n      'git-success': '#2ea043',\n      'git-info': '#4493f8',\n    }\n  }\n}"}, {"file": "apps/web/src/components/RightSidebar.tsx", "search": "              <div className=\"text-[15px] font-bold text-[#2ea043] mb-0.5 truncate\">\n                {repo.full_name}\n              </div>", "replace": "              <div className=\"text-[15px] font-bold text-git-success mb-0.5 truncate\">\n                {repo.full_name}\n              </div>"}, {"file": "apps/web/src/components/RightSidebar.tsx", "search": "              <div className=\"text-[15px] font-bold text-[#4493f8] mb-0.5 truncate\">\n                {repo.full_name}\n              </div>", "replace": "              <div className=\"text-[15px] font-bold text-git-info mb-0.5 truncate\">\n                {repo.full_name}\n              </div>"}]}
 
 **Reviewer**: Reviewer response unparseable
+
+---
+
+## Cycle 1774681856
+**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
+
+### Step 1: Codebase Understanding
+
+This repository, `git-pulse`, appears to be a web application designed to display and interact with GitHub user data, including profiles, repositories, events, and contributions. It likely serves as a personalized dashboard or a social platform centered around GitHub activity.
+
+*   **`apps/web/src/app/loading.tsx`**: This file defines the loading state UI for the main application route in a Next.js application. It uses skeleton components and animated pulse effects to provide visual feedback to the user while data is being fetched.
+*   **`pnpm-workspace.yaml`**: This file configures the pnpm package manager for a monorepo setup. It specifies that packages within the `apps/` and `packages/` directories should be treated as workspaces, enabling shared dependencies and streamlined development across different parts of the project.
+*   **`apps/web/src/lib/github.ts`**: This file acts as a comprehensive service layer for interacting with the GitHub API. It encapsulates logic for fetching user data, repositories, events, and contribution statistics using both GitHub's REST and GraphQL APIs. It includes caching mechanisms and robust error handling for API calls.
+
+The codebase uses:
+*   **Next.js**: For server-side rendering, routing, and API routes.
+*   **React**: For building user interfaces.
+*   **Tailwind CSS**: For utility-first styling, with custom color definitions.
+*   **pnpm workspaces**: For monorepo management.
+*   **GitHub REST API and GraphQL API**: For data fetching.
+*   **TypeScript**: For type safety.
+*   **Caching**: Implemented via `withCache` for performance optimization.
+
+### Step 2: Deep Analysis
+
+**`apps/web/src/app/loading.tsx`**:
+*   **Consistency**: Uses custom Tailwind colors (`git-bg`, `git-border`, `git-muted`) which is consistent with recent refactoring efforts to centralize colors.
+*   **Logic**: The skeleton structure correctly mimics the layout of the main page, providing a good user experience during loading.
+*   No immediate security, performance, or architectural concerns for this specific file, as it's a purely presentational component.
+
+**`pnpm-workspace.yaml`**:
+*   **Architecture**: Standard and correct configuration for a pnpm monorepo.
+*   No issues found.
+
+**`apps/web/src/lib/github.ts`**:
+*   **Security**:
+    *   Authentication tokens are passed securely via `Bearer` headers.
+    *   Tokens are sliced for cache keys (`token.slice(-10)`) to prevent full token exposure in logs/cache keys, which is a good practice.
+    *   No hardcoded secrets observed.
+    *   Input validation for `username`, `page`, `perPage` relies on the GitHub API's robustness, which is generally acceptable for these parameters.
+*   **Logic**:
+    *   Error handling in `fetchWithAuth` and `fetchGraphQL` is comprehensive, logging rate limits, HTTP errors, and GraphQL errors.
+    *   The `withCache` utility is used effectively to prevent redundant API calls.
+    *   GraphQL error handling correctly returns `json.data` even if `json.errors` exist, allowing for partial data responses.
+    *   **Inconsistency**: Some list-fetching functions like `getGitHubRepos` and `getGitHubAllRepos` explicitly return an empty array (`[]`) if `fetchWithAuth` returns `null`. However, `getGitHubStarredRepos` (and potentially `getGitHubReceivedEvents` based on the truncated content) returns `GitHubRepo[] | null`, propagating the `null` value. This creates an inconsistency in how list-oriented data is handled on error or no-data scenarios.
+*   **Performance**:
+    *   `withCache` is a strong performance enhancement.
+    *   `next: { revalidate: ... }` is used for Next.js data revalidation, optimizing data freshness.
+    *   Cache keys are well-designed to ensure uniqueness and prevent collisions.
+*   **Architecture**:
+    *   Clear separation of concerns: core fetchers (`fetchWithAuth`, `fetchGraphQL`) and higher-level API functions.
+    *   Well-defined TypeScript interfaces for GitHub entities.
+*   **Consistency**:
+    *   As noted under Logic, there's an inconsistency in return types for list-fetching functions. Some return `Promise<ArrayType>` (guaranteeing an array, even if empty), while others return `Promise<ArrayType | null>`. This forces inconsistent `null` checks in consuming code.
+*   **Dead Code**: No obvious dead code.
+
+### Step 3: Pick ONE Improvement
+
+The most valuable improvement is to address the **inconsistency in return types for list-fetching functions** within `apps/web/src/lib/github.ts`. Specifically, `getGitHubStarredRepos` (and potentially `getGitHubReceivedEvents`) should consistently return an empty array (`[]`) instead of `null` when no data is available or an error occurs, aligning with `getGitHubRepos` and `getGitHubAllRepos`.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT**:
+Ensure that functions fetching lists of GitHub entities consistently return an empty array instead of `null` when no data is available or an error occurs. Specifically, modify the `getGitHubStarredRepos` function to always return `GitHubRepo[]`. If the `getGitHubReceivedEvents` function (or any other function designed to return a list of items) is found to have a `Promise<SomeType[] | null>` return type, apply the same correction.
+
+**WHERE**:
+In the file `apps/web/src/lib/github.ts`:
+1.  Locate the `getGitHubStarredRepos` function.
+2.  If present, locate the `getGitHubReceivedEvents` function.
+3.  Review any other functions within this file that are designed to return a list of items (e.g., `Promise<SomeType[] | null>`).
+
+**WHY**:
+This change improves type safety and consistency across the GitHub API service layer. By ensuring that list-oriented functions always return an array (even if empty) instead of `null`, consuming components can safely iterate over the results without needing explicit `null` checks. This leads to cleaner, more predictable, and less error-prone code. This aligns `getGitHubStarredRepos` with the established pattern of `getGitHubRepos` and `getGitHubAllRepos` within the same file, reducing cognitive load for developers using this service layer.
+
+**HOW**:
+1.  For the `getGitHubStarredRepos` function, change its TypeScript return type annotation from `Promise<GitHubRepo[] | null>` to `Promise<GitHubRepo[]>`.
+2.  Modify the function's body to explicitly handle the `null` return from `fetchWithAuth`. This means awaiting the `fetchWithAuth` call and using a logical OR (`||`) with an empty array (`[]`) to ensure an array is always returned.
+3.  If the `getGitHubReceivedEvents` function (or any other function designed to return a list of items) is found to have a `Promise<SomeType[] | null>` return type, apply the same two steps: update its return type annotation to `Promise<SomeType[]>` and modify its body to return `(await fetchWithAuth(...)) || []` (or `(await fetchGraphQL(...)) || []` if it uses GraphQL).
+
+**Executor**: {"title": "[REFACTOR] Ensure Consistent Return Types for List-Fetching Functions", "body": "### Problem / Gap\nThe `getGitHubStarredRepos` function returns `Promise<GitHubRepo[] | null>`, while other list-fetching functions like `getGitHubRepos` and `getGitHubAllRepos` return `Promise<GitHubRepo[]>`. This inconsistency can lead to unnecessary null checks and potential errors in consuming components.\n\n### Solution & Insight\nTo address this, we will modify the `getGitHubStarredRepos` function to always return an array, even if it's empty, by using the logical OR operator (`||`) with an empty array (`[]`). This ensures that the return type is consistent across all list-fetching functions, making the code more predictable and easier to work with.\n\n### Impact\nThis change improves type safety, reduces the need for explicit null checks, and enhances the overall maintainability of the codebase.", "branch_name": "bot/upgrade-1774681856", "edits": [{"file": "apps/web/src/lib/github.ts", "search": "export async function getGitHubStarredRepos(username: string, token: string, page = 1, perPage = 30): Promise<GitHubRepo[] | null> {\n  return fetchWithAuth(`/users/${username}/starred?page=${page}&per_page=${perPage}`, token);\n}", "replace": "export async function getGitHubStarredRepos(username: string, token: string, page = 1, perPage = 30): Promise<GitHubRepo[]> {\n  return (await fetchWithAuth(`/users/${username}/starred?page=${page}&per_page=${perPage}`, token)) || [];\n}"}]}
+
+**Reviewer**: APPROVE: The edit correctly addresses the inconsistency in return types for list-fetching functions, specifically `getGitHubStarredRepos`. It ensures the function always returns an array (even if empty) instead of `null`, improving type safety and consistency with other similar functions in `github.ts`. This aligns perfectly with the Scanner's recommendation and previous approved PRs for this repo that aimed for similar consistency.
 
 ---
