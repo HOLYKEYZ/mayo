@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Remove Hardcoded Secret from Admin Digest API Call. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/50) - *Status: APPROVED - Joseph liked this!*
-- **Repo: git-pulse**: [SEC] Fix Case-Sensitivity in Bearer Token Authentication. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/52) - *Status: APPROVED - Joseph liked this!*
+- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [REFACTOR] Upgrade TypeScript Compiler Target to ES2020. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/53) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_DISCUSSION_REPLY=1774697444 -->
 - **Repo: git-pulse**: [LOGIC] Correct params type in reactions/route.ts. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/54) - *Status: APPROVED - Joseph liked this!*
