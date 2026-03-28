@@ -6410,71 +6410,7 @@ This change is crucial for maintaining consistency and improving the maintainabi
 
 ---
 
-## Cycle 1774677571
-**Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
-
-### Step 1: Codebase Understanding
-
-This repository, `HOLYKEYZ/git-pulse`, appears to be a web application built with Next.js that serves as a social platform or dashboard for GitHub activity. It integrates with the GitHub API to display trending repositories and developers, user profiles, posts, and provides search functionality. It likely uses a database (Prisma is indicated) to store user-generated content and profiles.
-
-*   **`apps/web/tsconfig.json`**: This is the TypeScript configuration file for the `web` application. It defines how TypeScript compiles the project, including target ECMAScript version, module resolution, JSX handling, and path aliases.
-*   **`apps/web/src/app/search/page.tsx`**: This file implements the client-side search page. It fetches search results (for repositories, users, and posts) based on a user's query, displays them in a tabbed interface, and manages the loading state.
-*   **`apps/web/src/components/RightSidebar.tsx`**: This is an asynchronous server component responsible for rendering the right-hand sidebar of the application. It fetches and displays various dynamic content such as trending GitHub repositories and developers, upcoming projects, most active projects, and suggested users to follow, utilizing both GitHub API and a local database.
-
-The codebase primarily uses Next.js (App Router), React, TypeScript, and Tailwind CSS. It follows a component-based architecture, leverages server components for data fetching, and integrates with Prisma for database operations and GitHub's API for external data.
-
-### Step 2: Deep Analysis
-
-**`apps/web/tsconfig.json`**
-*   **Consistency**: The `target: "ES2020"` is consistent with previous refactoring efforts (PR #53). No immediate issues found.
-
-**`apps/web/src/app/search/page.tsx`**
-*   **Logic/Features**:
-    *   The `RepoCard` component is rendered with `languageColor=""` and `lastPush=""`. The `getLanguageColor` utility exists in the codebase (seen in `RightSidebar.tsx`), suggesting that `languageColor` should be dynamically determined and passed. `lastPush` would require the search API to provide this data or an additional fetch. This represents a partial implementation or a feature gap for the `RepoCard` display.
-    *   Error handling for `fetchResults` currently only logs to the console (`console.error`). There is no user-facing feedback if the search API call fails, which could lead to a poor user experience.
-*   **Accessibility**: The tab buttons (`Repositories`, `Users`, `Posts`) lack ARIA attributes like `role="tablist"`, `role="tab"`, and `aria-selected`, which are important for screen reader users to understand the interactive nature and current state of the tabs.
-*   **Consistency**: The `SearchResult` interface for `repos` does not include `lastPush`, which the `RepoCard` component expects, leading to the hardcoded empty string.
-
-**`apps/web/src/components/RightSidebar.tsx`**
-*   **Consistency/Architecture**: The titles for "Upcoming Projects" and "Most Active Today" (`repo.full_name`) use hardcoded hex color values (`text-[#2ea043]` and `text-[#4493f8]`). This directly contradicts recent refactoring efforts (PR #70, #78) to centralize custom colors within `tailwind.config.ts`. This is a significant inconsistency that impacts maintainability and adherence to established styling conventions.
-*   **Logic/Type Safety**: The `map` functions for `upcomingProjects` and `activeProjects` use `(repo: any)`. While functional, this bypasses TypeScript's type checking and reduces code robustness. A more specific type for GitHub repository objects should be defined and used.
-*   **Logic**: The expression `repo.stargazers_count?.toLocaleString() || 0` for displaying stars could be more robust. If `stargazers_count` is `undefined` or `null`, `toLocaleString()` would not be called, and `|| 0` would correctly provide a fallback. However, if `stargazers_count` is `0`, `toLocaleString()` would be called on `0`, which is fine. The current usage is acceptable but could be slightly clearer as `(repo.stargazers_count ?? 0).toLocaleString()`.
-*   **Features/UX**: The "Follow" button in the "Who to follow" section navigates to the user's profile page. While this is a valid interaction, a direct "Follow" action (e.g., via an API call) might be expected by users, potentially leading to an extra click. This is a minor UX consideration rather than a bug.
-
-### Step 3: Pick ONE Improvement
-
-The most valuable improvement is to address the **hardcoded color values in `RightSidebar.tsx`**. This is a direct violation of recent refactoring efforts to centralize custom colors in `tailwind.config.ts` (PR #70, #78). It's a clear consistency and maintainability issue that can be fixed by using the project's established styling conventions. This aligns with improving code quality and adhering to architectural patterns.
-
-### Step 4: Write the Executor's Plan
-
-**WHAT to change:**
-The hardcoded hex color values used for the `repo.full_name` titles within the "Upcoming Projects" and "Most Active Today" sections of the `RightSidebar` component must be replaced with appropriate Tailwind CSS utility classes. These classes should either already exist in the centralized `tailwind.config.ts` or be added there if they are new semantic colors.
-
-**WHERE in the file(s):**
-The primary changes will be in `apps/web/src/components/RightSidebar.tsx`.
-Specifically, within the `upcomingProjects.map` loop, the `div` element displaying `repo.full_name` currently has `className="text-[15px] font-bold text-[#2ea043] mb-0.5 truncate"`.
-Similarly, within the `activeProjects.map` loop, the `div` element displaying `repo.full_name` currently has `className="text-[15px] font-bold text-[#4493f8] mb-0.5 truncate"`.
-A secondary change might be required in `apps/web/tailwind.config.ts` if the semantic colors are not yet defined.
-
-**WHY this matters:**
-This change is critical for maintaining consistency, improving maintainability, and adhering to the established architectural patterns of the `git-pulse` repository. The project has recently undergone refactoring to centralize custom colors in `tailwind.config.ts`. Using hardcoded hex values directly in JSX bypasses this centralized configuration, making it difficult to manage, update, and ensure a consistent visual theme. By utilizing Tailwind classes, future color adjustments can be made in a single, well-defined location, reducing the risk of inconsistencies and simplifying the overall maintenance burden.
-
-**HOW to do it:**
-1.  **Inspect `apps/web/tailwind.config.ts`:** First, examine the `apps/web/tailwind.config.ts` file to determine if semantic color names corresponding to `#2ea043` (a green, often used for success or new features) and `#4493f8` (a blue, often used for information or links) have already been defined within the `theme.extend.colors` section.
-2.  **Define new colors if necessary:** If suitable semantic color classes are not found (e.g., `git-success` for green, `git-info` for blue), add these new custom colors to the `theme.extend.colors` object in `apps/web/tailwind.config.ts`. For example, add entries like `git-success: '#2ea043'` and `git-info: '#4493f8'`.
-3.  **Modify "Upcoming Projects" title color:** In `apps/web/src/components/RightSidebar.tsx`, locate the `div` element within the `upcomingProjects.map` function that contains `repo.full_name` and currently uses `text-[#2ea043]`. Replace `text-[#2ea043]` with the appropriate Tailwind utility class (e.g., `text-git-success`).
-4.  **Modify "Most Active Today" title color:** In `apps/web/src/components/RightSidebar.tsx`, locate the `div` element within the `activeProjects.map` function that contains `repo.full_name` and currently uses `text-[#4493f8]`. Replace `text-[#4493f8]` with the appropriate Tailwind utility class (e.g., `text-git-info`).
-
-**SCOPE:**
-This improvement may involve changes to two files: `apps/web/tailwind.config.ts` (if new colors need to be defined) and `apps/web/src/components/RightSidebar.tsx`. This multi-file approach ensures a complete and consistent application of the centralized color strategy.
-
-**Executor**: {"title": "[REFACTOR] Centralize Custom Colors in RightSidebar", "body": "### Problem / Gap\nThe `RightSidebar` component uses hardcoded hex color values for the titles of 'Upcoming Projects' and 'Most Active Today' sections. This contradicts the recent refactoring efforts to centralize custom colors in `tailwind.config.ts`, making it difficult to manage and update the visual theme consistently.\n\n### Solution & Insight\nTo address this inconsistency, we will replace the hardcoded hex color values with appropriate Tailwind CSS utility classes. First, we need to define these colors in `tailwind.config.ts` if they do not already exist. Then, we will update the `RightSidebar` component to use these classes instead of the hardcoded values.\n\n### Impact\nThis change improves the maintainability and consistency of the codebase by adhering to the established architectural patterns. It simplifies future adjustments to the color scheme, as changes can be made in a single, well-defined location.", "branch_name": "bot/upgrade-1774677571", "edits": [{"file": "apps/web/tailwind.config.ts", "search": "", "replace": "theme: {\n  extend: {\n    colors: {\n      'git-success': '#2ea043',\n      'git-info': '#4493f8',\n    }\n  }\n}"}, {"file": "apps/web/src/components/RightSidebar.tsx", "search": "              <div className=\"text-[15px] font-bold text-[#2ea043] mb-0.5 truncate\">\n                {repo.full_name}\n              </div>", "replace": "              <div className=\"text-[15px] font-bold text-git-success mb-0.5 truncate\">\n                {repo.full_name}\n              </div>"}, {"file": "apps/web/src/components/RightSidebar.tsx", "search": "              <div className=\"text-[15px] font-bold text-[#4493f8] mb-0.5 truncate\">\n                {repo.full_name}\n              </div>", "replace": "              <div className=\"text-[15px] font-bold text-git-info mb-0.5 truncate\">\n                {repo.full_name}\n              </div>"}]}
-
-**Reviewer**: Reviewer response unparseable
-
----
-
-## Cycle 1774681856
+1774681856
 **Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
 
 ### Step 1: Codebase Understanding
@@ -6740,5 +6676,70 @@ The most critical improvement is to fix the fundamental logic flaw in the rate l
 **Executor**: {"title": "[LOGIC] Fix Rate Limiting Logic in rateLimit Function", "body": "### Problem / Gap\nThe current rate limiting logic in the `rateLimit` function has a flaw. The `ttl` (time-to-live) for a token's count in the LRU cache is only set when the token is first encountered. This means the rate limit window does not slide correctly; it's a fixed window based on the *first* request, rather than a sliding window that resets `ttl` milliseconds after the *last* request.\n\n### Solution & Insight\nThe fix involves simplifying the internal storage of the token count from an array to a direct number and updating the `check` method to refresh the `ttl` on every access. This ensures the rate limiter functions as expected, providing consistent and fair usage control.\n\n### Impact\nThis change will improve the rate limiting mechanism, ensuring it correctly implements a sliding window rate limit.", "branch_name": "bot/fix-rate-limit-1774694168", "edits": [{"file": "apps/web/src/lib/rateLimit.ts", "search": "const tokenCount = (tokenCache.get(token) as number[]) || [0];\nif (tokenCount[0] === 0) {\n  tokenCache.set(token, tokenCount);\n}\ntokenCount[0] += 1;\nconst currentUsage = tokenCount[0];\nconst isRateLimited = currentUsage > limit;", "replace": "const tokenCount = (tokenCache.get(token) as number) || 0;\ntokenCount += 1;\nconst currentUsage = tokenCount;\nconst isRateLimited = currentUsage > limit;"}]}
 
 **Reviewer**: REJECTED x2: The proposed edit for `apps/web/src/lib/rateLimit.ts` is functionally incomplete. While it correctly simplifies `tokenCount` to a number, it fails to update the `tokenCache` with the new count. For a sliding window rate limit, it is crucial to call `tokenCache.set(token, newTokenCount)` *after* incrementing the count. This action refreshes the `ttl` for the token in the LRU cache, which is essential for the sliding window behavior. Without this, the `ttl` is only set on the first request, not on subsequent ones, breaking the sliding window logic. Please ensure `tokenCache.set` is called with the updated count (e.g., `tokenCache.set(token, tokenCount);` after `tokenCount += 1;`). Also, review the `search` and `replace` blocks carefully to ensure no lines are duplicated or unintentionally left behind, as suggested by the diff preview's duplicate `isRateLimited` declaration.
+
+---
+
+## Cycle 1774697450
+**Scanner**: ## Codebase Understanding
+
+This repository, `git-pulse`, is a web application built with Next.js that functions as a social platform for developers. It allows users to explore posts, interact with content, and display GitHub repository information.
+
+The target file `apps/web/src/app/explore/tags/[tag]/page.tsx` is a Next.js page that displays a feed of posts associated with a specific tag. It fetches posts from a database, calculates a score for each post based on various metrics, and then renders them using `PostCard` components. The `apps/web/src/app/api/github/user/route.ts` file provides API endpoints for fetching and updating the authenticated user's GitHub profile data. The `pnpm-workspace.yaml` file defines the monorepo structure for managing multiple packages within the project using pnpm.
+
+The codebase utilizes Next.js for its frontend and API routes, Prisma for database interactions, and Tailwind CSS for styling. It follows a component-based architecture and uses TypeScript for type safety.
+
+## Deep Analysis
+
+### apps/web/src/app/explore/tags/[tag]/page.tsx
+
+*   **Logic/Consistency/Type Safety**: The `PageProps` interface defines `params` as `Promise<{tag: string;}>`. In Next.js, `params` passed to `generateMetadata` and page components are typically already resolved objects, not Promises. Consequently, the `await params` calls within `generateMetadata` and `TagFeedPage` are unnecessary and misleading. This indicates an incorrect type definition and redundant operations.
+*   **Architecture/Consistency**: The `mapPrismaPostToProps` function is defined directly within the page file. While functional, the global memory indicates ongoing refactoring efforts to centralize post mapping logic (PR #75) and scoring parameters (PR #77). This local function duplicates logic that should ideally be centralized for better maintainability and consistency.
+*   **Logic/Consistency**: The `mapPrismaPostToProps` function contains its own scoring logic for non-`repoEmbed` posts, separate from the imported `calculatePostScore` function which is only used for `repoEmbed` posts. This creates fragmented and inconsistent scoring logic, making it harder to manage and update scoring algorithms centrally.
+*   **Performance/Features**: The `prisma.post.findMany` query uses `take: 50`, which limits the number of posts displayed. There is no pagination implemented, meaning users cannot view posts beyond the initial 50 for a given tag. This could be a feature limitation for tags with many posts.
+
+### apps/web/src/app/api/github/user/route.ts
+
+*   **Security**: The `PATCH` route correctly filters allowed fields (`name`, `bio`, `blog`, etc.) before constructing the payload for the GitHub API. This prevents arbitrary updates to a user's GitHub profile.
+*   **Architecture/Consistency**: Both `GET` and `PATCH` routes perform similar authorization checks (`session?.user?.accessToken`). While not a critical issue for just two routes, for a larger API, this pattern could be abstracted into a middleware or helper function to reduce duplication.
+*   **Error Handling**: The `catch` blocks provide generic error messages ("failed to fetch profile", "failed to update profile"). While acceptable for user-facing messages, more detailed server-side logging could aid in debugging specific API failures.
+
+### pnpm-workspace.yaml
+
+*   **Consistency**: The `pnpm-workspace.yaml` file is standard for a pnpm monorepo and correctly defines the workspace packages. No issues found.
+
+## Pick ONE Improvement
+
+The most valuable improvement is to correct the type definition of `PageProps` and remove the unnecessary `await` calls in `apps/web/src/app/explore/tags/[tag]/page.tsx`. This addresses a fundamental type safety and logical inconsistency with Next.js conventions, making the code more accurate, readable, and aligned with best practices. It's a clear bug in type declaration and redundant operation.
+
+## Executor's Plan
+
+**WHAT** to change:
+Correct the type definition of `PageProps` to accurately reflect that Next.js `params` are a plain object, not a Promise. Subsequently, remove the unnecessary `await` keywords from the `params` destructuring in both the `generateMetadata` function and the default `TagFeedPage` component, as `params` will no longer be a Promise.
+
+**WHERE** in the file(s):
+The changes are confined to `apps/web/src/app/explore/tags/[tag]/page.tsx`.
+1.  The `interface PageProps` definition.
+2.  The `generateMetadata` function, specifically the line where `tag` is destructured from `params`.
+3.  The `TagFeedPage` default export function, specifically the line where `rawTag` is destructured from `params`.
+
+**WHY** this matters:
+1.  **Type Safety and Correctness**: In Next.js, the `params` object passed to `generateMetadata` and page components is already resolved and available as a plain object. Typing it as a `Promise` is incorrect and misrepresents the actual data structure, leading to potential confusion for developers.
+2.  **Readability and Simplicity**: The `await` keyword is used for asynchronous operations. Since `params` is not a Promise, awaiting it is redundant and adds unnecessary complexity to the code without providing any functional benefit. Removing it simplifies the code and makes its intent clearer.
+3.  **Consistency with Next.js Conventions**: Adhering to the correct type definitions and usage patterns for Next.js components and functions ensures consistency with the framework's design and improves maintainability.
+
+**HOW** to do it:
+1.  Locate the `interface PageProps` definition at the top of the file.
+2.  Modify the type of the `params` property within `PageProps` from `Promise<{tag: string;}>` to `{ tag: string; }`.
+3.  Find the `generateMetadata` function.
+4.  In the line `const { tag } = await params;`, remove the `await` keyword so it becomes `const { tag } = params;`.
+5.  Find the `TagFeedPage` default export function.
+6.  In the line `const { tag: rawTag } = await params;`, remove the `await` keyword so it becomes `const { tag: rawTag } = params;`.
+
+**SCOPE**:
+This change is a focused, single-file modification that corrects a type definition and removes redundant asynchronous operations, improving the correctness and clarity of the code without impacting its core functionality.
+
+**Executor**: {"title": "[REFACTOR] Correct Type Definition and Remove Redundant Await in page.tsx", "body": "### Problem / Gap\nThe `PageProps` interface in `page.tsx` incorrectly defines `params` as a `Promise<{tag: string;}>`, and the `generateMetadata` function and `TagFeedPage` component unnecessarily await the `params` object.\n\n### Solution & Insight\nCorrect the type definition of `PageProps` to reflect that `params` is a plain object, not a Promise, and remove the redundant `await` keywords. This change improves type safety, readability, and consistency with Next.js conventions.\n\n### Impact\nThis refactoring enhances the accuracy and maintainability of the codebase, reducing potential confusion and errors related to incorrect type definitions and unnecessary asynchronous operations.", "branch_name": "bot/upgrade-1774697450", "edits": [{"file": "apps/web/src/app/explore/tags/[tag]/page.tsx", "search": "interface PageProps {\n  params: Promise<{tag: string;});\n}", "replace": "interface PageProps {\n  params: {tag: string;}\n}"}, {"file": "apps/web/src/app/explore/tags/[tag]/page.tsx", "search": "const { tag } = await params;", "replace": "const { tag } = params;"}, {"file": "apps/web/src/app/explore/tags/[tag]/page.tsx", "search": "const { tag: rawTag } = await params;", "replace": "const { tag: rawTag } = params;"}]}
+
+**Reviewer**: APPROVE: The Executor's proposed edits correctly address the type safety and logical inconsistency identified by the Scanner. In Next.js, `params` are typically plain objects, not Promises, when passed to `generateMetadata` and page components. The changes accurately update the `PageProps` interface and remove the redundant `await` keywords, improving code correctness, readability, and adherence to Next.js conventions. The diff is clean and non-destructive.
 
 ---
