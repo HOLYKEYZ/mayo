@@ -61,3 +61,4 @@ just what the hell, mayo ??" — Mayo acknowledged and responded.
 - **Repo: git-pulse**: [LOGIC] Fix Inconsistent Srcset Handling in ProfileReadme. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/97) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Centralize Custom Colors in ComposeFeed. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/98) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: Opened issue — [PERF] Optimize Trending Hashtag Aggregation in Explore Tags Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/issues/99) - *Status: AWAITING JOSEPH'S INPUT*
+- **Repo: git-pulse**: [LOGIC] Fix Critical Bugs in Algorithm Scoring. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/100) - *Status: PENDING REVIEW*
