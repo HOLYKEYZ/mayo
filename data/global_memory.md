@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Enhance Type Safety in Auth JWT Callback. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/71) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [LOGIC] Optimize User Identification in Authenticated API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/72) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [PERF] Implement In-Memory Cache for GitHub Contributions. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/73) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [PERF] Fix Ineffective LRU Cache in Trending Tags Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/74) - *Status: APPROVED - Joseph liked this!*
