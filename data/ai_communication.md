@@ -7639,3 +7639,69 @@ Currently, posts older than 24 hours are all displayed as "X days ago". This bec
 **Reviewer**: APPROVE: The Executor's proposed edit correctly extends the `formatRelativeTimestamp` function to handle longer durations (weeks, months, years), as recommended by the Scanner. The search block is an exact match, and the replacement code is functionally sound, improves user experience by providing more precise timestamps, and correctly handles pluralization. This change directly addresses previous feedback from Joseph regarding timestamp formatting in this component.
 
 ---
+
+## Cycle 1774827377
+**Scanner**: ## Codebase Understanding
+
+This repository, `git-pulse`, appears to be a web application designed to display and manage GitHub-related data, likely focusing on user contributions, repositories, and social interactions within a developer community context. It leverages a monorepo structure with `apps/web` for the main application and `packages/ui` for shared UI components.
+
+The `packages/ui/tsconfig.json` file defines the TypeScript configuration for the shared UI components package, extending the root `tsconfig.json` and setting up compiler options specific to a UI library, including path aliases for `@/*`.
+The `apps/web/src/lib/contributionCache.ts` file implements a simple in-memory LRU cache specifically for storing contribution data, likely to reduce redundant API calls and improve performance for frequently accessed information.
+The `apps/web/src/lib/colors.ts` file centralizes a mapping of programming language names to their corresponding hex color codes, along with a utility function to retrieve these colors or a default value. This promotes consistent styling across the application.
+
+The codebase uses TypeScript, React, Next.js, and likely Tailwind CSS, following modern web development conventions for a monorepo setup.
+
+## Deep Analysis
+
+### packages/ui/tsconfig.json
+*   **Consistency**: The `tsconfig.json` correctly extends the root configuration and defines path aliases, which is a good practice for monorepos to ensure consistent module resolution.
+*   **Architecture**: The separation of `tsconfig.json` for the `ui` package from the main `web` app is a sound architectural decision for a monorepo, allowing independent configuration and build processes.
+*   No immediate issues found. The `target: "ES2020"` is acceptable, and given the "training data is outdated" directive, it's assumed to be the intended target.
+
+### apps/web/src/lib/contributionCache.ts
+*   **Performance**: The use of `LRUCache` is a good pattern for optimizing performance by caching frequently accessed data.
+*   **Consistency/DX**: The `max` and `ttl` values (`500` and `1000 * 60 * 60 * 24 * 7`) are "magic numbers." While the `ttl` has a comment, extracting these into named constants would significantly improve readability, maintainability, and make the cache's configuration intent more explicit. This aligns with previous refactoring efforts to centralize and clarify values.
+*   **Logic**: The cache logic itself appears straightforward. Without knowing how it's used, it's hard to assess potential race conditions if multiple concurrent writes/reads happen, but for a simple LRU cache, this is generally handled by the library.
+
+### apps/web/src/lib/colors.ts
+*   **Consistency/Architecture**: Centralizing `LANGUAGE_COLORS` and providing a `getLanguageColor` utility is excellent for maintaining a consistent UI and reducing duplication.
+*   **Logic**: The `getLanguageColor` function correctly handles `null` or `undefined` language inputs by returning a default color, which is robust.
+*   **Dead Code/Features**: The inclusion of "HolyC" in `LANGUAGE_COLORS` is unusual. If "HolyC" is not a language relevant to the `git-pulse` platform or its users, this entry might be dead data. While not a critical bug, it's a minor point of potential cleanup or clarification.
+*   **Consistency/DX**: The default color `#8b949e` in `getLanguageColor` is a magic string. Similar to the cache values, extracting this into a named constant would improve readability and make it easier to change the default color consistently if needed.
+
+### Global Memory Review
+*   The recurring rejections due to patching failures (especially `search: ""`, indentation, and search block mismatches) are a critical concern. This means any proposed change must be extremely precise in its location and context to avoid these issues. I must avoid creating new files.
+*   Joseph's feedback indicates a strong preference for code quality, refactoring, and fixing logic/performance issues.
+
+## Pick ONE Improvement
+
+The most valuable improvement, considering the codebase's current state and the Executor's known limitations, is to enhance the readability and maintainability of the `contributionCache.ts` by extracting its configuration values into named constants. This addresses a consistency/DX issue (magic numbers) and is a contained, low-risk refactor within an existing file, minimizing patching complexity.
+
+## Executor's Plan
+
+**WHAT**:
+Refactor the `apps/web/src/lib/contributionCache.ts` file to replace the magic numbers used for `max` and `ttl` in the `LRUCache` configuration with clearly named constants.
+
+**WHERE**:
+In the file `apps/web/src/lib/contributionCache.ts`. The constants should be defined at the top of the file, immediately after the import statement and before the `contributionCache` variable declaration.
+
+**WHY**:
+This change improves code readability and maintainability by eliminating magic numbers. By using named constants like `CONTRIBUTION_CACHE_MAX_SIZE` and `CONTRIBUTION_CACHE_TTL_MS`, the purpose and value of these configuration parameters become immediately clear without needing to parse numerical expressions or rely on comments. This also centralizes these values, making future adjustments to the cache configuration easier and less error-prone.
+
+**HOW**:
+1.  Locate the `import { LRUCache } from 'lru-cache';` statement in `apps/web/src/lib/contributionCache.ts`.
+2.  Immediately after this import statement, insert two new constant declarations:
+    *   `const CONTRIBUTION_CACHE_MAX_SIZE = 500;`
+    *   `const CONTRIBUTION_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7;`
+3.  Locate the `const contributionCache = new LRUCache({ ... });` block.
+4.  Inside this block, replace the literal `500` for the `max` property with `CONTRIBUTION_CACHE_MAX_SIZE`.
+5.  Replace the literal expression `1000 * 60 * 60 * 24 * 7` for the `ttl` property with `CONTRIBUTION_CACHE_TTL_MS`. Ensure the comment `// 7 days cache` is removed as the constant name makes it self-documenting.
+
+**SCOPE**:
+This change is confined to a single file: `apps/web/src/lib/contributionCache.ts`.
+
+**Executor**: {"title": "[REFACTOR] Enhance contributionCache.ts with named constants", "body": "### Problem / Gap\nThe `contributionCache.ts` file uses magic numbers for `max` and `ttl` in the `LRUCache` configuration, making it hard to understand and maintain.\n\n### Solution & Insight\nExtracting these values into named constants (`CONTRIBUTION_CACHE_MAX_SIZE` and `CONTRIBUTION_CACHE_TTL_MS`) improves code readability and maintainability.\n\n### Impact\nThis change centralizes cache configuration values, making future adjustments easier and less error-prone.", "branch_name": "bot/upgrade-1774827377", "edits": [{"file": "apps/web/src/lib/contributionCache.ts", "search": "import { LRUCache } from 'lru-cache';", "replace": "import { LRUCache } from 'lru-cache';\n\nconst CONTRIBUTION_CACHE_MAX_SIZE = 500;\nconst CONTRIBUTION_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7;"}, {"file": "apps/web/src/lib/contributionCache.ts", "search": "  max: 500,\n  ttl: 1000 * 60 * 60 * 24 * 7, // 7 days cache", "replace": "  max: CONTRIBUTION_CACHE_MAX_SIZE,\n  ttl: CONTRIBUTION_CACHE_TTL_MS,"}]}
+
+**Reviewer**: APPROVE: The Executor's proposed edits accurately implement the Scanner's plan to refactor `contributionCache.ts` by replacing magic numbers with named constants. The search blocks are precise, the replacements are functionally correct, and the change significantly improves code readability and maintainability. This aligns with previous successful refactors in this repository that Joseph has approved.
+
+---
