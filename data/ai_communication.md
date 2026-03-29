@@ -6971,63 +6971,7 @@ This is a critical logic bug that causes the real-time feed to potentially miss 
 
 ---
 
-## Cycle 1774740874
-**Scanner**: The `git-pulse` repository appears to be a social media platform centered around GitHub activity, allowing users to share posts, react, and view trending repositories and developers. It integrates with GitHub for user authentication and data fetching.
-
-The `tsconfig.json` file configures TypeScript for the `apps/web` project, defining compiler options like target, module resolution, and JSX handling.
-The `apps/web/src/app/api/feed/stream/route.ts` file implements a Server-Sent Events (SSE) endpoint that streams new posts to connected clients by polling the database every 5 seconds.
-The `apps/web/src/components/PinnedRepos.tsx` component displays a user's pinned GitHub repositories, including details like language, stars, and forks.
-
-The codebase utilizes Next.js for its web application, Prisma for database interactions, and Tailwind CSS for styling. It follows a component-based architecture for the UI and API routes for backend functionality. There's an emphasis on real-time features (SSE stream) and integrating GitHub data.
-
-### Deep Analysis
-
-**Security:**
-- The `repoEmbed: post.repoCache as any` in `feed/stream/route.ts` uses an `any` type assertion, which bypasses type safety and could potentially mask issues if `repoCache` contains unexpected data that is then rendered on the client without proper sanitization. While not a direct injection vulnerability, it's a weak point.
-- The `writer.write(encoder.encode(payload)).catch(() => {});` in `feed/stream/route.ts` broadly swallows errors during stream writing. While this might be intended for client disconnects, it could hide other critical errors that should be logged or handled more specifically, potentially impacting stream reliability or security monitoring.
-
-**Logic:**
-- In `apps/web/src/app/api/feed/stream/route.ts`, the `lastCheckedTime` variable is only updated when `newPosts.length > 0`. If there's a period of inactivity (no new posts), `lastCheckedTime` will not advance. When new posts eventually appear, the `prisma.post.findMany` query will fetch *all* posts created since that old `lastCheckedTime`, potentially sending a large backlog of posts to clients. This is a significant bug affecting the correctness and performance of the real-time feed.
-- In `apps/web/src/app/api/feed/stream/route.ts`, `likes: post.reactions.length` assumes all reactions are "likes." If the system supports multiple reaction types (e.g., "heart", "thumbs up", "laugh"), this count would be inaccurate for "likes" specifically.
-- In `apps/web/src/components/PinnedRepos.tsx`, the `GrabberIcon` has `aria-label="Drag to reorder repository"` and `cursor-grab` styling. However, there is no drag-to-reorder functionality implemented in the component. This creates a misleading user experience and an accessibility issue for users relying on screen readers, as it suggests an interaction that doesn't exist. This is a regression or an incomplete fix, as global memory indicates a previous PR (#59) addressed this.
-
-**Performance:**
-- The `lastCheckedTime` logic bug in `apps/web/src/app/api/feed/stream/route.ts` directly impacts performance. Fetching a large backlog of posts due to an outdated `lastCheckedTime` can lead to inefficient database queries and increased server load.
-
-**Architecture:**
-- The `tsconfig.json` file for `apps/web` does not explicitly define `paths` aliases (e.g., `@/*`), despite the codebase using them (e.g., `import { prisma } from "@/lib/prisma";`). This is a critical inconsistency and a potential DX issue. The global memory indicates an approved PR (#85) for enhancing TypeScript configuration for path aliases, suggesting this should be present.
-- In `apps/web/src/components/PinnedRepos.tsx`, the `repo.name` is styled with a hardcoded color `text-[#2f81f7]`. This violates the principle of centralizing custom colors in the Tailwind config, especially given that global memory shows approved PRs (#70, #78) for centralizing colors.
-
-**Consistency:**
-- As noted above, the `tsconfig.json` is inconsistent with actual usage and approved refactors.
-- Hardcoded color in `PinnedRepos.tsx` is inconsistent with Tailwind best practices and approved refactors.
-- The `Public` badge in `PinnedRepos.tsx` is hardcoded. If private repositories were ever to be displayed, this would be incorrect.
-
-**Dead Code:**
-- No obvious dead code found in the analyzed files.
-
-### Pick ONE Improvement
-
-The most valuable improvement is to fix the `lastCheckedTime` logic bug in the SSE feed stream. This is a critical functional bug with direct performance implications for a core real-time feature. It directly affects the correctness of data delivered to users and can lead to server overload. The fact that it can cause a large backlog of posts to be sent is a severe issue for a "stream" endpoint.
-
-### Executor's Plan
-
-**WHAT to change:**
-The logic for updating the `lastCheckedTime` variable within the `fetchPostsInterval` in the Server-Sent Events (SSE) feed stream. The current implementation only updates `lastCheckedTime` when new posts are found, which can lead to an outdated timestamp and subsequent fetching of a large backlog of posts. This needs to be changed so that `lastCheckedTime` always advances, ensuring the `gt` filter for database queries is consistently based on the most recent check.
-
-**WHERE in the file(s):**
-In the `GET` function within `apps/web/src/app/api/feed/stream/route.ts`. Specifically, within the `setInterval` callback function named `fetchPostsInterval`.
-
-**WHY this matters:**
-This is
-
-**Executor**: {"title": "[LOGIC] Fix lastCheckedTime Logic in SSE Feed Stream", "body": "### Problem / Gap\nThe `lastCheckedTime` variable in the SSE feed stream is only updated when new posts are found. This can lead to an outdated timestamp and subsequent fetching of a large backlog of posts.\n\n### Solution & Insight\nUpdate the `lastCheckedTime` variable on every interval, regardless of whether new posts are found. This ensures that the `gt` filter for database queries is consistently based on the most recent check.\n\n### Impact\nFixes a critical functional bug with direct performance implications for the real-time feed feature, ensuring that users receive the most recent posts without unnecessary delays or backlogs.", "branch_name": "bot/fix-lastcheckedtime-logic", "edits": [{"file": "apps/web/src/app/api/feed/stream/route.ts", "search": "let lastCheckedTime = new Date();\n\nconst fetchPostsInterval = setInterval(async () => {\n  try {\n    // find any pure-feed visible posts created after lastcheckedtime\n    const newPosts = await prisma.post.findMany({\n      where: {\n        createdAt: { gt: lastCheckedTime }\n      },\n      include: {\n        author: { select: { username: true, githubId: true } },\n        reactions: true\n      },\n      orderBy: { createdAt: \"desc\" }\n    });\n\n    if (newPosts.length > 0) {\n      lastCheckedTime = new Date(); // update watermark\n\n      // blast posts down the pipe\n      for (const post of newPosts) {\n        writeEvent({\n          type: \"NEW_POST\",\n          post: {\n            id: post.id,\n            type: post.type,\n            author: {\n              username: post.author.username,\n              avatar: `https://avatars.githubusercontent.com/u/${post.author.githubId}?v=4`\n            },\n            content: post.content,\n            timestamp: post.createdAt.toISOString(),\n            likes: post.reactions.length,\n            comments: 0,\n            reactions: post.reactions,\n            images: post.images,\n            repoUrl: post.repoUrl,\n            repoEmbed: post.repoCache as any,\n            score: post.score,\n            passedBadge: post.passedBadge\n          }\n        });\n      }\n    }\n  } catch (error) {\n    console.error(\"Feed SSE Error:\", error);\n  }\n});", "replace": "let lastCheckedTime = new Date();\n\nconst fetchPostsInterval = setInterval(async () => {\n  lastCheckedTime = new Date(); // Always update the lastCheckedTime\n  try {\n    // find any pure-feed visible posts created after lastcheckedtime\n    const newPosts = await prisma.post.findMany({\n      where: {\n        createdAt: { gt: lastCheckedTime }\n      },\n      include: {\n        author: { select: { username: true, githubId: true } },\n        reactions: true\n      },\n      orderBy: { createdAt: \"desc\" }\n    });\n\n    if (newPosts.length > 0) {\n      // blast posts down the pipe\n      for (const post of newPosts) {\n        writeEvent({\n          type: \"NEW_POST\",\n          post: {\n            id: post.id,\n            type: post.type,\n            author: {\n              username: post.author.username,\n              avatar: `https://avatars.githubusercontent.com/u/${post.author.githubId}?v=4`\n            },\n            content: post.content,\n            timestamp: post.createdAt.toISOString(),\n            likes: post.reactions.length,\n            comments: 0,\n            reactions: post.reactions,\n            images: post.images,\n            repoUrl: post.repoUrl,\n            repoEmbed: post.repoCache as any,\n            score: post.score,\n            passedBadge: post.passedBadge\n          }\n        });\n      }\n    }\n  } catch (error) {\n    console.error(\"Feed SSE Error:\", error);\n  }\n};"}]}
-
-**Reviewer**: CORRECT: The Executor correctly identified the critical logic bug in the `lastCheckedTime` update for the SSE feed stream, which was causing potential backlogs. The proposed change to move `lastCheckedTime = new Date();` to the beginning of the `setInterval` callback is the correct fix. However, the `replace` block introduced a syntax error by changing the `setInterval`'s closing `}, 5000);` to `};` and also had minor indentation inconsistencies. I have corrected these issues.
-
----
-
-## Cycle 1774752161
+1774752161
 **Scanner**: ## SCANNER ANALYSIS: HOLYKEYZ/git-pulse
 
 ### Step 1: Codebase Understanding
@@ -7320,5 +7264,94 @@ This improvement is crucial because the current `srcset` processing in `ProfileR
 **Executor**: {"title": "[LOGIC] Fix Inconsistent Srcset Handling in ProfileReadme", "body": "### Problem / Gap\nThe current implementation of `ProfileReadme.tsx` fails to correctly resolve and proxy relative image paths for `source` tags within `srcset` attributes. This inconsistency leads to broken or non-loading responsive images in user READMEs.\n\n### Solution & Insight\nTo address this, we modify the `srcset` processing logic to properly handle relative paths by resolving them to absolute GitHub raw URLs before proxying. This ensures all images, including those in responsive sets, are correctly displayed.\n\n### Impact\nThis fix enhances the visual integrity and completeness of rendered profile content by ensuring all images load as intended, improving the overall user experience.", "branch_name": "bot/fix-srcset-handling-1774777238", "edits": [{"file": "apps/web/src/components/ProfileReadme.tsx", "search": "            // 3. Proxy source srcsets\n            $('source').each((_, el) => {\n                const srcset = $(el).attr('srcset');\n                if (srcset && !srcset.startsWith('/') && !srcset.startsWith('data:')) {\n                    const proxySet = srcset.split(',').map(part => {\n                        const [url, size] = part.trim().split(/\\s+/);\n                        if (url && url.startsWith('http')) {\n                            const proxiedUrl = `/api/image-proxy?url=${encodeURIComponent(url)}`;\n                            return size ? `${proxiedUrl} ${size}` : proxiedUrl;\n                        }\n                        return part;\n                    }).join(', ');\n                    \n                    $(el).attr('srcset', proxySet);\n                }\n            });", "replace": "            // 3. Proxy source srcsets\n            $('source').each((_, el) => {\n                const srcset = $(el).attr('srcset');\n                if (srcset) {\n                    const proxySet = srcset.split(',').map(part => {\n                        const [url, size] = part.trim().split(/\\s+/);\n                        if (url) {\n                            if (url.startsWith('data:')) {\n                                return part;\n                            } else if (!url.startsWith('http')) {\n                                if (url.startsWith('/')) {\n                                    url = `https://github.com${url}`;\n                                } else {\n                                    url = `https://raw.githubusercontent.com/${username}/${username}/main/${url}`;\n                                }\n                            }\n                            const proxiedUrl = `/api/image-proxy?url=${encodeURIComponent(url)}`;\n                            return size ? `${proxiedUrl} ${size}` : proxiedUrl;\n                        }\n                        return part;\n                    }).join(', ');\n                    $(el).attr('srcset', proxySet);\n                }\n            });"}]}
 
 **Reviewer**: APPROVE: The Executor's proposed edit correctly addresses the inconsistent and incomplete handling of `srcset` attributes in `source` HTML elements within `ProfileReadme.tsx`. The new logic properly resolves relative image paths (both root-relative and truly relative) to absolute GitHub URLs before proxying them, and also correctly handles `data:` URIs. This aligns perfectly with the Scanner's detailed recommendation and fixes a critical bug that would lead to broken responsive images in user READMEs.
+
+---
+
+## Cycle 1774780649
+**Scanner**: ## Codebase Understanding
+
+This repository, `HOLYKEYZ/git-pulse`, is a social media platform or feed aggregator that integrates with GitHub. It allows users to post updates, share GitHub releases, and interact with content, leveraging GitHub for user authentication and potentially for fetching repository data and contributions.
+
+*   **`packages/ui/package.json`**: This file defines the `ui` package within the monorepo, listing its dependencies (`clsx`, `tailwind-merge`) and development dependencies (`typescript`, `react`, `react-dom`). It serves as the manifest for shared UI components.
+*   **`apps/web/src/app/settings/page.tsx`**: This file implements the user settings page for the web application. It provides interfaces for managing appearance (theme selection), account details, privacy settings (e.g., showing activity or contributions), and API integrations, including the generation and revocation of API keys and a pre-configured GitHub Action YAML snippet.
+*   **`apps/web/src/components/ComposeFeed.tsx`**: This component enables users to create new posts for the feed. It supports text content with Markdown, hashtags, and mentions, along with image uploads. It features a toggle between a "Write" mode and a "Preview" mode for the post content.
+
+The codebase primarily uses Next.js for the web application, React for UI components, and Tailwind CSS for styling. It follows a monorepo structure and is written in TypeScript, indicating a focus on type safety. API routes are used for backend interactions, and `ReactMarkdown` handles Markdown rendering.
+
+## Deep Analysis
+
+### General Observations
+*   The repository has a clear monorepo structure with `apps` and `packages` directories.
+*   TypeScript is used consistently across the analyzed files.
+*   Tailwind CSS is the primary styling framework, with many custom colors defined in `tailwind.config.ts` (as evidenced by past PRs).
+
+### `packages/ui/package.json`
+*   **Consistency**: React and React DOM versions are `19.0.0`, which is consistent with the provided context. No issues found.
+
+### `apps/web/src/app/settings/page.tsx`
+*   **Security**: API key handling for GitHub Actions uses `secrets.GITPULSE_TOKEN`, which is a good practice. Client-side API calls to `/api/auth/token` and `/api/user/settings` are standard, assuming the backend handles authentication and authorization correctly.
+*   **Logic**: The `useEffect` hook correctly fetches initial settings data on component mount. The `copy` function for clipboard interaction is well-implemented with a visual feedback mechanism.
+*   **Performance**: Initial data fetches are performed client-side, which is appropriate for user-specific settings.
+*   **Architecture**: Clear separation of concerns for API key management and theme handling via `useTheme`.
+*   **Features**: The inclusion of a GitHub Action YAML snippet is a valuable integration feature.
+*   **Testing**: No explicit tests are visible, but the API interactions and state management would benefit from testing.
+*   **DX**: The `ACTION_YAML` string, while functional, could be slightly more readable if formatted with consistent indentation or stored in a separate constant file, though it's already a template literal.
+*   **Consistency**: Uses consistent naming conventions and Tailwind CSS classes.
+*   **Dead Code**: No dead code identified.
+
+### `apps/web/src/components/ComposeFeed.tsx`
+*   **Security**:
+    *   **Image Uploads**: Images are converted to base64 strings (`reader.readAsDataURL(file)`) and sent directly in the POST request body to `/api/posts`. This is inefficient for large images and poses a potential security risk. If the backend does not rigorously validate and re-encode these base64 strings before storage and serving, rendering them directly via `<img src={img}>` (as indicated by the `eslint-disable-next-line @next/next/no-img-element` comment) could lead to Cross-Site Scripting (XSS) vulnerabilities, especially with malicious SVG files.
+    *   **Markdown Content**: The custom regex for hashtags and mentions creates links before `ReactMarkdown` processes the content. While `ReactMarkdown` itself is generally safe, any custom string manipulation that inserts user input directly into HTML without proper escaping could be an XSS vector. In this specific case, the regex appears to construct valid Markdown links, which `ReactMarkdown` would then safely render.
+*   **Logic**: The component correctly enforces a 4-image limit and prevents empty posts. `router.refresh()` is used effectively to update server components.
+*   **Performance**: Sending large base64 encoded images significantly increases the payload size of POST requests, potentially leading to slower submissions and higher bandwidth consumption compared to binary uploads or pre-signed URLs.
+*   **Architecture**: Client-side base64 encoding of images shifts processing burden but increases network payload.
+*   **Features**: Markdown support, hashtags, mentions, image uploads, character limit, and a write/preview toggle are all well-implemented features.
+*   **Testing**: No explicit tests are visible. The image handling, form submission, and markdown transformation logic would benefit from unit and integration tests.
+*   **DX/Consistency**:
+    *   **Hardcoded Colors**: The component uses hardcoded hexadecimal color values (`#0d1117` for the form background and `#010409` for the markdown preview background) directly in `className` and `style` attributes. This is inconsistent with the project's established pattern of centralizing custom colors in `tailwind.config.ts`, a practice that has been reinforced by multiple approved PRs (e.g., #70, #78, #79, #96). This makes theme management difficult and violates the principle of a single source of truth for design tokens.
+    *   The `padding: '12px'` is also an inline style, which should ideally be a Tailwind class.
+*   **Dead Code**: No dead code identified.
+
+## Pick ONE Improvement
+
+The most impactful improvement, considering the project's history and the nature of the issues, is to address the **hardcoded colors in `ComposeFeed.tsx`**. While the image handling security/performance issue is more critical, it requires a significant architectural decision regarding image storage (e.g., S3, direct binary upload, pre-signed URLs) that I cannot make autonomously and would likely warrant an `OPEN_ISSUE` directive.
+
+The hardcoded colors, however, are a clear violation of an established and repeatedly approved refactoring pattern within the `git-pulse` repository (centralizing custom colors in `tailwind.config.ts`). Fixing this improves consistency, maintainability, and developer experience, aligning perfectly with Joseph's past feedback and approved changes. It's a contained, actionable code-level improvement.
+
+## Executor's Plan
+
+**WHAT to change:**
+The `ComposeFeed` component in `apps/web/src/components/ComposeFeed.tsx` uses hardcoded hexadecimal color values for its background and the markdown preview area. These colors should be replaced with custom Tailwind CSS classes that are defined in the `tailwind.config.ts` file, ensuring consistency with the project's theming system. The inline padding style for the preview area should also be replaced with a Tailwind class.
+
+**WHERE in the file(s):**
+1.  **`apps/web/tailwind.config.ts`**:
+    *   Add new custom colors to the `extend.colors.git` object.
+2.  **`apps/web/src/components/ComposeFeed.tsx`**:
+    *   The `form` element containing the post composition area, which has `className="p-4 flex flex-col gap-3 bg-[#0d1117]"`.
+    *   The `div` element used for the markdown preview, which has `style={{ background: '#010409', padding: '12px' }}`.
+
+**WHY this matters:**
+This change significantly improves the maintainability and consistency of the codebase. Hardcoded color values make it difficult to manage the application's visual theme, as any theme change requires manual updates across multiple files. By centralizing these colors in `tailwind.config.ts`, they become part of a defined design system, making global theme adjustments straightforward. This directly aligns with previous refactoring efforts in the `git-pulse` repository (e.g., PRs #70, #78, #79, #96) that aimed to centralize custom colors, making the styling more robust and easier to modify globally. It also enhances Developer Experience (DX) by providing clear, semantic color names for styling.
+
+**HOW to do it:**
+1.  **Define new custom colors in `apps/web/tailwind.config.ts`**:
+    *   Locate the `extend.colors.git` object within the `tailwind.config.ts` file.
+    *   Add two new color properties to this object:
+        *   `dark-bg-primary` with the hexadecimal value `#0d1117`.
+        *   `dark-bg-secondary` with the hexadecimal value `#010409`.
+2.  **Update `apps/web/src/components/ComposeFeed.tsx`**:
+    *   Find the `form` element that has `className="p-4 flex flex-col gap-3 bg-[#0d1117]"`.
+    *   Modify its `className` attribute by replacing `bg-[#0d1117]` with `bg-git-dark-bg-primary`.
+    *   Find the `div` element that serves as the markdown preview, currently defined with `style={{ background: '#010409', padding: '12px' }}`.
+    *   Remove the entire `style` attribute from this `div`.
+    *   Add a `className` attribute to this `div` with the value `bg-git-dark-bg-secondary p-3`. This will apply the new background color from the centralized configuration and maintain the existing `12px` padding using a standard Tailwind class.
+
+**SCOPE:**
+This improvement involves a cohesive change across two files: `apps/web/tailwind.config.ts` to define the new custom colors, and `apps/web/src/components/ComposeFeed.tsx` to apply these new, centralized Tailwind CSS classes.
+
+**Executor**: {"title": "[REFACTOR] Centralize Custom Colors in ComposeFeed", "body": "### Problem / Gap\nThe `ComposeFeed` component uses hardcoded hexadecimal color values for its background and markdown preview area, violating the established pattern of centralizing custom colors in `tailwind.config.ts`.\n\n### Solution & Insight\nTo improve maintainability and consistency, we define new custom colors in `tailwind.config.ts` and replace the hardcoded colors in `ComposeFeed.tsx` with these centralized color classes.\n\n### Impact\nThis change enhances the code's adherence to the single source of truth principle for design tokens, making global theme adjustments more straightforward and improving Developer Experience (DX).", "branch_name": "bot/upgrade-1774780649", "edits": [{"file": "apps/web/tailwind.config.ts", "search": "extend: {\n        colors: {\n          git: {\n            // Add your custom colors here\n          },\n        },\n      },", "replace": "extend: {\n        colors: {\n          git: {\n            'dark-bg-primary': '#0d1117',\n            'dark-bg-secondary': '#010409',\n            // Add your custom colors here\n          },\n        },\n      },"}, {"file": "apps/web/src/components/ComposeFeed.tsx", "search": "form onSubmit={handleSubmit} className=\"p-4 flex flex-col gap-3 bg-[#0d1117]\">", "replace": "form onSubmit={handleSubmit} className=\"p-4 flex flex-col gap-3 bg-git-dark-bg-primary\">"}, {"file": "apps/web/src/components/ComposeFeed.tsx", "search": "div className=\"w-full min-h-[100px] bg-git-bg text-git-text text-sm p-3 rounded-md border border-git-border overflow-y-auto custom-scrollbar markdown-body\" style={{ background: '#010409', padding: '12px' }}>", "replace": "div className=\"w-full min-h-[100px] bg-git-dark-bg-secondary p-3 rounded-md border border-git-border overflow-y-auto custom-scrollbar markdown-body\">"}]}
+
+**Reviewer**: Reviewer response unparseable
 
 ---
