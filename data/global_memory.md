@@ -63,3 +63,4 @@ just what the hell, mayo ??" — Mayo acknowledged and responded.
 - **Repo: git-pulse**: [REFACTOR] Return Raw Timestamp in Search API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/122) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Centralize Language Color Mapping. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/123) - *Status: PENDING REVIEW*
 <!-- LAST_DISCUSSION_REPLY=1774924719 -->
+- **Repo: git-pulse**: [FEAT] Fix Discover Link in BottomNav. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/125) - *Status: PENDING REVIEW*
