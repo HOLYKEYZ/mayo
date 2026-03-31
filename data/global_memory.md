@@ -1,13 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Enhance TypeScript Configuration for Path Aliases. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/85) - *Status: APPROVED - Joseph liked this!*
-- **Repo: git-pulse**: [SEC] Validate User Status Input. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/87) - *Status: APPROVED - Joseph liked this!*
-<!-- LAST_DISCUSSION_REPLY=1774913900 -->
-- **REJECTED by Reviewer**: Executor failed to create new file and insert import using `search: ""` for `git-pulse`, confirming previous rejections for this repo due to unreliable patching for file creation/insertion.
-- **REJECTED by Reviewer**: Executor failed to create a new file `apps/web/src/lib/constants.ts` using `search: ""`, leading to a `ReferenceError` in `stars/page.tsx`. This confirms `search: ""` is unreliable for file creation/insertion in `git-pulse`.
-- **Repo: git-pulse**: [REFACTOR] Remove Redundant Conditional Check in CollabWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/88) - *Status: APPROVED - Joseph liked this!*
-<!-- LAST_PROACTIVE_ISSUE=1774898086 -->
+- *[ARCHIVED] 3 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: Automated improvement. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/90) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_ISSUE_JUDGE=1774903819 -->
 - **Repo: git-pulse**: [PERF] Optimize findSimilarDevs Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/91) - *Status: APPROVED - Joseph liked this!*
