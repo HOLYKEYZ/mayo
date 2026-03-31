@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 3 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: Automated improvement. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/90) - *Status: APPROVED - Joseph liked this!*
-<!-- LAST_ISSUE_JUDGE=1774903819 -->
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [PERF] Optimize findSimilarDevs Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/91) - *Status: APPROVED - Joseph liked this!*
 - **Joseph's Feedback on git-pulse#90**: "what is this??
 just what the hell, mayo ??" — Mayo acknowledged and responded.
