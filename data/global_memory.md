@@ -47,7 +47,7 @@
 - **Repo: git-pulse**: [REFACTOR] Return Raw Timestamp in Search API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/122) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Centralize Language Color Mapping. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/123) - *Status: PENDING REVIEW*
 <!-- LAST_DISCUSSION_REPLY=1774969488 -->
-- **Repo: git-pulse**: [FEAT] Fix Discover Link in BottomNav. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/125) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [FEAT] Fix Discover Link in BottomNav. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/125) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_PROACTIVE_ISSUE=1774933980 -->
 - **Repo: git-pulse**: [REFACTOR] Correct Type Annotation and Remove Unnecessary Await. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/127) - *Status: PENDING REVIEW*
 <!-- LAST_ISSUE_JUDGE=1774963597 -->
