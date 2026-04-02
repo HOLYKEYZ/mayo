@@ -71,3 +71,5 @@ mayo , are ya sure of wat ya even doin'
 - **Joseph's Feedback on git-pulse#147**: "where is the code change, if u cant provide one  mayo , i'll close it
 @gemini-code-assist , help him out, bring me  a c" — Mayo acknowledged and responded.
 - **Joseph's Feedback on git-pulse#148**: "mayo , is this good" — Mayo acknowledged and responded.
+- **Joseph's Feedback on git-pulse#146**: "where is the codeee mayo ???
+@gemini-code-assist , help him out" — Mayo acknowledged and responded.
