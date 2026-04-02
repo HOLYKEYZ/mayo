@@ -65,3 +65,6 @@ u are saying trash mayo" — Mayo acknowledged and responded.
 - **Repo: git-pulse**: [REFACTOR] Correct params handling in reactions API route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/149) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Background Colors in RepoCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/151) - *Status: APPROVED - Joseph liked this!*
 - **Joseph's Feedback on git-pulse#146**: "mayo fix that" — Mayo acknowledged and responded.
+- **Joseph's Feedback on git-pulse#147**: "is that defined in @lib/github, i mean is there a folder like that???
+mayo , are ya sure of wat ya even doin'
+@gemini-" — Mayo acknowledged and responded.
