@@ -79,3 +79,4 @@ mayo , are ya sure of wat ya even doin'
 - **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Tailwind CSS Colors in RepoCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/153) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Centralize Magic Numbers in Post Scoring Algorithm. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/154) - *Status: APPROVED - Joseph liked this!*
 - **Joseph's Feedback on git-pulse#154**: "sorry mayo , i closed this bcus i dont thing it's defined properly" — Mayo acknowledged and responded.
+- **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Hover Background Color in CollabWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/155) - *Status: PENDING REVIEW*
