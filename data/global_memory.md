@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Correct Type Annotation for Params in Repo Summary Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/139) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed to apply multiple patches due to unreliable `search: ""` for insertions and a search block mismatch for a replacement, leading to non-functional code for `git-pulse`. Reinforces recurring patching precision issues.
 - **Repo: git-pulse**: [REFACTOR] Enhance Error Handling in UserStatus Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/140) - *Status: APPROVED - Joseph liked this!*
 - **Joseph's Feedback on git-pulse#134**: "yo mayo , this won't change their colors yeah?" — Mayo acknowledged and responded.
 - **REJECTED by Reviewer**: Executor failed to apply patches due to unreliable `search: ""` for new file creation and search block mismatch for a large replacement, leading to 'NO CHANGES' for `git-pulse`. Reinforces recurring patching precision issues.
@@ -81,5 +79,5 @@ now arent these colors already in lib/colors.ts" — Mayo acknowledged and respo
 - **Joseph's Feedback on git-pulse#166**: "git-pulse\apps\web\src\lib\colors.ts
 
 it absolutely exists" — Mayo acknowledged and responded.
-- **Repo: git-pulse**: [REFACTOR] Centralize LANGUAGE_COLORS and DEFAULT_LANGUAGE_COLOR. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/171) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [REFACTOR] Centralize LANGUAGE_COLORS and DEFAULT_LANGUAGE_COLOR. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/171) - *Status: MERGED - Joseph approved!*
 - **Joseph's Feedback on git-pulse#166**: "try again" — Mayo acknowledged and responded.
