@@ -1,19 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [LOGIC] Fix Inconsistent PWA Theme Colors in Manifest File. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/130) - *Status: REJECTED - Joseph closed this Comment: 'why this ?
-u are saying trash mayo'*
-<!-- LAST_PR_JUDGE=1775213757 -->
-- **REJECTED by Reviewer**: Executor failed to apply patch due to exact search block mismatch (single vs. double quotes) and submitted duplicate edits for `git-pulse`. Reinforces recurring patching precision issues.
-- **REJECTED by Reviewer**: Executor failed to apply patch due to unreliable `search: ""` for `git-pulse`, a recurring issue for this repo, leading to 'NO CHANGES'.
-- **REJECTED by Reviewer**: Executor failed to apply multiple patches due to search block mismatches and introduced functional errors due to missing imports, reinforcing recurring `git-pulse` patching precision and dependency issues. Also, indentation issues persist.
-- **REJECTED by Reviewer**: Executor failed to centralize constant due to unreliable `search: ""` for insertions, leading to destructive change and `ReferenceError` in `git-pulse`. Recurring issue.
-- **REJECTED by Reviewer**: Executor failed to add constant to `apps/web/src/lib/utils.ts` due to patching failure, leading to `ReferenceError`. Reinforces recurring `git-pulse` patching precision issues.
-- **Joseph's Feedback on git-pulse#130**: "why this ?
-u are saying trash mayo" — Mayo acknowledged and responded.
-- **Joseph's Feedback on git-pulse#130**: "im waiting" — Mayo acknowledged and responded.
-- **Joseph's Feedback on git-pulse#130**: "since no updated code , closed" — Mayo acknowledged and responded.
-- **REJECTED by Reviewer**: Executor failed to correctly add to `tailwind.config.ts` (unreliable `search: ""`) and submitted malformed patches for `ContributionActivity.tsx` (syntax error, incorrect search block for progress bar), reinforcing recurring `git-pulse` patching precision and configuration issues.
 - **Repo: git-pulse**: [REFACTOR] Centralize Colors in ContributionActivity. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/131) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor submitted destructive `tailwind.config.ts` edit due to imprecise search block, overwriting existing colors, and failed to apply `not-found.tsx` edit due to patching failure, both recurring issues for `git-pulse`.
 - **Repo: git-pulse**: [REFACTOR] Centralize Hover Color in NotFound Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/132) - *Status: APPROVED - Joseph liked this!*
@@ -83,8 +70,8 @@ mayo , are ya sure of wat ya even doin'
 - **Repo: git-pulse**: [REFACTOR] Remove redundant paths configuration in tsconfig.json. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/161) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_ISSUE_JUDGE=1775210310 -->
 - **REJECTED by Reviewer**: Executor submitted destructive `tailwind.config.ts` edit due to imprecise search block, overwriting existing colors, and failed to apply dependent patch, reinforcing recurring `git-pulse` patching precision and destructive change issues.
-- **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Progress Bar Color in ContributionActivity. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/162) - *Status: PENDING REVIEW*
-- **Repo: git-pulse**: [FEAT] Enhance ThemeProvider to Respect System Color Scheme Preference. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/163) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Progress Bar Color in ContributionActivity. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/162) - *Status: MERGED - Joseph approved! Comment: 'mayo , is that already defined in the tailwind config?'*
+- **Repo: git-pulse**: [FEAT] Enhance ThemeProvider to Respect System Color Scheme Preference. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/163) - *Status: MERGED - Joseph approved!*
 - **Repo: git-pulse**: [PERF] Optimize Next.js Build Output. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/164) - *Status: APPROVED - Joseph liked this!*
 - **Joseph's Feedback on git-pulse#162**: "mayo , is that already defined in the tailwind config?" — Mayo acknowledged and responded.
 - **Joseph's Feedback on git-pulse#162**: "mayo , dont ever try to tweak colors anymore!
