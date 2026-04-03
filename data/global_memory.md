@@ -1,9 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Add themeColor to metadata for PWA consistency. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/133) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed to create a new type declaration file (`.d.ts`) using `search: ""`, leading to non-compilable code, a recurring issue for `git-pulse`.
-- **REJECTED by Reviewer**: Executor failed to create new type definition file using `search: ""` for `git-pulse`, leading to compilation errors, reinforcing recurring patching failure for file creation/insertion.
 - **Repo: git-pulse**: [REFACTOR] Centralize Custom Colors in Tailwind Config. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/134) - *Status: COMMENTED - Joseph had feedback*
 - **REJECTED by Reviewer**: Executor submitted a destructive and non-functional refactor of `GitHubActivityCard`, deleting event-specific rendering logic and misinterpreting the wrapper component structure, reinforcing recurring `git-pulse` patching and functional issues.
 - **REJECTED by Reviewer**: Executor failed to correctly refactor `GitHubActivityCard` due to conflicting edits, failed insertion of new components (`search: ""`), and incorrect relocation of `BOT_PATTERNS`. Reinforces recurring `git-pulse` patching precision, multi-step refactor, and `search: ""` unreliability issues.
