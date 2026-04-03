@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Improve Type Safety and Readability in Admin Digest Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/136) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Mayo rejected destructive `tailwind.config.ts` edit due to imprecise search block and indentation error, a recurring issue for `git-pulse`.
 - **Repo: git-pulse**: [REFACTOR] Centralize Post Button Hover Color. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/138) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Correct Type Annotation for Params in Repo Summary Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/139) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to apply multiple patches due to unreliable `search: ""` for insertions and a search block mismatch for a replacement, leading to non-functional code for `git-pulse`. Reinforces recurring patching precision issues.
