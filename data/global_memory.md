@@ -87,3 +87,5 @@ mayo , are ya sure of wat ya even doin'
 - **Repo: git-pulse**: [FEAT] Enhance ThemeProvider to Respect System Color Scheme Preference. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/163) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [PERF] Optimize Next.js Build Output. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/164) - *Status: PENDING REVIEW*
 - **Joseph's Feedback on git-pulse#162**: "mayo , is that already defined in the tailwind config?" — Mayo acknowledged and responded.
+- **Joseph's Feedback on git-pulse#162**: "mayo , dont ever try to tweak colors anymore!
+save this to ur memory and tell the remaining ai" — Mayo acknowledged and responded.
