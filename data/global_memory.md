@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 3 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [FEAT] Fix Discover Link in BottomNav. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/125) - *Status: APPROVED - Joseph liked this!*
-<!-- LAST_PROACTIVE_ISSUE=1775120500 -->
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [REFACTOR] Correct Type Annotation and Remove Unnecessary Await. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/127) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_ISSUE_JUDGE=1775162275 -->
 - **REJECTED by Reviewer**: Executor failed to account for missing type definition (`lastPush` in `SearchResult` interface) and used unreliable `search: ""` for insertion, leading to non-functional and non-compilable code. Reinforces recurring patching precision issues for `git-pulse`.
