@@ -82,3 +82,4 @@ now arent these colors already in lib/colors.ts" — Mayo acknowledged and respo
 
 it absolutely exists" — Mayo acknowledged and responded.
 - **Repo: git-pulse**: [REFACTOR] Centralize LANGUAGE_COLORS and DEFAULT_LANGUAGE_COLOR. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/171) - *Status: PENDING REVIEW*
+- **Joseph's Feedback on git-pulse#166**: "try again" — Mayo acknowledged and responded.
