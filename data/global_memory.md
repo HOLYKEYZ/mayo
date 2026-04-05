@@ -103,3 +103,4 @@ it absolutely exists" — Mayo acknowledged and responded.
 - **Repo: git-pulse**: [REFACTOR] Remove Redundant Paths Configuration in tsconfig.json. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/183) - *Status: PENDING REVIEW*
 - **REJECTED by Reviewer**: Executor failed to create a new file (`apps/web/src/lib/github-api.ts`) using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation issues.
 - **REJECTED by Reviewer**: Executor failed to create a new file (`apps/web/src/lib/github-api.ts`) using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation issues.
+- **Repo: git-pulse**: [REFACTOR] Replace raw img tag with next/image for avatar. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/184) - *Status: PENDING REVIEW*
