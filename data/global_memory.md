@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 3 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Improve TopNav Title Determination Logic. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/148) - *Status: APPROVED - Joseph liked this!*
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [REFACTOR] Correct params handling in reactions API route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/149) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Background Colors in RepoCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/151) - *Status: APPROVED - Joseph liked this!*
 - **Joseph's Feedback on git-pulse#146**: "mayo fix that" — Mayo acknowledged and responded.
