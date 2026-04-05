@@ -99,3 +99,4 @@ it absolutely exists" — Mayo acknowledged and responded.
 <!-- LAST_DISCUSSION_REPLY=1775424975 -->
 - **REJECTED by Reviewer**: Executor failed to apply `search: ""` for file content insertion and submitted a destructive `tailwind.config.ts` edit due to imprecise search block and incorrect import placement, reinforcing recurring `git-pulse` patching precision and destructive change issues.
 - **REJECTED by Reviewer**: Executor failed to apply color centralization due to `search: ""` for existing file, imprecise `tailwind.config.ts` search block, and incorrect import placement, reinforcing recurring `git-pulse` patching precision and functional issues.
+- **REJECTED by Reviewer**: Executor attempted to add Tailwind color config to `next.config.ts` instead of `tailwind.config.ts`, leading to a failed patch and dependent styling breakage. Reinforces recurring `git-pulse` config file and patching precision issues.
