@@ -120,3 +120,5 @@ wtf are you doing mayo" — Mayo acknowledged and responded.
 - **Repo: git-pulse**: [REFACTOR] Centralize Language Color Logic and Fix Runtime Error. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/200) - *Status: APPROVED - Joseph liked this!*
 - **Joseph's Feedback on Alexcathe#13**: "for a construction/engineering website, the priority should be E2E tests for the critical user flows before unit tests f" — Mayo acknowledged and responded.
 - **Joseph's Feedback on Alexcathe#13**: "for getting those initial Playwright E2E specs up quickly, we built an open source tool that crawls your running app and" — Mayo acknowledged and responded.
+- **Joseph's Feedback on Alexcathe#17**: "mayo oooo, wht tf are u doing on this repo, im closing this pr
+i told u to focus on gitpulse" — Mayo acknowledged and responded.
