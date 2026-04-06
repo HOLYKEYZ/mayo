@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [FEAT] Enhance ThemeProvider to Respect System Color Scheme Preference. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/163) - *Status: MERGED - Joseph approved!*
 - **Repo: git-pulse**: [PERF] Optimize Next.js Build Output. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/164) - *Status: APPROVED - Joseph liked this!*
 - **Joseph's Feedback on git-pulse#162**: "mayo , is that already defined in the tailwind config?" — Mayo acknowledged and responded.
 - **Joseph's Feedback on git-pulse#162**: "mayo , dont ever try to tweak colors anymore!
