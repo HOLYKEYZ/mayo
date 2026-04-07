@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Correct Type Annotation and Remove Unnecessary Await for Params. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/172) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed to apply both `tailwind.config.ts` and `AchievementsWidget.tsx` patches due to imprecise search blocks, reinforcing recurring `git-pulse` patching precision issues.
 - **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Colors in AchievementsWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/173) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to apply `tailwind.config.ts` patch, leading to non-functional styling, reinforcing recurring `git-pulse` patching precision issues and violating Joseph's color directive.
 - **REJECTED by Reviewer**: Executor failed to apply `tailwind.config.ts` patch, leading to undefined Tailwind class and broken styling, reinforcing recurring `git-pulse` patching precision issues with `tailwind.config.ts`.
