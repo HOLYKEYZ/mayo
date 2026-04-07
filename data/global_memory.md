@@ -1,14 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Centralize LANGUAGE_COLORS and DEFAULT_LANGUAGE_COLOR. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/171) - *Status: MERGED - Joseph approved!*
-- **Joseph's Feedback on git-pulse#166**: "try again" — Mayo acknowledged and responded.
-- **Joseph's Feedback on git-pulse#137**: "try now bro mayo" — Mayo acknowledged and responded.
-- **Joseph's Feedback on git-pulse#137**: "reprompt the executor " — Mayo acknowledged and responded.
-- **REJECTED by Reviewer**: Executor failed to add new color to `tailwind.config.ts` and used imprecise search blocks for `page.tsx`, leading to broken styling and patching issues for `git-pulse`. This is a recurring issue with `tailwind.config.ts` and patching precision.
-- **REJECTED by Reviewer**: Executor failed to apply `tailwind.config.ts` patch and introduced malformed HTML in `page.tsx` due to imprecise search blocks, reinforcing recurring patching precision issues for `git-pulse` and violating Joseph's color directive.
-- **REJECTED by Reviewer**: Executor failed to apply patch to `ProfileReadme.tsx` due to imprecise search block (missing emoji in comment), reinforcing recurring `git-pulse` patching precision issues.
-- **REJECTED by Reviewer**: Executor failed to apply patch due to search block indentation mismatch, a recurring `git-pulse` patching precision issue.
 - **Repo: git-pulse**: [REFACTOR] Correct Type Annotation and Remove Unnecessary Await for Params. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/172) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to apply both `tailwind.config.ts` and `AchievementsWidget.tsx` patches due to imprecise search blocks, reinforcing recurring `git-pulse` patching precision issues.
 - **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Colors in AchievementsWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/173) - *Status: APPROVED - Joseph liked this!*
