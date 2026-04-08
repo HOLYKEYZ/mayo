@@ -1,10 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Extract Server Action for Sign Out. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/177) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor attempted to centralize `LANGUAGE_COLORS` but failed to apply import and tried to re-add constant already present in `lib/colors.ts` from a previous PR (`git-pulse#171`). Patching precision for imports and awareness of existing centralized constants are critical.
-- **REJECTED by Reviewer**: Executor failed to complete a multi-file refactor by missing a critical file modification, leading to an incomplete and non-functional change. This is a recurring patching precision issue for `git-pulse`.
-- **REJECTED by Reviewer**: Executor failed to insert new function into `apps/web/src/lib/github.ts` due to unreliable `search: ""`, a recurring patching precision issue for `git-pulse`, leading to non-functional dependent code.
 - **Repo: git-pulse**: [REFACTOR] Centralize Duplicated Error Message in AiSummary. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/178) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Centralize SSRF Prevention Logic in Image Proxy Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/179) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to create new file using `search: ""` and incorrectly placed import statement inside a block, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation issues.
