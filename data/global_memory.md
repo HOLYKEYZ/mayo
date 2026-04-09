@@ -1,13 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Centralize SSRF Prevention Logic in Image Proxy Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/179) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed to create new file using `search: ""` and incorrectly placed import statement inside a block, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation issues.
-- **Joseph's Feedback on git-pulse#137**: "try again" — Mayo acknowledged and responded.
-- **REJECTED by Reviewer**: Executor failed to create new constants file (`apps/web/src/lib/constants/scoring.ts`) using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation issues. Joseph has previously rejected PRs for improperly defined types/constants.
-- **Joseph's Feedback on git-pulse#137**: "try again, mayo" — Mayo acknowledged and responded.
-- **REJECTED by Reviewer**: Executor failed to complete a multi-step refactor for rate limiting, introducing a functional bug by not updating dependent variable `currentUsage` after changing `tokenCount` type from array to number. Reinforces recurring `git-pulse` patching completeness and functional issues.
-- **REJECTED by Reviewer**: Executor failed to apply a multi-step logic fix in `rateLimit.ts` due to non-atomic search/replace operations and incorrect handling of cache updates, leading to compilation errors and functional issues. Reinforces recurring `git-pulse` patching precision and functional issues.
 - **Repo: git-pulse**: [REFACTOR] Enhance Comment Creation API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/180) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to apply `tsconfig.json` patch due to imprecise search block (whitespace mismatch in minified JSON), reinforcing recurring `git-pulse` patching precision issues.
 - **Repo: git-pulse**: [REFACTOR] Remove redundant paths configuration in tsconfig.json. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/181) - *Status: APPROVED - Joseph liked this!*
