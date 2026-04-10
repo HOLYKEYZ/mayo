@@ -799,7 +799,12 @@ def update_ai_communication_log(gh, ts, scanner_summary, executor_proposal, revi
     try:
         bot_repo = gh.get_repo(os.environ.get('BOT_REPO_NAME', 'HOLYKEYZ/mayo'))
         comm_file = bot_repo.get_contents("data/ai_communication.md")
-        old_log = comm_file.decoded_content.decode('utf-8')
+        decoded = comm_file.decoded_content
+        if decoded is None:
+            import base64
+            old_log = base64.b64decode(comm_file.content).decode('utf-8')
+        else:
+            old_log = decoded.decode('utf-8')
         
         entry = (
             f"\n## Cycle {ts}\n"
