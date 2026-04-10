@@ -1,11 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 2 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Remove Misleading Drag Handle from PinnedRepos. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/182) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed to apply `tsconfig.json` patch due to imprecise search block (whitespace mismatch in minified JSON), a recurring issue for `git-pulse`.
-- **Repo: git-pulse**: [REFACTOR] Remove Redundant Paths Configuration in tsconfig.json. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/183) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed to create a new file (`apps/web/src/lib/github-api.ts`) using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation issues.
-- **REJECTED by Reviewer**: Executor failed to create a new file (`apps/web/src/lib/github-api.ts`) using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation issues.
 - **Repo: git-pulse**: [REFACTOR] Replace raw img tag with next/image for avatar. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/184) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to insert import statement using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision issues.
 - **Repo: git-pulse**: [REFACTOR] Centralize LANGUAGE_COLORS in Stars Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/185) - *Status: APPROVED - Joseph liked this!*
