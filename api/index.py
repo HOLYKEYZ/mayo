@@ -1440,37 +1440,43 @@ OUTPUT FORMAT (Strict JSON, nothing else):
     }}
   ]
 }}
-"""
-            # Run Dual Executors + Gemini Fallback (same architecture as cron Phase 2)
-            executor1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_API_KEY'))
-            executor2_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
+            """
+            # Run Fireworks AI first (most reliable), then Groq, then Gemini
+            # Fireworks is most reliable - use it first
+            fireworks_resp = query_fireworks_executor(executor_prompt)
+            fireworks_data = extract_json_from_response(fireworks_resp) if fireworks_resp else None
             
-            data1 = extract_json_from_response(executor1_resp) if executor1_resp else None
-            data2 = extract_json_from_response(executor2_resp) if executor2_resp else None
-            
-            final_payload = None
-            if data1 and isinstance(data1, dict) and 'edits' in data1:
-                final_payload = data1
-                if data2 and isinstance(data2, dict) and 'edits' in data2 and isinstance(final_payload.get('edits'), list) and isinstance(data2.get('edits'), list):
-                    combined_edits = final_payload['edits'] + data2['edits']
-                    final_payload = {"title": final_payload.get('title', ''), "body": final_payload.get('body', ''), "edits": combined_edits}
-            elif data2 and isinstance(data2, dict) and 'edits' in data2:
-                final_payload = data2
+            if fireworks_data and isinstance(fireworks_data, dict) and 'edits' in fireworks_data:
+                final_payload = fireworks_data
             else:
-                # Fallback: Groq Fallback Key
-                fb1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
-                final_payload = extract_json_from_response(fb1_resp) if fb1_resp else None
+                # Try Groq dual keys
+                executor1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROQ_API_KEY'))
+                executor2_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
                 
-                if not isinstance(final_payload, dict) or 'edits' not in final_payload:
-                    # Fireworks AI Fallback
-                    fb_fw_resp = query_fireworks_executor(executor_prompt)
-                    final_payload = extract_json_from_response(fb_fw_resp) if fb_fw_resp else None
+                data1 = extract_json_from_response(executor1_resp) if executor1_resp else None
+                data2 = extract_json_from_response(executor2_resp) if executor2_resp else None
+                
+                if data1 and isinstance(data1, dict) and 'edits' in data1:
+                    final_payload = data1
+                    if data2 and isinstance(data2, dict) and 'edits' in data2:
+                        final_payload['edits'] = final_payload.get('edits', []) + data2.get('edits', [])
+                elif data2 and isinstance(data2, dict) and 'edits' in data2:
+                    final_payload = data2
+                else:
+                    # Try Groq fallback key
+                    fb1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
+                    final_payload = extract_json_from_response(fb1_resp) if fb1_resp else None
                     
                     if not isinstance(final_payload, dict) or 'edits' not in final_payload:
-                        # Ultimate Fallback: Gemini Executor
-                        fb2_resp = query_gemini_executor(executor_prompt)
-                        if fb2_resp:
-                            final_payload = extract_json_from_response(fb2_resp)
+                        # Use Fireworks if not already tried
+                        if not fireworks_data:
+                            final_payload = fireworks_data
+                        
+                        # Gemini as last resort
+                        if not isinstance(final_payload, dict) or 'edits' not in final_payload:
+                            fb2_resp = query_gemini_executor(executor_prompt)
+                            if fb2_resp:
+                                final_payload = extract_json_from_response(fb2_resp)
             
             if isinstance(final_payload, dict) and isinstance(final_payload.get('edits'), list):
                 # Group edits by file
