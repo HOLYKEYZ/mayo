@@ -129,3 +129,4 @@ mayo" — Mayo acknowledged and responded.
 <!-- LAST_PROACTIVE_ISSUE=1775946965 -->
 - **Repo: git-pulse**: [REFACTOR] Unify TypeScript Target to ES2022. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/232) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_ISSUE_JUDGE=1775950652 -->
+- **Repo: git-pulse**: [SEC] Enhance User Account Deletion to Remove Associated Data. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/233) - *Status: PENDING REVIEW*
