@@ -1,13 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 4 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Centralize LEVEL_COLORS in ContributionHeatmap. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/189) - *Status: COMMENTED - Joseph had feedback*
-- **REJECTED by Reviewer**: Executor failed to create new file and insert import using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation/insertion issues.
-- **REJECTED by Reviewer**: Executor failed to create new file and insert import using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation/insertion issues.
-- **REJECTED by Reviewer**: Executor failed to create new type definition file (`apps/web/src/types/next-auth.d.ts`) using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation issues. Joseph has previously rejected PRs for improperly defined types.
-- **REJECTED by Reviewer**: Executor failed to create new type definition file (`.d.ts`) using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation issues. Joseph has previously rejected PRs for improperly defined types.
-- **REJECTED by Reviewer**: Executor failed to create new file and incorrectly placed imports inside a component function, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation/insertion issues.
-- **REJECTED by Reviewer**: Executor failed a multi-step refactor by not creating a new file using `search: ""` and using an imprecise search block (missing emoji) for a dependent file, leading to compilation errors. Reinforces recurring `git-pulse` patching precision and file creation issues.
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [REFACTOR] Centralize Authentication Logic in GitHub Follow API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/190) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Sanitize Comment Content with ReactMarkdown. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/191) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to create new file using `search: ""` for `git-pulse`, leading to compilation errors, reinforcing recurring patching precision and file creation issues.
