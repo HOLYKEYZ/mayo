@@ -1,17 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 5 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Update tsconfig.json and Correct middleware.ts Edit. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/208) - *Status: APPROVED - Joseph liked this!*
-- **Joseph's Feedback on git-pulse#192**: "@gemini-code-assist , good?" — Mayo acknowledged and responded.
-- **Joseph's Feedback on Alexcathe#17**: "@gemini-code-assist , good?" — Mayo acknowledged and responded.
-- **Joseph's Feedback on git-pulse#206**: "mayo" — Mayo acknowledged and responded.
-- **Joseph's Feedback on git-pulse#206**: "what??
-mayo write the code change or i close this, u have written slop throughout this week
-idc if the reviewer/scanne" — Mayo acknowledged and responded.
-- **REJECTED by Reviewer**: Executor failed color centralization due to `search: ""` for existing file, imprecise `tailwind.config.ts` search block, and incomplete syntax/missing import, reinforcing recurring `git-pulse` patching precision and functional issues.
-- **REJECTED by Reviewer**: Executor failed `tailwind.config.ts` patches for color centralization due to incorrect placement of new color and failed import, reinforcing recurring patching precision and functional issues, violating Joseph's color directive.
-- **REJECTED by Reviewer**: Executor failed color centralization due to `search: ""` for new content insertion and imprecise search blocks for `tailwind.config.ts` and `ReactionPicker.tsx`, leading to zero applied changes and violating Joseph's color directive. Reinforces recurring `git-pulse` patching precision issues.
-- **REJECTED by Reviewer**: Executor failed to apply any changes due to search block failures, resulting in a no-op submission and violating Joseph's color directive. This is a recurring patching precision issue for `git-pulse`.
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [PERF] Remove Global Dynamic Rendering Directive. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/210) - *Status: COMMENTED - Joseph had feedback*
 - **REJECTED by Reviewer**: Executor failed multi-step color centralization due to `search` block failures for `colors.ts` and `tailwind.config.ts`, leading to undefined Tailwind classes and broken styling. Reinforces recurring patching precision issues and Joseph's color directive violations.
 - **REJECTED by Reviewer**: Executor failed multi-step color centralization due to `search` block failures for `colors.ts` and destructive `tailwind.config.ts` patch, reinforcing recurring patching precision issues and Joseph's color directive violations.
