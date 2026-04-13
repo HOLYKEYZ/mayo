@@ -540,7 +540,7 @@ IMPORTANT: If suggestions involve file changes, respond options:
     return content
 
 # === API CALL HELPERS ===
-def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/models/llama-v3p3-70b-instruct"):
+def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/models/llama-3.3-70b-instruct"):
     if not key: return None, None
     headers = {'Content-Type': 'application/json'}
     fw_payload = {
@@ -549,6 +549,7 @@ def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/model
         "temperature": temperature,
         "max_tokens": 8000
     }
+    print(f"DEBUG: Trying Fireworks with model={model}, key_prefix={key[:10]}...")
     try:
         r = requests.post(
             "https://api.fireworks.ai/inference/v1/chat/completions",
