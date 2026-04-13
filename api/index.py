@@ -540,7 +540,7 @@ IMPORTANT: If suggestions involve file changes, respond options:
     return content
 
 # === API CALL HELPERS ===
-def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/models/llama-3.3-70b-instruct"):
+def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/models/llama-v3p3-70b-instruct"):
     if not key: return None, None
     headers = {'Content-Type': 'application/json'}
     fw_payload = {
@@ -558,7 +558,7 @@ def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/model
             timeout=120
         )
         r.raise_for_status()
-        return r.json()['choices'][0]['message']['content'], f"Fireworks AI ({model})"
+        return r.json()['choices'][0]['message']['content'], f"Fireworks AI (Llama 3.3 70B)"
     except requests.exceptions.HTTPError as e:
         try:
             err_json = r.json()
@@ -711,7 +711,7 @@ def query_fireworks_executor(prompt, temperature=0.1):
         return None, None
     
     headers = {'Content-Type': 'application/json'}
-    model = "accounts/fireworks/models/llama-3.3-70b-instruct"
+    model = "accounts/fireworks/models/llama-v3p3-70b-instruct"
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
