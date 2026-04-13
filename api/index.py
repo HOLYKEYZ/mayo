@@ -558,6 +558,10 @@ def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/model
         )
         r.raise_for_status()
         return r.json()['choices'][0]['message']['content'], f"Fireworks AI ({model})"
+    except requests.exceptions.HTTPError as e:
+        err_body = r.text[:500] if r.text else "No response body"
+        print(f"Fireworks HTTP Error {r.status_code}: {err_body}")
+        return None, None
     except Exception as e:
         print(f"Fireworks API Error: {e}")
         return None, None
@@ -572,7 +576,11 @@ def _try_gemini_api(prompt, key, temperature, model="gemini-2.5-flash"):
     try:
         r = requests.post(f"{GEMINI_API_URL}?key={key}", json=payload, headers=headers, timeout=120)
         r.raise_for_status()
-        return r.json()['candidates'][0]['content']['parts'][0]['text'], f"Gemini 2.5 Flash ({key[:5]}...)"
+        return r.json()['candidates'][0]['content']['parts'][0]['text'], f"Gemini 2.5 Flash ({key[:8]}...)"
+    except requests.exceptions.HTTPError as e:
+        err_body = r.text[:300] if r.text else "No response body"
+        print(f"Gemini HTTP Error {r.status_code}: {err_body}")
+        return None, None
     except Exception as e:
         print(f"Gemini API Error: {e}")
         return None, None
