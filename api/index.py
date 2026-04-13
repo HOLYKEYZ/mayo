@@ -211,7 +211,7 @@ Response Format:
 ```
 Do not explain. Just return the JSON.
 """
-    response = query_gemini(analysis_prompt, initial_context)
+    response, _ = query_gemini(analysis_prompt, initial_context)
     return extract_json_from_response(response)
 
 
@@ -504,6 +504,8 @@ def apply_surgical_edits(content, edits):
 
 
 def query_gemini(prompt, context="", temperature=0.4):
+    if not GEMINI_API_KEY:
+        return None, None
     headers = {'Content-Type': 'application/json'}
     final_prompt = f"""You are an autonomous GitHub bot called @mayo.
 Context: {context}
@@ -521,10 +523,10 @@ Instructions:
     try:
         r = requests.post(f"{GEMINI_API_URL}?key={GEMINI_API_KEY}", json=payload, headers=headers, timeout=120)
         r.raise_for_status()
-        return r.json()['candidates'][0]['content']['parts'][0]['text']
+        return r.json()['candidates'][0]['content']['parts'][0]['text'], "Gemini 2.5 Flash"
     except Exception as e:
         print(f"Gemini Error: {e}")
-        return None
+        return None, None
 
 def query_gemini_for_code(prompt, context=""):
     code_prompt = f"""{prompt}
@@ -534,7 +536,8 @@ IMPORTANT: If suggestions involve file changes, respond options:
 ```json
 {{ "explanation": "...", "files": {{ "path/to/file": "content" }} }}
 ```"""
-    return query_gemini(code_prompt, context)
+    content, _ = query_gemini(code_prompt, context)
+    return content
 
 # === API CALL HELPERS ===
 def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/models/llama-v3p3-70b-instruct"):
@@ -593,8 +596,6 @@ def query_gemini_scanner(prompt, temperature=0.2):
         if content: return content, model_name
     
     return None, None
-
-def query_gemini_newcrons(prompt, temperature=0.2):
 
 def query_gemini_newcrons(prompt, temperature=0.2):
     """Dedicated Gemini call for new cron phases (0.6, 0.7, I, D). Prioritizes Fireworks (from GEMINI_NEWCRONS_API_KEY or GEMINI_FALLBACK_API_KEY)."""
@@ -662,7 +663,7 @@ def query_gemini_executor(prompt, temperature=0.1):
     """Ultimate Fallback Executor AI (Gemini 2.5 Flash)."""
     if not GEMINI_EXECUTOR_API_KEY:
         print("DEBUG: GEMINI_EXECUTOR_API_KEY not set, skipping Gemini executor fallback.")
-        return None
+        return None, None
     
     headers = {'Content-Type': 'application/json'}
     payload = {
@@ -672,13 +673,13 @@ def query_gemini_executor(prompt, temperature=0.1):
     keys = [k for k in [GEMINI_EXECUTOR_API_KEY, GEMINI3_FALLBACK_API_KEY] if k]
     if not keys:
         print("DEBUG: No Gemini executor keys available.")
-        return None
+        return None, None
     
     for i, key in enumerate(keys):
         try:
             r = requests.post(f"{GEMINI_API_URL}?key={key}", json=payload, headers=headers, timeout=120)
             r.raise_for_status()
-            return r.json()['candidates'][0]['content']['parts'][0]['text']
+            return r.json()['candidates'][0]['content']['parts'][0]['text'], f"Gemini 2.5 Flash"
         except Exception as e:
             err_body = str(getattr(getattr(e, 'response', None), 'text', ''))
             key_preview = "".join([c for i2, c in enumerate(str(key)) if i2 < 10])
@@ -687,18 +688,19 @@ def query_gemini_executor(prompt, temperature=0.1):
                 print(f"DEBUG: Gemini Executor failed. Waiting 15s before trying fallback key...")
                 time.sleep(15)
             else:
-                return None
-    return None
+                return None, None
+    return None, None
 
 def query_fireworks_executor(prompt, temperature=0.1):
     """Fireworks AI Executor Fallback."""
     if not FIREWORKS_API_KEY:
         print("DEBUG: FIREWORKS_API_KEY not set, skipping Fireworks executor.")
-        return None
+        return None, None
     
     headers = {'Content-Type': 'application/json'}
+    model = "accounts/fireworks/models/llama-v3p3-70b-instruct"
     payload = {
-        "model": "accounts/fireworks/models/llama-v3p3-70b-instruct",
+        "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": temperature,
         "max_tokens": 4096
@@ -711,40 +713,40 @@ def query_fireworks_executor(prompt, temperature=0.1):
             timeout=120
         )
         r.raise_for_status()
-        return r.json()['choices'][0]['message']['content']
+        return r.json()['choices'][0]['message']['content'], f"Fireworks AI ({model})"
     except Exception as e:
         err_body = str(getattr(getattr(e, 'response', None), 'text', ''))
         print(f"Fireworks Executor Error: {e} | {err_body}")
-        return None
+        return None, None
 
 def query_gemini_reviewer(prompt, temperature=0.1):
     """Reviewer AI (Gemini B) — validates edits, returns verdict JSON."""
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": temperature, "maxOutputTokens": 8000}
-    }
-    # Key rotation: primary → fallback → primary (GEMINI2 keys only, never steal Scanner keys)
     primary = GEMINI2_API_KEY or GEMINI_API_KEY
-    fallback = GEMINI2_FALLBACK_API_KEY  # No `or GEMINI_FALLBACK_API_KEY` — don't steal Scanner's key
+    fallback = GEMINI2_FALLBACK_API_KEY
     reviewer_keys = [primary, fallback or primary, primary]
     for attempt in range(3):
         try:
             current_key = reviewer_keys[attempt]
+            if not current_key:
+                continue
+            headers = {'Content-Type': 'application/json'}
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": temperature, "maxOutputTokens": 8000}
+            }
             r = requests.post(f"{GEMINI_API_URL}?key={current_key}", json=payload, headers=headers, timeout=120)
             r.raise_for_status()
-            return r.json()['candidates'][0]['content']['parts'][0]['text']
+            return r.json()['candidates'][0]['content']['parts'][0]['text'], f"Gemini 2.5 Flash"
         except Exception as e:
             err_body = str(getattr(getattr(e, 'response', None), 'text', ''))
             print(f"Reviewer Error (attempt {attempt+1}/3): {e} | {err_body}")
             if attempt < 2:
-                # Reduced wait for serverless/interactive context
                 wait = [1, 5, 10][attempt]
                 print(f"DEBUG: Reviewer failed. Waiting {wait}s before retry...")
                 time.sleep(wait)
             else:
-                return None
-    return None
+                return None, None
+    return None, None
 
 def audit_pending_reviews(gh):
     """Reviewer checks PENDING REVIEW entries in memory and updates with actual PR status."""
@@ -1152,7 +1154,7 @@ Rules:
 6. Do NOT suggest formatting/style changes unless critical.
 7. Do NOT wrap in markdown code blocks, return raw JSON only
 """
-        review_raw = query_gemini(prompt, temperature=0.2)
+        review_raw, reviewer_model = query_gemini(prompt, temperature=0.2)
         
         all_files_for_mem = []
         if isinstance(files_already_read, list):
@@ -1203,8 +1205,9 @@ Rules:
                     # Use GitHub REST API directly for line+side support
                     token = get_installation_token(installation['id'])
                     api_url = f"https://api.github.com/repos/{repo_info['full_name']}/pulls/{pr_number}/reviews"
+                    model_display = f" ({reviewer_model})" if reviewer_model else ""
                     review_payload = {
-                        'body': f"🤖 **Automated Code Review**\n\n{summary}{memory_block}",
+                        'body': f"🤖 **Automated Code Review{model_display}**\n\n{summary}{memory_block}",
                         'event': 'COMMENT',
                         'comments': [{
                             'path': c['path'],
@@ -1226,7 +1229,8 @@ Rules:
                 except Exception as review_err:
                     print(f"Review API exception: {review_err}")
                     # Fallback: post as regular comment with suggestion blocks
-                    fallback = f"🤖 **Automated Code Review**\n\n{summary}\n\n"
+                    model_display = f" ({reviewer_model})" if reviewer_model else ""
+                    fallback = f"🤖 **Automated Code Review{model_display}**\n\n{summary}\n\n"
                     for enum_s, s in enumerate(suggestions):
                         if enum_s >= 5: break
                         fallback += f"**{s.get('file', '')}** (L{s.get('line', '?')}): {s.get('reason', '')}\n"
@@ -1234,10 +1238,12 @@ Rules:
                     pr.create_issue_comment(f"{fallback}{memory_block}")
             else:
                 # No inline suggestions, just post summary
-                pr.create_issue_comment(f"🤖 **Automated Code Review**\n\n{summary}{memory_block}")
+                model_display = f" ({reviewer_model})" if reviewer_model else ""
+                pr.create_issue_comment(f"🤖 **Automated Code Review{model_display}**\n\n{summary}{memory_block}")
         elif review_raw:
             # Gemini didn't return structured JSON, post as plain review
-            pr.create_issue_comment(f"🤖 **Automated Code Review**\n\n{review_raw}{memory_block}")
+            model_display = f" ({reviewer_model})" if reviewer_model else ""
+            pr.create_issue_comment(f"🤖 **Automated Code Review{model_display}**\n\n{review_raw}{memory_block}")
             
     except Exception as e:
         import traceback
@@ -1377,7 +1383,7 @@ Instructions:
 2. If Joseph is providing feedback, rejecting something, or explaining a preferred pattern, state clearly how you understand his instruction.
 3. If Joseph's request requires code changes, explain the technical plan for the fix and end your ENTIRE response with the exact marker: [REQUIRES_EXECUTION]
 """
-        plan = query_gemini_reviewer(reviewer_prompt)
+        plan, reviewer_model = query_gemini_reviewer(reviewer_prompt)
         if not plan:
             issue_obj.create_comment("⚠️ **Reviewer (Mayo) Error:** I failed to generate a technical plan after multiple attempts. Please re-trigger me or check my API health.")
             return
@@ -1390,7 +1396,8 @@ Instructions:
             
         memory_block = format_memory_block({"files_read": all_files_for_mem})
         
-        issue_obj.create_comment(f"🛡️ **Reviewer (Mayo):**\n{plan}{memory_block}")
+        model_display = f" ({reviewer_model})" if reviewer_model else ""
+        issue_obj.create_comment(f"🛡️ **Reviewer (Mayo){model_display}:**\n{plan}{memory_block}")
         
         # Save Joseph's feedback to memory
         try:
@@ -1409,7 +1416,8 @@ Instructions:
         
         # 6. Execute Code Changes (Executor)
         if "[REQUIRES_EXECUTION]" in plan:
-            issue_obj.create_comment("⚡ *Executor (Llama 3.3 70B) is now writing the code changes...*")
+            executor_model_display = f" ({used_model})" if used_model else ""
+            issue_obj.create_comment(f"⚡ *Executor{executor_model_display} is now writing the code changes...*")
             
             # Re-read the exact file contents for the Executor (with clear delimiters)
             exact_files_context_list = []
@@ -1478,28 +1486,31 @@ OUTPUT FORMAT (Strict JSON, nothing else):
             """
             # Run Fireworks AI first (most reliable), then Groq, then Gemini
             # Fireworks is most reliable - use it first
-            fireworks_resp = query_fireworks_executor(executor_prompt)
+            fireworks_resp, fireworks_model = query_fireworks_executor(executor_prompt)
             fireworks_data = extract_json_from_response(fireworks_resp) if fireworks_resp else None
+            used_model = fireworks_model or "Fireworks AI"
             
             if fireworks_data and isinstance(fireworks_data, dict) and 'edits' in fireworks_data:
                 final_payload = fireworks_data
             else:
                 # Try Groq dual keys
-                executor1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROQ_API_KEY'))
-                executor2_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
+                executor1_resp, _ = query_groq(executor_prompt, api_key=os.environ.get('GROQ_API_KEY'))
+                executor2_resp, _ = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
                 
                 data1 = extract_json_from_response(executor1_resp) if executor1_resp else None
                 data2 = extract_json_from_response(executor2_resp) if executor2_resp else None
                 
                 if data1 and isinstance(data1, dict) and 'edits' in data1:
                     final_payload = data1
+                    used_model = "Groq (llama-3.1-8b-instant)"
                     if data2 and isinstance(data2, dict) and 'edits' in data2:
                         final_payload['edits'] = final_payload.get('edits', []) + data2.get('edits', [])
                 elif data2 and isinstance(data2, dict) and 'edits' in data2:
                     final_payload = data2
+                    used_model = "Groq (llama-3.1-8b-instant)"
                 else:
                     # Try Groq fallback key
-                    fb1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
+                    fb1_resp, _ = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
                     final_payload = extract_json_from_response(fb1_resp) if fb1_resp else None
                     
                     if not isinstance(final_payload, dict) or 'edits' not in final_payload:
@@ -1509,7 +1520,8 @@ OUTPUT FORMAT (Strict JSON, nothing else):
                         
                         # Gemini as last resort
                         if not isinstance(final_payload, dict) or 'edits' not in final_payload:
-                            fb2_resp = query_gemini_executor(executor_prompt)
+                            fb2_resp, fb2_model = query_gemini_executor(executor_prompt)
+                            used_model = fb2_model or used_model
                             if fb2_resp:
                                 final_payload = extract_json_from_response(fb2_resp)
             
@@ -1565,8 +1577,9 @@ OUTPUT FORMAT (Strict JSON, nothing else):
                     
                     commit_title = final_payload.get('title', f"Fix: Addressed feedback in #{issue_number}")
                     success, commit_err = commit_changes_via_api(repo, branch, file_changes, commit_title)
+                    executor_model_display = f" (via {used_model})" if used_model else ""
                     if success:
-                        msg = f"✅ Committed changes to `{branch}`.\n\nDescription: {final_payload.get('body', commit_title)}"
+                        msg = f"✅ Committed changes to `{branch}`{executor_model_display}.\n\nDescription: {final_payload.get('body', commit_title)}"
                         if failed_edits:
                             safe_preview = [f"- {fe}" for i, fe in enumerate(failed_edits) if i < 5]
                             msg += f"\n\n⚠️ Some edits failed to match:\n" + "\n".join(safe_preview)

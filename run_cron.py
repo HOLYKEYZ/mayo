@@ -13,7 +13,8 @@ from index import (
     APP_ID, PRIVATE_KEY, GEMINI_API_URL, GEMINI_API_KEY, GROK_API_KEY, GROQ_API_URL, GEMINI2_API_KEY,
     audit_pending_reviews, get_repo_structure, read_file_content, query_gemini_scanner,
     query_groq, extract_json_from_response, apply_surgical_edits, query_gemini_reviewer,
-    commit_changes_via_api, update_ai_communication_log, query_gemini_newcrons
+    commit_changes_via_api, update_ai_communication_log, query_gemini_newcrons,
+    query_fireworks_executor, query_gemini_executor
 )
 
 def co_author_msg(msg):
@@ -138,25 +139,27 @@ def run_cron():
                     )
                     
                     print("DEBUG: Executing Phase 0.5 Dual Groq Llama 3.3 + Fallbacks...")
-                    executor1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_API_KEY'))
-                    executor2_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
+                    executor1_resp, executor1_model = query_groq(executor_prompt, api_key=os.environ.get('GROK_API_KEY'))
+                    executor2_resp, executor2_model = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
                     
                     data1 = extract_json_from_response(executor1_resp) if executor1_resp else None
                     data2 = extract_json_from_response(executor2_resp) if executor2_resp else None
                     
                     improvement_data = None
+                    used_model = executor1_model or executor2_model or "Groq (llama-3.1-8b-instant)"
+                    
                     if (data1 and 'edits' in data1) or (data2 and 'edits' in data2):
                         improvement_data = data1 if data1 else data2
                         if data1 and data2 and 'edits' in data1 and 'edits' in data2:
-                            improvement_data['edits'].extend(data2['edits'])
+                            improvement_data['edits'].extend(data2.get('edits', []))
                     else:
                         print("DEBUG: Phase 0.5 Primary Executors failed. Checking fallbacks...")
-                        fb1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
+                        fb1_resp, _ = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
                         improvement_data = extract_json_from_response(fb1_resp) if fb1_resp else None
                         
                         if not improvement_data or 'edits' not in improvement_data:
-                            from api.index import query_gemini_executor
-                            fb2_resp = query_gemini_executor(executor_prompt)
+                            fb2_resp, fb2_model = query_gemini_executor(executor_prompt)
+                            used_model = fb2_model or used_model
                             if fb2_resp:
                                 improvement_data = extract_json_from_response(fb2_resp)
                     
@@ -293,7 +296,7 @@ Diff:
 Rate this PR's reasonableness (0-100) and decide: merge, close, or skip.
 Output ONLY JSON: {{"reasonableness_score": 85, "action": "merge|close|skip", "reason": "explanation"}}"""
                             
-                            response = query_gemini_newcrons(judge_prompt)
+                            response, _ = query_gemini_newcrons(judge_prompt)
                             if response:
                                 verdict = extract_json_from_response(response)
                                 if verdict:
@@ -347,7 +350,7 @@ Labels: {[l.name for l in issue.labels]}
 Rate reasonableness (0-100) and decide: fix (open a PR to solve it), close (unreasonable/spam/outdated), or skip.
 Output ONLY JSON: {{"reasonableness_score": 70, "action": "fix|close|skip", "reason": "explanation", "fix_plan": "if action=fix, describe what to change"}}"""
                             
-                            response = query_gemini_newcrons(judge_prompt)
+                            response, _ = query_gemini_newcrons(judge_prompt)
                             if response:
                                 verdict = extract_json_from_response(response)
                                 if verdict:
@@ -411,7 +414,7 @@ BODY: [detailed explanation with recommendations]
 
 If the repo looks fine, output: SKIP"""
                     
-                    result = query_gemini_newcrons(proactive_prompt)
+                    result, _ = query_gemini_newcrons(proactive_prompt)
                     if result and 'DIRECTIVE: PROACTIVE_ISSUE' in result:
                         import re as re_mod
                         title_match = re_mod.search(r'TITLE:\s*(.+)', result)
@@ -487,7 +490,7 @@ Repo structure:
 
 Write a helpful, concise reply. Be friendly and technical. If it's a question, answer it. If it's a feature request, analyze feasibility. If it's a bug report, suggest next steps."""
                                 
-                                reply = query_gemini_newcrons(disc_prompt)
+                                reply, _ = query_gemini_newcrons(disc_prompt)
                                 if reply:
                                     # Post reply via GraphQL
                                     graphql_query(token, """
@@ -635,7 +638,7 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
             print(f"DEBUG: Failed to load scanner prompt: {e}")
             scanner_prompt = f"Analyze {target_repo.full_name} ({target_path_display}) and recommend one improvement. Text only, no code."
         
-        scanner_plan = query_gemini_scanner(scanner_prompt)
+        scanner_plan, scanner_model = query_gemini_scanner(scanner_prompt)
         if not scanner_plan:
             print("DEBUG: Scanner returned nothing")
             return
@@ -709,39 +712,40 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
             
             # --- THE DUAL EXECUTOR & FALLBACK ARCHITECTURE (Meta Llama 3.3 + xAI Grok) ---
             print("DEBUG: Executing Dual Groq Llama 3.3 + Fallbacks...")
-            executor1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_API_KEY'))
-            executor2_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
+            executor1_resp, executor1_model = query_groq(executor_prompt, api_key=os.environ.get('GROK_API_KEY'))
+            executor2_resp, executor2_model = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
             
             data1 = extract_json_from_response(executor1_resp) if executor1_resp else None
             data2 = extract_json_from_response(executor2_resp) if executor2_resp else None
             
             improvement_data = None
+            used_model = executor1_model or executor2_model or "Groq (llama-3.1-8b-instant)"
             
             # Combine successful edits from EXECUTOR 1 and EXECUTOR 2
             if (data1 and 'edits' in data1) or (data2 and 'edits' in data2):
                 improvement_data = data1 if data1 else data2
                 if data1 and data2 and 'edits' in data1 and 'edits' in data2:
                     print("DEBUG: Both Executors succeeded! Combining their surgical edits...")
-                    improvement_data['edits'].extend(data2['edits'])
+                    improvement_data['edits'].extend(data2.get('edits', []))
             else:
                 print("DEBUG: Both Primary Executors failed or returned invalid JSON. Checking fallbacks...")
                 # Fallback 1: The Groq Fallback Key
-                fb1_resp = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
+                fb1_resp, _ = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
                 improvement_data = extract_json_from_response(fb1_resp) if fb1_resp else None
                 
                 if not improvement_data or 'edits' not in improvement_data:
                     # Fallback 2: Fireworks AI
                     print("DEBUG: Groq Fallback failed. Engaging Fireworks AI Executor...")
-                    from api.index import query_fireworks_executor
-                    fb2_resp = query_fireworks_executor(executor_prompt)
+                    fb2_resp, fb2_model = query_fireworks_executor(executor_prompt)
+                    used_model = fb2_model or used_model
                     if fb2_resp:
                         improvement_data = extract_json_from_response(fb2_resp)
                     
                     if not improvement_data or 'edits' not in improvement_data:
                         # Fallback 3: The Ultimate Gemini Executor
                         print("DEBUG: Fireworks failed. Engaging Ultimate Gemini Executor...")
-                        from api.index import query_gemini_executor
-                        fb3_resp = query_gemini_executor(executor_prompt)
+                        fb3_resp, fb3_model = query_gemini_executor(executor_prompt)
+                        used_model = fb3_model or used_model
                         if fb3_resp:
                             improvement_data = extract_json_from_response(fb3_resp)
             
@@ -793,7 +797,7 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
                 final_branch = improvement_data.get('branch_name', f'bot/fix-{ts}')
                 break
             
-            reviewer_response = query_gemini_reviewer(reviewer_prompt)
+            reviewer_response, reviewer_model = query_gemini_reviewer(reviewer_prompt)
             if not reviewer_response:
                 print("DEBUG: Reviewer returned nothing, using Executor's edits as-is")
                 final_edits = improvement_data.get('edits', [])
@@ -904,9 +908,14 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
             co_author_name = os.environ.get('CO_AUTHOR_NAME', '')
             co_author_email = os.environ.get('CO_AUTHOR_EMAIL', '')
             co_author_line = f"\n\nCo-authored-by: {co_author_name} <{co_author_email}>" if co_author_name and co_author_email else ""
+            
+            scanner_display = f"Scanner ({scanner_model})" if scanner_model else "Scanner"
+            executor_display = f"Executor ({used_model})" if used_model else "Executor (Groq Llama)"
+            reviewer_display = f"Reviewer ({reviewer_model})" if reviewer_model else "Reviewer (Gemini)"
+            
             pr = target_repo.create_pull(
                 title=f"[VALIDATED] {final_title}",
-                body=f"Hey @{owner_login}! Joseph, I've found an improvement for you.\n\n{final_body}\n\n---\n*Validated by Triple-AI: Scanner (Gemini 2.5 Flash) → Executor (Llama 3.3 70B) → Reviewer (Gemini 2.5 Flash)*\n\nGenerated autonomously by Mayo 🤖{co_author_line}",
+                body=f"Hey @{owner_login}! Joseph, I've found an improvement for you.\n\n{final_body}\n\n---\n*Validated by Triple-AI: {scanner_display} → {executor_display} → {reviewer_display}*\n\nGenerated autonomously by Mayo 🤖{co_author_line}",
                 head=final_branch,
                 base=target_repo.default_branch
             )
