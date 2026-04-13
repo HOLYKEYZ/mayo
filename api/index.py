@@ -536,102 +536,71 @@ IMPORTANT: If suggestions involve file changes, respond options:
 ```"""
     return query_gemini(code_prompt, context)
 
-# === TRIPLE-AI FUNCTIONS ===
+# === API CALL HELPERS ===
+def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/models/llama-v3p3-70b-instruct"):
+    if not key: return None
+    headers = {'Content-Type': 'application/json'}
+    fw_payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperature,
+        "max_tokens": 8000
+    }
+    try:
+        r = requests.post(
+            "https://api.fireworks.ai/inference/v1/chat/completions",
+            json=fw_payload,
+            headers={**headers, 'Authorization': f'Bearer {key}'},
+            timeout=120
+        )
+        r.raise_for_status()
+        return r.json()['choices'][0]['message']['content']
+    except Exception as e:
+        print(f"Fireworks API Error: {e}")
+        return None
 
-def query_gemini_scanner(prompt, temperature=0.2):
-    """Scanner AI (Gemini A) — reads codebase, outputs text-only analysis."""
+def _try_gemini_api(prompt, key, temperature, model="gemini-2.5-flash"):
+    if not key: return None
     headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": temperature, "maxOutputTokens": 8000}
     }
-    
-    def try_fireworks(key):
-        try:
-            fw_payload = {
-                "model": "accounts/fireworks/models/llama-v3p3-70b-instruct",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": temperature,
-                "max_tokens": 8000
-            }
-            r = requests.post(
-                "https://api.fireworks.ai/inference/v1/chat/completions",
-                json=fw_payload,
-                headers={**headers, 'Authorization': f'Bearer {key}'},
-                timeout=120
-            )
-            r.raise_for_status()
-            return r.json()['choices'][0]['message']['content']
-        except Exception as e:
-            print(f"Scanner Fireworks Error: {e}")
-            return None
-    
-    # Try GEMINI_FALLBACK_API_KEY as Fireworks first (since user puts Fireworks key there)
-    if GEMINI_FALLBACK_API_KEY:
-        result = try_fireworks(GEMINI_FALLBACK_API_KEY)
-        if result:
-            return result
-    
-    # Try primary Gemini key
-    if GEMINI_API_KEY:
-        try:
-            r = requests.post(f"{GEMINI_API_URL}?key={GEMINI_API_KEY}", json=payload, headers=headers, timeout=120)
-            r.raise_for_status()
-            return r.json()['candidates'][0]['content']['parts'][0]['text']
-        except Exception as e:
-            print(f"Scanner Gemini Error: {e}")
+    try:
+        r = requests.post(f"{GEMINI_API_URL}?key={key}", json=payload, headers=headers, timeout=120)
+        r.raise_for_status()
+        return r.json()['candidates'][0]['content']['parts'][0]['text']
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
+        return None
+
+# === TRIPLE-AI FUNCTIONS ===
+def query_gemini_scanner(prompt, temperature=0.2):
+    """Scanner AI (Gemini A) — reads codebase, outputs text-only analysis."""
+    # Try Fireworks keys first
+    for key in [FIREWORKS_API_KEY, GEMINI_FALLBACK_API_KEY]: # Check both possible Fireworks key locations
+        result = _try_fireworks_api(prompt, key, temperature)
+        if result: return result
+
+    # Then try Gemini keys
+    for key in [GEMINI_API_KEY]: # Add GEMINI2_API_KEY if needed as fallback here
+        result = _try_gemini_api(prompt, key, temperature)
+        if result: return result
     
     return None
 
 def query_gemini_newcrons(prompt, temperature=0.2):
     """Dedicated Gemini call for new cron phases (0.6, 0.7, I, D)."""
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": temperature, "maxOutputTokens": 8000}
-    }
-    
-    def try_fireworks(key):
-        try:
-            fw_payload = {
-                "model": "accounts/fireworks/models/llama-v3p3-70b-instruct",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": temperature,
-                "max_tokens": 8000
-            }
-            r = requests.post(
-                "https://api.fireworks.ai/inference/v1/chat/completions",
-                json=fw_payload,
-                headers={**headers, 'Authorization': f'Bearer {key}'},
-                timeout=120
-            )
-            r.raise_for_status()
-            return r.json()['choices'][0]['message']['content']
-        except Exception as e:
-            print(f"NewCrons Fireworks Error: {e}")
-            return None
-    
-    # Try GEMINI_FALLBACK_API_KEY as Fireworks first
-    if GEMINI_FALLBACK_API_KEY:
-        result = try_fireworks(GEMINI_FALLBACK_API_KEY)
-        if result:
-            return result
-    
-    # Try NEWCRONS key as Fireworks
-    if GEMINI_NEWCRONS_API_KEY:
-        result = try_fireworks(GEMINI_NEWCRONS_API_KEY)
-        if result:
-            return result
-    
-    # Try primary Gemini key
-    if GEMINI_API_KEY:
-        try:
-            r = requests.post(f"{GEMINI_API_URL}?key={GEMINI_API_KEY}", json=payload, headers=headers, timeout=120)
-            r.raise_for_status()
-            return r.json()['candidates'][0]['content']['parts'][0]['text']
-        except Exception as e:
-            print(f"NewCrons Gemini Error: {e}")
-    
+    # Try Fireworks keys first
+    for key in [FIREWORKS_API_KEY, GEMINI_FALLBACK_API_KEY, GEMINI_NEWCRONS_API_KEY]: # GEMINI_NEWCRONS_API_KEY might also hold a Fireworks key
+        result = _try_fireworks_api(prompt, key, temperature)
+        if result: return result
+
+    # Then try Gemini keys
+    for key in [GEMINI_API_KEY]: # Add GEMINI2_API_KEY if needed as fallback here
+        result = _try_gemini_api(prompt, key, temperature)
+        if result: return result
+        
     return None
 
 GEMINI_EXECUTOR_API_KEY = os.environ.get('GEMINI_EXECUTOR_API_KEY')
