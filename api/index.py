@@ -600,25 +600,25 @@ def query_gemini_newcrons(prompt, temperature=0.2):
     """Dedicated Gemini call for new cron phases (0.6, 0.7, I, D). Prioritizes Fireworks (from GEMINI_NEWCRONS_API_KEY or GEMINI_FALLBACK_API_KEY)."""
     # Try GEMINI_NEWCRONS_API_KEY as Fireworks first
     if GEMINI_NEWCRONS_API_KEY:
-        result = _try_fireworks_api(prompt, GEMINI_NEWCRONS_API_KEY, temperature)
-        if result: return result
+        content, model_name = _try_fireworks_api(prompt, GEMINI_NEWCRONS_API_KEY, temperature)
+        if content: return content, model_name
 
     # Then try GEMINI_FALLBACK_API_KEY as Fireworks
     if GEMINI_FALLBACK_API_KEY:
-        result = _try_fireworks_api(prompt, GEMINI_FALLBACK_API_KEY, temperature)
-        if result: return result
+        content, model_name = _try_fireworks_api(prompt, GEMINI_FALLBACK_API_KEY, temperature)
+        if content: return content, model_name
 
     # Then try dedicated Fireworks API_KEY (if user provided it separately)
     if FIREWORKS_API_KEY:
-        result = _try_fireworks_api(prompt, FIREWORKS_API_KEY, temperature)
-        if result: return result
+        content, model_name = _try_fireworks_api(prompt, FIREWORKS_API_KEY, temperature)
+        if content: return content, model_name
 
     # Then try Gemini keys
-    for key in [GEMINI_API_KEY]: # Add GEMINI2_API_KEY if needed as fallback here
-        result = _try_gemini_api(prompt, key, temperature)
-        if result: return result
+    for key in [GEMINI_API_KEY]:
+        content, model_name = _try_gemini_api(prompt, key, temperature)
+        if content: return content, model_name
         
-    return None
+    return None, None
 
 GEMINI_EXECUTOR_API_KEY = os.environ.get('GEMINI_EXECUTOR_API_KEY')
 GEMINI3_FALLBACK_API_KEY = os.environ.get('GEMINI3_FALLBACK_API_KEY')
