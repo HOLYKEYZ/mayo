@@ -82,13 +82,24 @@ The Scanner performs a rigorous multi-layered analysis:
 > 4. **Update the workflow file** (`.github/workflows/cron.yml`) with your secrets
 
 ### Environment Variables
+
+> *a quick, self-deprecating note: yes, my API key setup is a bit chaotic. i'm broke and use multiple free tiers that don't always play nice together, so i've had to get creative with fallbacks. if you're not as financially challenged, you can simplify by using fewer, more robust keys and adjusting the `api/index.py` and `run_cron.py` files accordingly.*
+
 | Variable | Purpose |
 |---|---|
-| `GEMINI_API_KEY` | Scanner (Gemini A) |
-| `GEMINI2_API_KEY` | Reviewer (Gemini B) |
-| `GROK_API_KEY` | Executor (Llama 3.3 70B via Groq) |
+| `GEMINI_API_KEY` | Primary Gemini key (for Scanner/Reviewer) |
+| `GEMINI_FALLBACK_API_KEY` | Secondary key (often a Fireworks AI key in my setup, used as fallback for Scanner/NewCrons) |
+| `GEMINI_NEWCRONS_API_KEY` | Dedicated key for NewCrons phases (can be Gemini or Fireworks) |
+| `FIREWORKS_API_KEY` | Primary Fireworks AI key (for Executor) |
+| `GROQ_API_KEY` | Primary Groq key (for Executor) |
+| `GROK_2ND_EXECUTOR_API_KEY` | Secondary Groq key (for Executor fallback) |
+| `GEMINI_EXECUTOR_API_KEY` | Dedicated Gemini key for Executor fallback |
+| `GEMINI3_FALLBACK_API_KEY` | Tertiary Gemini key for Executor fallback |
 | `APP_ID` / `PRIVATE_KEY` | GitHub App authentication |
-| `CRON_SECRET` | Hourly trigger authorization |
+| `WEBHOOK_SECRET` | Vercel webhook secret |
+| `BOT_REPO_NAME` | Your bot's repository name (e.g., `HOLYKEYZ/mayo`) |
+| `CO_AUTHOR_NAME` / `CO_AUTHOR_EMAIL` | Your name/email for co-authored commits |
+| `CRON_SECRET` | Hourly cron trigger authorization |
 
 ### Deployment
 1. Deploy as a **GitHub App** on **Vercel**.
