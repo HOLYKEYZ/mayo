@@ -547,7 +547,7 @@ def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/model
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": temperature,
-        "max_tokens": 8000
+        "max_tokens": 4096
     }
     print(f"DEBUG: Trying Fireworks with model={model}, key_prefix={key[:10]}...")
     try:
