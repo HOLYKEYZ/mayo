@@ -559,8 +559,12 @@ def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/model
         r.raise_for_status()
         return r.json()['choices'][0]['message']['content'], f"Fireworks AI ({model})"
     except requests.exceptions.HTTPError as e:
-        err_body = r.text[:500] if r.text else "No response body"
-        print(f"Fireworks HTTP Error {r.status_code}: {err_body}")
+        try:
+            err_json = r.json()
+            err_body = err_json.get('error', {}).get('message', r.text[:500])
+        except:
+            err_body = r.text[:500] if r.text else "No response body"
+        print(f"Fireworks HTTP {r.status_code}: {err_body}")
         return None, None
     except Exception as e:
         print(f"Fireworks API Error: {e}")
