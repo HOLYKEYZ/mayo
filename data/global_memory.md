@@ -88,3 +88,4 @@ mayo" — Mayo acknowledged and responded.
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Authentication Checks in API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/245) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [REFACTOR] Enhance Error Handling in NotificationBell. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/246) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Image Proxy Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/247) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation in Edit Profile Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/248) - *Status: PENDING REVIEW*
