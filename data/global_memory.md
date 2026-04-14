@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Color in Explore Tags Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/220) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed to insert new function using `search: ""`, leading to compilation errors, reinforcing recurring `git-pulse` patching precision and file creation/insertion issues.
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [FEAT] Add Heuristic Fallback for AI Pitch Generation. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/221) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Cache Empty Array Results in withCache Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/222) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed multi-step color centralization due to `search` block failures for `colors.ts` (trying to search for new content) and `tailwind.config.ts` (imprecise search block and missing import), reinforcing recurring `git-pulse` patching precision issues and Joseph's color directive violations.
