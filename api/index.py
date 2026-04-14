@@ -592,46 +592,19 @@ def _try_gemini_api(prompt, key, temperature, model="gemini-2.5-flash"):
 
 # === TRIPLE-AI FUNCTIONS ===
 def query_gemini_scanner(prompt, temperature=0.2):
-    """Scanner AI (Gemini A) — reads codebase, outputs text-only analysis. Prioritizes Fireworks (from GEMINI_FALLBACK_API_KEY)."""
-    # Try GEMINI_FALLBACK_API_KEY as Fireworks first
+    """Scanner AI (Gemini A) — reads codebase, outputs text-only analysis. Uses Fireworks with GEMINI_FALLBACK_API_KEY."""
     if GEMINI_FALLBACK_API_KEY:
         content, model_name = _try_fireworks_api(prompt, GEMINI_FALLBACK_API_KEY, temperature)
-        if content: return content, model_name
-
-    # Then try dedicated Fireworks API_KEY (if user provided it separately)
-    if FIREWORKS_API_KEY:
-        content, model_name = _try_fireworks_api(prompt, FIREWORKS_API_KEY, temperature)
-        if content: return content, model_name
-
-    # Then try Gemini keys
-    for key in [GEMINI_API_KEY]:
-        content, model_name = _try_gemini_api(prompt, key, temperature)
         if content: return content, model_name
     
     return None, None
 
 def query_gemini_newcrons(prompt, temperature=0.2):
-    """Dedicated Gemini call for new cron phases (0.6, 0.7, I, D). Prioritizes Fireworks (from GEMINI_NEWCRONS_API_KEY or GEMINI_FALLBACK_API_KEY)."""
-    # Try GEMINI_NEWCRONS_API_KEY as Fireworks first
+    """Dedicated Fireworks for cron phases. Uses Fireworks with GEMINI_NEWCRONS_API_KEY."""
     if GEMINI_NEWCRONS_API_KEY:
         content, model_name = _try_fireworks_api(prompt, GEMINI_NEWCRONS_API_KEY, temperature)
         if content: return content, model_name
-
-    # Then try GEMINI_FALLBACK_API_KEY as Fireworks
-    if GEMINI_FALLBACK_API_KEY:
-        content, model_name = _try_fireworks_api(prompt, GEMINI_FALLBACK_API_KEY, temperature)
-        if content: return content, model_name
-
-    # Then try dedicated Fireworks API_KEY (if user provided it separately)
-    if FIREWORKS_API_KEY:
-        content, model_name = _try_fireworks_api(prompt, FIREWORKS_API_KEY, temperature)
-        if content: return content, model_name
-
-    # Then try Gemini keys
-    for key in [GEMINI_API_KEY]:
-        content, model_name = _try_gemini_api(prompt, key, temperature)
-        if content: return content, model_name
-        
+    
     return None, None
 
 GEMINI_EXECUTOR_API_KEY = os.environ.get('GEMINI_EXECUTOR_API_KEY')
