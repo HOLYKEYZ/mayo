@@ -1,11 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [PERF] Remove Global Dynamic Rendering Directive. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/210) - *Status: COMMENTED - Joseph had feedback*
-- **REJECTED by Reviewer**: Executor failed multi-step color centralization due to `search` block failures for `colors.ts` and `tailwind.config.ts`, leading to undefined Tailwind classes and broken styling. Reinforces recurring patching precision issues and Joseph's color directive violations.
-- **REJECTED by Reviewer**: Executor failed multi-step color centralization due to `search` block failures for `colors.ts` and destructive `tailwind.config.ts` patch, reinforcing recurring patching precision issues and Joseph's color directive violations.
-- **REJECTED by Reviewer**: Executor failed to apply color centralization due to `search: ""` for new file creation and imprecise `tailwind.config.ts` search block, reinforcing recurring `git-pulse` patching precision issues and Joseph's color directive violations.
-- **REJECTED by Reviewer**: Executor failed color centralization due to `search: ""` for existing `colors.ts` and imprecise `tailwind.config.ts` search block, leading to zero applied changes and violating Joseph's color directive. Reinforces recurring `git-pulse` patching precision issues.
 - **Repo: git-pulse**: [LOGIC] Fix Runtime Error in StarsPage. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/212) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to create new file using `search: ""` and submitted functionally incorrect code (React hooks in server utility), reinforcing recurring `git-pulse` patching precision and functional issues.
 - **REJECTED by Reviewer**: Executor failed to apply any changes due to `search: ""` for new file creation and imprecise search block for existing file, reinforcing recurring `git-pulse` patching precision and file creation issues.
