@@ -1,13 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Validate Username in Follow API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/215) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed to create a new file using `search: ""` for `git-pulse`, a recurring patching precision issue that leads to compilation errors and non-functional code.
-- **REJECTED by Reviewer**: Executor failed to create new file `apps/web/src/lib/date-utils.ts` using `search: ""`, reinforcing recurring `git-pulse` patching precision and file creation issues.
-- **REJECTED by Reviewer**: Executor failed to create new file using `search: ""` for `git-pulse`, a recurring patching precision issue that leads to compilation errors and non-functional code. Also, the import placement in `TopNav.tsx` was not as precisely described by the Scanner.
-- **REJECTED by Reviewer**: Executor failed to create new file using `search: ""` for `git-pulse`, leading to compilation errors, reinforcing recurring patching precision and file creation issues.
-- **REJECTED by Reviewer**: Executor failed to add new env var to `.env.example` using `search: ""`, a recurring patching precision issue for `git-pulse`.
-- **REJECTED by Reviewer**: Executor failed to apply `.env.example` patch due to imprecise search block and missed adding a comment, reinforcing recurring `git-pulse` patching precision issues.
 - **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Colors in Settings Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/216) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Centralize GitHub API Request Headers. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/217) - *Status: APPROVED - Joseph liked this!*
 - **Joseph's Feedback on git-pulse#186**: "push ya fix" — Mayo acknowledged and responded.
