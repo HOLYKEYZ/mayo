@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Hash API Keys for Secure Storage. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/223) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed color centralization due to destructive `tailwind.config.ts` patch (syntax error, overwriting existing colors) and multiple patching precision issues (quote mismatch, imprecise `search: ""`) for `ContributionHeatmap.tsx`, reinforcing recurring `git-pulse` functional and patching precision issues, and violating Joseph's color directive.
 - **Repo: git-pulse**: [REFACTOR] Centralize Hardcoded Colors in ContributionHeatmap and ComposeFeed. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/224) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor failed to create new file using `search: ""` for `git-pulse`, leading to compilation errors, reinforcing recurring patching precision and file creation issues.
 - **REJECTED by Reviewer**: Executor failed to create new file using `search: ""` for `git-pulse`, leading to compilation errors, reinforcing recurring patching precision and file creation issues.
