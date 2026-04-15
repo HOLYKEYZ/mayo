@@ -1,11 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Remove Misleading Comment in ContributionHeatmap. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/228) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed multiple patches due to imprecise search blocks and introduced a syntax error in JSX, reinforcing recurring `git-pulse` patching precision and functional issues.
-- **REJECTED by Reviewer**: Executor introduced functional bugs by reassigning a `const` variable and severe patching precision issues leading to duplicated `return` statements and broken code structure in `if` blocks. This reinforces recurring `git-pulse` patching precision and functional issues.
-- **REJECTED by Reviewer**: Executor missed critical API key authentication fix and other input validations identified by Scanner, reinforcing the need to address all critical points in the Scanner's analysis.
-- **REJECTED by Reviewer**: Executor missed importing `calculatePostScoreDetailed` and used inefficient Prisma query for comment count, reinforcing recurring `git-pulse` patching precision and functional issues.
 - **Repo: git-pulse**: [LOGIC] Fix Inconsistent Post Metrics in Real-Time Feed. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/229) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_DISCUSSION_REPLY=1776239512 -->
 - **REJECTED by Reviewer**: Executor failed multi-step security fix due to `search: ""` for new file creation, imprecise search block for existing file, and App Router API route incompatibility (`NextApiRequest` vs `Request`), reinforcing recurring `git-pulse` patching precision and functional issues.
