@@ -62,3 +62,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in PostCard.tsx. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/257) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Prevent SQL Injection in Notification API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/258) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in API Endpoints. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/259) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/260) - *Status: PENDING REVIEW*
