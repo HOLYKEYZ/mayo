@@ -48,3 +48,4 @@ cant u use ur senses'*
 <!-- LAST_PR_JUDGE=1776290108 -->
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/266) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/267) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/268) - *Status: PENDING REVIEW*
