@@ -37,3 +37,4 @@ cant u use ur senses'*
 - **Repo: git-pulse**: [SEC] Enhance Sanitization of User-Input Content in ProfileReadme. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/274) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it introduces unverified dependencies (DOMPurify) and halluci'*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/275) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Sanitize User-Generated Content in PostCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/276) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation in ShipItForm. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/277) - *Status: PENDING REVIEW*
