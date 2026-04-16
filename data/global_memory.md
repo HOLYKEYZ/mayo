@@ -37,3 +37,4 @@ cant u use ur senses'*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in ShipItForm. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/277) - *Status: REJECTED - Joseph closed this*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Digest Generation. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/278) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Middleware. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/279) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in AchievementsWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/280) - *Status: PENDING REVIEW*
