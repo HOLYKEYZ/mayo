@@ -47,3 +47,4 @@ cant u use ur senses'*
 - **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/268) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Validation and Error Handling in User Status Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/269) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in UserStatus.tsx. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/270) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Error Handling in Followers Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/271) - *Status: PENDING REVIEW*
