@@ -37,3 +37,4 @@ cant u use ur senses'*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/275) - *Status: REJECTED - Joseph closed this Comment: 'Closing this in favor of a manual, production-grade implementation. We have just'*
 - **Repo: git-pulse**: [SEC] Sanitize User-Generated Content in PostCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/276) - *Status: REJECTED - Joseph closed this*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in ShipItForm. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/277) - *Status: REJECTED - Joseph closed this*
+- **Repo: git-pulse**: [SEC] Enhance Error Handling in Digest Generation. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/278) - *Status: PENDING REVIEW*
