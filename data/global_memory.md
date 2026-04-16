@@ -1,9 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Refine User Status Update API Response. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/244) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor failed due to character encoding mismatch ('\u2715' vs '✕') in the search block, reinforcing recurring `git-pulse` patching precision issues.
-- **REJECTED by Reviewer**: Executor failed due to imprecise search block and incorrect placement of the new element within a ternary operator, reinforcing recurring `git-pulse` patching precision and functional issues.
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Authentication Checks in API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/245) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [REFACTOR] Enhance Error Handling in NotificationBell. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/246) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Image Proxy Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/247) - *Status: APPROVED - Joseph liked this!*
@@ -34,9 +31,9 @@ cant u use ur senses'*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/266) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/267) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/268) - *Status: PENDING REVIEW*
-- **Repo: git-pulse**: [SEC] Enhance Validation and Error Handling in User Status Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/269) - *Status: PENDING REVIEW*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in UserStatus.tsx. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/270) - *Status: PENDING REVIEW*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in Followers Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/271) - *Status: PENDING REVIEW*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation for GitHub Follow/Unfollow API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/272) - *Status: PENDING REVIEW*
-- **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/273) - *Status: PENDING REVIEW*
-- **Repo: git-pulse**: [SEC] Enhance Sanitization of User-Input Content in ProfileReadme. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/274) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Validation and Error Handling in User Status Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/269) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it contains hallucinated function calls and unverified logic '*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation in UserStatus.tsx. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/270) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it contains hallucinated function calls and unverified logic '*
+- **Repo: git-pulse**: [SEC] Enhance Error Handling in Followers Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/271) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it contains hallucinated function calls and unverified logic '*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation for GitHub Follow/Unfollow API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/272) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it contains hallucinated function calls and unverified logic '*
+- **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/273) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it contains hallucinated function calls and unverified logic '*
+- **Repo: git-pulse**: [SEC] Enhance Sanitization of User-Input Content in ProfileReadme. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/274) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it introduces unverified dependencies (DOMPurify) and halluci'*
