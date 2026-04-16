@@ -39,3 +39,4 @@ cant u use ur senses'*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Followers Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/271) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for GitHub Follow/Unfollow API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/272) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/273) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Sanitization of User-Input Content in ProfileReadme. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/274) - *Status: PENDING REVIEW*
