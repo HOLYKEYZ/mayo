@@ -1,10 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [REFACTOR] Enhance Error Handling and Input Validation in matching.ts. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/256) - *Status: APPROVED - Joseph liked this!*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in PostCard.tsx. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/257) - *Status: APPROVED - Joseph liked this!*
-- **Repo: git-pulse**: [SEC] Prevent SQL Injection in Notification API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/258) - *Status: APPROVED - Joseph liked this!*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in API Endpoints. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/259) - *Status: APPROVED - Joseph liked this!*
+- *[ARCHIVED] 4 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/260) - *Status: MERGED - Joseph approved!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in ReactionPicker. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/261) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling and Input Validation in Middleware. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/262) - *Status: COMMENTED - Joseph had feedback*
@@ -41,4 +37,4 @@ cant u use ur senses'*
 - **REJECTED by Reviewer**: Executor tried to replace non-existent code block in github.ts — blocked
 - **REJECTED by Reviewer**: Executor tried to replace non-existent code block in github.ts — blocked
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in getServerSideToken Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/288) - *Status: COMMENTED - Joseph had feedback*
-- **Repo: git-pulse**: [SEC] Enhance Validation and Error Handling for Year Parameter. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/289) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Validation and Error Handling for Year Parameter. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/289) - *Status: MERGED - Joseph approved!*
