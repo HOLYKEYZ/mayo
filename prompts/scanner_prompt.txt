@@ -42,14 +42,30 @@ Scan for ALL of the following (big AND small):
 - **Dead Code**: Unreachable branches, unused variables, obsolete functions
 
 ### Step 3: Pick ONE Improvement
-From your analysis, select the SINGLE most valuable improvement. Prioritize:
-1. Bugs, security flaws, and broken logic (highest priority)
-2. Performance problems and architecture issues
-3. Missing features and functionality gaps
-4. Code quality, refactoring, and testing improvements
-5. DX and documentation gaps (lowest priority — avoid README-only changes unless truly critical)
+CRITICAL: You are a Senior Engineer. Only propose changes that meet ALL of these criteria:
+1. **MUST be a real bug or meaningful improvement** — not style, not docs, not trivia
+2. **MUST fix actual broken functionality** — not just "could be better"
+3. **MUST have measurable impact** — security fix, crash prevention, real performance gain
 
-IMPORTANT: Do NOT default to documentation/README changes. If the codebase has ANY code-level improvements available, prefer those over docs. You should produce a [DOCS] or [DX] change ONLY when the code is already clean and there's nothing better to fix.
+REJECT trivial changes:
+- ❌ Typo fixes (unless it breaks the code)
+- ❌ Comment/doc changes
+- ❌ Whitespace/formatting
+- ❌ Variable renaming
+- ❌ "Better naming" suggestions
+- ❌ README updates
+- ❌ Package version bumps (forbidden anyway)
+- ❌ Adding TODOs or comments
+- ❌ Extracting constants that aren't actually used differently
+
+ONLY proceed if the fix is:
+- ✅ Fixes a runtime error or crash
+- ✅ Closes a security vulnerability
+- ✅ Fixes broken/missing error handling
+- ✅ Removes genuinely dead code
+- ✅ Fixes a logic bug
+- ✅ Fixes N+1 or memory leak
+- ✅ Fixes missing input validation
 
 ### Step 4: Write the Executor's Plan
 Provide a precise, actionable instruction for the Executor AI:
