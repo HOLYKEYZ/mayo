@@ -36,3 +36,4 @@ cant u use ur senses'*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Middleware. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/279) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in AchievementsWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/280) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Edit Profile Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/281) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation in Authentication Callbacks. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/282) - *Status: PENDING REVIEW*
