@@ -922,12 +922,6 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
                 base=target_repo.default_branch
             )
             
-            try:
-                pr.add_to_assignees(owner_login)
-                pr.create_review_request(reviewers=[owner_login])
-            except Exception as e:
-                print(f"DEBUG: Failed to assign/request review: {e}")
-
             print(f"DEBUG: PR created: {pr.html_url}")
             
             # Save to memory
