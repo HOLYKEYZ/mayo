@@ -190,10 +190,11 @@ def run_cron():
                                     co_author_email = os.environ.get('CO_AUTHOR_EMAIL', '')
                                     co_author_line = f"\n\nCo-authored-by: {co_author_name} <{co_author_email}>" if co_author_name and co_author_email else ""
                                     pr = issue_repo.create_pull(
-                                        title=f"[VALIDATED] {title}",
-                                        body=f"Approved by Joseph in {issue_url}\n\n{improvement_data.get('body', '')}\n\n*Executed by Mayo 🤖*{co_author_line}",
+                                        title=f"[DRAFT] {title}",
+                                        body=f"Approved by Joseph in {issue_url}\n\n{improvement_data.get('body', '')}\n\n*Executed by Mayo 🤖*{co_author_line}\n\n**This is a DRAFT PR — review and merge when ready.**",
                                         head=branch,
-                                        base=issue_repo.default_branch
+                                        base=issue_repo.default_branch,
+                                        draft=True
                                     )
                                     print(f"DEBUG: PR created from approved issue: {pr.html_url}")
                                     
@@ -916,10 +917,11 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
             reviewer_display = f"Reviewer ({reviewer_model})" if reviewer_model else "Reviewer (Gemini)"
             
             pr = target_repo.create_pull(
-                title=f"[VALIDATED] {final_title}",
-                body=f"Hey @{owner_login}! Joseph, I've found an improvement for you.\n\n{final_body}\n\n---\n*Validated by Triple-AI: {scanner_display} → {executor_display} → {reviewer_display}*\n\nGenerated autonomously by Mayo 🤖{co_author_line}",
+                title=f"[DRAFT] {final_title}",
+                body=f"Hey @{owner_login}! Joseph, I've found an improvement for you.\n\n{final_body}\n\n---\n*Validated by Triple-AI: {scanner_display} → {executor_display} → {reviewer_display}*\n\nGenerated autonomously by Mayo 🤖{co_author_line}\n\n**This is a DRAFT PR — review and merge when ready.**",
                 head=final_branch,
-                base=target_repo.default_branch
+                base=target_repo.default_branch,
+                draft=True
             )
             
             print(f"DEBUG: PR created: {pr.html_url}")
