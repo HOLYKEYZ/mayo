@@ -27,6 +27,7 @@ GEMINI2_FALLBACK_API_KEY = os.environ.get('GEMINI2_FALLBACK_API_KEY')
 GROK_FALLBACK_API_KEY = os.environ.get('GROK_FALLBACK_API_KEY')
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
 FIREWORKS_API_KEY = os.environ.get('FIREWORKS_API_KEY')
+FIREWORKS2_API_KEY = os.environ.get('FIREWORKS2_API_KEY')
 GEMINI_NEWCRONS_API_KEY = os.environ.get('GEMINI_NEWCRONS_API_KEY')
 GROQ_NEWCRONS_API_KEY = os.environ.get('GROQ_NEWCRONS_API_KEY')
 APP_ID = os.environ.get('APP_ID')
@@ -706,10 +707,9 @@ def query_fireworks_executor(prompt, temperature=0.1):
         return None, None
 
 def query_gemini_reviewer(prompt, temperature=0.1):
-    """Reviewer AI (Gemini B) — validates edits, returns verdict JSON. Uses Fireworks with GEMINI2_API_KEY."""
-    # Use GEMINI2_API_KEY as Fireworks only
-    if GEMINI2_API_KEY:
-        content, model_name = _try_fireworks_api(prompt, GEMINI2_API_KEY, temperature)
+    """Reviewer AI (Gemini B) — validates edits, returns verdict JSON. Uses Fireworks with FIREWORKS2_API_KEY."""
+    if FIREWORKS2_API_KEY:
+        content, model_name = _try_fireworks_api(prompt, FIREWORKS2_API_KEY, temperature)
         if content: return content, model_name
     
     return None, None
