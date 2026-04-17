@@ -35,5 +35,5 @@ cant u use ur senses'*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Authentication Callbacks. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/282) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling and Input Validation in GitHub Contributions Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/283) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in User Status Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/284) - *Status: COMMENTED - Joseph had feedback*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation and Sanitization in ComposeFeed. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/285) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation and Sanitization in ComposeFeed. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/285) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling and Input Validation in withCache Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/286) - *Status: COMMENTED - Joseph had feedback*
