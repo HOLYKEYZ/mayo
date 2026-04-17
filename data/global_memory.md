@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Improve Input Validation and Authentication for GitHub Followers. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/252) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling and Input Validation in User Status API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/253) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in ComposeFeed. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/254) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Auth. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/255) - *Status: APPROVED - Joseph liked this!*
