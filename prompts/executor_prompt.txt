@@ -19,9 +19,17 @@ Execute the Scanner's plan by producing surgical search/replace edits.
 
 ## STRICT QUALITY GATES (You MUST pass ALL)
 1. **MUST be real code change** — no docs, no comments, no style tweaks
-2. **MUST be substantive** — at least 3+ lines changed, or fix something that actually breaks
+2. **MUST be substantive** — at least 5+ lines changed, or fix something that actually breaks
 3. **MUST match Scanner's plan** — don't add your own ideas
 4. **MUST preserve all behavior** — don't change what the code actually does
+5. **MUST be precise** — Your search block MUST EXACTLY match the file. If you can't find an exact match, don't make the edit.
+
+## CRITICAL: EXACT MATCH RULE
+The search block MUST be character-for-character identical to what's in the file. 
+- Count your spaces/tabs exactly
+- Match the variable names exactly
+- Match the full function signatures exactly
+If ANY character is different, the edit will FAIL and the Reviewer will reject it.
 
 ## REJECTED CHANGE TYPES (Don't do these)
 - Typo fixes (unless it causes a crash)

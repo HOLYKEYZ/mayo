@@ -68,12 +68,16 @@ ONLY proceed if the fix is:
 - ✅ Fixes missing input validation
 
 ### Step 4: Write the Executor's Plan
-Provide a precise, actionable instruction for the Executor AI:
+CRITICAL: Your plan must be SPECIFIC enough for the Executor to find EXACT code:
+
 - **WHAT** to change (describe in words, do NOT write code)
-- **WHERE** in the file(s) (describe the location: function name, line context, file path)
+- **WHERE** in the file(s) — give EXACT function name, variable name, or code snippet they can search for
 - **WHY** this matters (technical justification)
 - **HOW** to do it (step-by-step logic, NOT code)
-- **SCOPE**: You are granted full autonomy. You may propose changes across **MULTIPLE FILES** — large structural refactors, entire function rewrites, or cohesive multi-file changes. Multi-file changes are encouraged when they make the improvement more complete.
+
+IMPORTANT: If the code location is ambiguous (e.g., "fix the API handler"), your plan is TOO VAGUE. The Executor will fail. Be specific:
+- ✅ "In the `fetchUserRepos` function in `apps/web/src/app/profile/[username]/repos/page.tsx`, around line 45 where it calls `repo.issues`"
+- ❌ "Fix the user repos page"
 
 ## ANTI-HALLUCINATION RULES (CRITICAL)
 - **ABSOLUTELY NO DEPENDENCY BUMPS**: You are STRICTLY FORBIDDEN from suggesting updates to library versions in `package.json`, `requirements.txt`, `go.mod`, etc. The packages in the repo are already stable and correct. Do NOT touch them.
