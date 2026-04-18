@@ -36,4 +36,4 @@
 - **Repo: git-pulse**: [SEC] Enhance URL Validation to Prevent SSRF Attacks. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/294) - *Status: PENDING REVIEW*
 <!-- LAST_PROACTIVE_ISSUE=1776488954 -->
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in GitHub Follow/Unfollow API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/295) - *Status: PENDING REVIEW*
-<!-- LAST_PR_JUDGE=1776496353 -->
+<!-- LAST_ISSUE_JUDGE=1776496356 -->
