@@ -37,3 +37,4 @@
 - **REJECTED by Reviewer**: Executor tried to fix SSRF in image-proxy/route.ts but introduced undefined function and potential compatibility issues — blocked
 - **Repo: git-pulse**: [SEC] Enhance URL Validation to Prevent SSRF Attacks. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/294) - *Status: PENDING REVIEW*
 <!-- LAST_PROACTIVE_ISSUE=1776488954 -->
+- **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in GitHub Follow/Unfollow API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/295) - *Status: PENDING REVIEW*
