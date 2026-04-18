@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/273) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it contains hallucinated function calls and unverified logic '*
 - **Repo: git-pulse**: [SEC] Enhance Sanitization of User-Input Content in ProfileReadme. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/274) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it introduces unverified dependencies (DOMPurify) and halluci'*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/275) - *Status: REJECTED - Joseph closed this Comment: 'Closing this in favor of a manual, production-grade implementation. We have just'*
 - **Repo: git-pulse**: [SEC] Sanitize User-Generated Content in PostCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/276) - *Status: REJECTED - Joseph closed this*
