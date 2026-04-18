@@ -36,4 +36,4 @@
 <!-- LAST_DISCUSSION_REPLY=1776479918 -->
 - **REJECTED by Reviewer**: Executor tried to fix SSRF in image-proxy/route.ts but introduced undefined function and potential compatibility issues — blocked
 - **Repo: git-pulse**: [SEC] Enhance URL Validation to Prevent SSRF Attacks. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/294) - *Status: PENDING REVIEW*
-<!-- LAST_ISSUE_JUDGE=1776488949 -->
+<!-- LAST_PROACTIVE_ISSUE=1776488954 -->
