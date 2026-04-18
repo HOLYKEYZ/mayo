@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Prevent SQL Injection in Prisma Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/268) - *Status: REJECTED - Joseph closed this Comment: 'Closing this in favor of a manual, production-grade implementation. While the in'*
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [SEC] Enhance Validation and Error Handling in User Status Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/269) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it contains hallucinated function calls and unverified logic '*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in UserStatus.tsx. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/270) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it contains hallucinated function calls and unverified logic '*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Followers Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/271) - *Status: REJECTED - Joseph closed this Comment: 'Closing this PR as it contains hallucinated function calls and unverified logic '*
