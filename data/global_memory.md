@@ -40,3 +40,4 @@
 <!-- LAST_PR_JUDGE=1776505901 -->
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in GitHub User Profile Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/297) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Authorization Check in User Deletion. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/298) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation for Emoji Parameter. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/299) - *Status: PENDING REVIEW*
