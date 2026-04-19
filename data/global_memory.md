@@ -1,10 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in API Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/275) - *Status: REJECTED - Joseph closed this Comment: 'Closing this in favor of a manual, production-grade implementation. We have just'*
-- **Repo: git-pulse**: [SEC] Sanitize User-Generated Content in PostCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/276) - *Status: REJECTED - Joseph closed this*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in ShipItForm. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/277) - *Status: REJECTED - Joseph closed this*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in Digest Generation. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/278) - *Status: COMMENTED - Joseph had feedback*
+- *[ARCHIVED] 4 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Middleware. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/279) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in AchievementsWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/280) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Edit Profile Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/281) - *Status: COMMENTED - Joseph had feedback*
