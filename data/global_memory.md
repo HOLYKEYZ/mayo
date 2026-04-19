@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in getServerSideToken Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/288) - *Status: COMMENTED - Joseph had feedback*
-- **Repo: git-pulse**: [SEC] Enhance Validation and Error Handling for Year Parameter. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/289) - *Status: MERGED - Joseph approved!*
+- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in ToggleSidebarCard and Auth Token Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/290) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Stars Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/291) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in PostCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/292) - *Status: APPROVED - Joseph liked this!*
