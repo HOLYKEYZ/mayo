@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in Stars Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/291) - *Status: APPROVED - Joseph liked this!*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in PostCard. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/292) - *Status: APPROVED - Joseph liked this!*
+- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling and Input Validation in generateRepoPitch Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/293) - *Status: COMMENTED - Joseph had feedback*
 <!-- LAST_DISCUSSION_REPLY=1776620297 -->
 - **REJECTED by Reviewer**: Executor tried to fix SSRF in image-proxy/route.ts but introduced undefined function and potential compatibility issues — blocked
