@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation and Sanitization in ComposeFeed. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/285) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling and Input Validation in withCache Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/286) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in handleYearChange Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/287) - *Status: COMMENTED - Joseph had feedback*
 - **REJECTED by Reviewer**: Executor tried to replace non-existent code block in github.ts — blocked
