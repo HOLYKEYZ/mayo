@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 4 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in Middleware. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/279) - *Status: COMMENTED - Joseph had feedback*
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in AchievementsWidget. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/280) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Edit Profile Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/281) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Authentication Callbacks. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/282) - *Status: COMMENTED - Joseph had feedback*
