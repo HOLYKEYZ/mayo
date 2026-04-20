@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Authorization Check in User Deletion. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/298) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for Emoji Parameter. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/299) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Image Proxy Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/300) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in CommentSection. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/301) - *Status: APPROVED - Joseph liked this!*
