@@ -43,3 +43,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in User Profile Editing. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/322) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Image Proxy Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/323) - *Status: PENDING REVIEW*
 <!-- LAST_DISCUSSION_REPLY=1776642002 -->
+- **Repo: git-pulse**: [SEC] Enhance Input Validation in SearchBar. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/324) - *Status: PENDING REVIEW*
