@@ -40,3 +40,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in SearchBar. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/324) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in GitHub API Integration. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/325) - *Status: PENDING REVIEW*
 <!-- LAST_PROACTIVE_ISSUE=1776672778 -->
+- **REJECTED by Reviewer**: Executor tried to implement input validation but did not fully address the security issue and did not match the search block — blocked
