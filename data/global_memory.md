@@ -1,9 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in CommentSection. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/301) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor tried to implement input validation but did not fully address the security issue — blocked
-- **REJECTED by Reviewer**: Executor tried to sanitize input in prisma.ts but targeted the wrong file and code block — blocked
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Sanitization in ProfileReadme. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/302) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Post API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/303) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in mapEventToPost Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/304) - *Status: COMMENTED - Joseph had feedback*
