@@ -1,10 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in GitHub Follow/Unfollow API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/295) - *Status: APPROVED - Joseph liked this!*
-<!-- LAST_ISSUE_JUDGE=1776638329 -->
-- **REJECTED by Reviewer**: Executor proposed minor edits to route.ts without addressing any real issues — blocked
-- **REJECTED by Reviewer**: Executor proposed trivial edits to route.ts that did not address a real bug or security issue — blocked
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in NotificationBell.tsx. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/296) - *Status: MERGED - Joseph approved! Comment: '@gemini-code-assist , good?'*
 <!-- LAST_PR_JUDGE=1776653742 -->
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in GitHub User Profile Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/297) - *Status: COMMENTED - Joseph had feedback*
