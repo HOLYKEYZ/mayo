@@ -42,3 +42,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in GitHub Contributions Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/330) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Notifications Stream Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/331) - *Status: PENDING REVIEW*
 - **REJECTED by Reviewer**: Executor tried to add redundant validation logic in posts/route.ts — blocked
+- **Repo: git-pulse**: [SEC] Enhance Input Validation in User Settings Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/332) - *Status: PENDING REVIEW*
