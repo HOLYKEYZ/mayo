@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in Image Proxy Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/300) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in CommentSection. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/301) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor tried to implement input validation but did not fully address the security issue — blocked
 - **REJECTED by Reviewer**: Executor tried to sanitize input in prisma.ts but targeted the wrong file and code block — blocked
