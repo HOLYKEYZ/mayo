@@ -44,3 +44,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for GitHub ID. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/336) - *Status: PENDING REVIEW*
 - **REJECTED by Reviewer**: Executor tried to add redundant validation logic in posts/route.ts — blocked
 - **REJECTED by Reviewer**: Executor tried to add redundant validation logic in posts/route.ts — blocked
+- **Repo: git-pulse**: [SEC] Enhance Input Validation for shipDetails Object. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/337) - *Status: PENDING REVIEW*
