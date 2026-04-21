@@ -1,11 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Sanitize User Input in CommentSection. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/307) - *Status: COMMENTED - Joseph had feedback*
-- **REJECTED by Reviewer**: Executor tried to enhance error handling in StarsPage but did not fully implement the handling for GitHub API errors — blocked
-- **REJECTED by Reviewer**: Executor tried to enhance error handling in StarsPage but introduced undefined function and incomplete implementations — blocked
-- **REJECTED by Reviewer**: Executor's security enhancement for auth route was technically flawed due to search block issues — blocked
-- **REJECTED by Reviewer**: Executor tried to replace non-existent code block in route.ts with unexplained new functions — blocked
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in generateRepoPitch Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/308) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Trending Hashtags. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/309) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in StarsPage. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/310) - *Status: APPROVED - Joseph liked this!*
