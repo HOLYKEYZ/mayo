@@ -42,3 +42,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in CommentSection. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/343) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor tried to add redundant validation logic in posts/route.ts — blocked
 - **REJECTED by Reviewer**: Executor tried to add redundant validation logic in posts/route.ts — blocked
+- **Repo: git-pulse**: [SEC] Enhance Input Validation in User Settings Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/344) - *Status: PENDING REVIEW*
