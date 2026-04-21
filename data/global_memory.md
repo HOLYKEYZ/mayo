@@ -42,3 +42,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in fetchWithAuth Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/334) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Comment API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/335) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for GitHub ID. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/336) - *Status: PENDING REVIEW*
+- **REJECTED by Reviewer**: Executor tried to add redundant validation logic in posts/route.ts — blocked
