@@ -42,3 +42,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in User Settings Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/332) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Search Bar. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/333) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in fetchWithAuth Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/334) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation in Comment API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/335) - *Status: PENDING REVIEW*
