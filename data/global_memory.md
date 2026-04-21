@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in PinnedRepos Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/313) - *Status: APPROVED - Joseph liked this!*
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in hashApiKey Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/314) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Authentication Configuration. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/315) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in calculatePostScoreDetailed Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/316) - *Status: APPROVED - Joseph liked this!*
