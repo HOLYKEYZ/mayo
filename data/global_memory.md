@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 3 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in Image Proxy Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/323) - *Status: APPROVED - Joseph liked this!*
-<!-- LAST_DISCUSSION_REPLY=1776895107 -->
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in SearchBar. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/324) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in GitHub API Integration. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/325) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_PROACTIVE_ISSUE=1776865678 -->
