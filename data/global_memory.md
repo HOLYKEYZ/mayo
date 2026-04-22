@@ -48,3 +48,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in PinnedRepos Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/351) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor tried to add input validation but lacked implementation details for the 'validate' method — blocked
 - **REJECTED by Reviewer**: Executor tried to enhance input validation in comment creation API route but was blocked.
+- **Repo: git-pulse**: [SEC] Enhance Error Handling in BackButton Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/352) - *Status: PENDING REVIEW*
