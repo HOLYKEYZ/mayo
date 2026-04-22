@@ -47,3 +47,4 @@
 - **Repo: git-pulse**: [SEC] Validate access token scope and handle errors in getUserTechStack. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/350) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in PinnedRepos Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/351) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor tried to add input validation but lacked implementation details for the 'validate' method — blocked
+- **REJECTED by Reviewer**: Executor tried to enhance input validation in comment creation API route but was blocked.
