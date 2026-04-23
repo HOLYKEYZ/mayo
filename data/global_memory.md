@@ -1,11 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in GitHub API Integration. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/325) - *Status: APPROVED - Joseph liked this!*
-<!-- LAST_PROACTIVE_ISSUE=1776865678 -->
-- **REJECTED by Reviewer**: Executor tried to implement input validation but did not fully address the security issue and did not match the search block — blocked
-- **REJECTED by Reviewer**: Executor tried to enhance input validation but edits were blocked due to search block issues — blocked
-<!-- LAST_ISSUE_JUDGE=1776912662 -->
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Authentication. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/326) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_PR_JUDGE=1776922390 -->
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Notifications Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/327) - *Status: APPROVED - Joseph liked this!*
