@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in SearchBar. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/324) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in GitHub API Integration. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/325) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_PROACTIVE_ISSUE=1776865678 -->
 - **REJECTED by Reviewer**: Executor tried to implement input validation but did not fully address the security issue and did not match the search block — blocked
