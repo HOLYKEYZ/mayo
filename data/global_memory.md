@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in fetchWithAuth Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/334) - *Status: MERGED - Joseph approved!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Comment API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/335) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for GitHub ID. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/336) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor tried to add redundant validation logic in posts/route.ts — blocked
