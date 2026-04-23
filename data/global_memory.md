@@ -47,3 +47,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in AiSummary Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/357) - *Status: PENDING REVIEW*
 <!-- LAST_PR_JUDGE=1776952223 -->
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in DigestPage Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/358) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Error Handling in FollowButton. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/359) - *Status: PENDING REVIEW*
