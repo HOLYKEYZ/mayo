@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in GitHub Contributions Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/330) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Notifications Stream Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/331) - *Status: APPROVED - Joseph liked this!*
 - **REJECTED by Reviewer**: Executor tried to add redundant validation logic in posts/route.ts — blocked
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in User Settings Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/332) - *Status: APPROVED - Joseph liked this!*
