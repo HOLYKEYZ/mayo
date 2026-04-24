@@ -46,3 +46,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Notifications Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/363) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in QuoteModal. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/364) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in RightSidebar.tsx. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/365) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation for GitHub Follow/Unfollow API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/366) - *Status: PENDING REVIEW*
