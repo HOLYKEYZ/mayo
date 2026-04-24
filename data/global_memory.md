@@ -44,3 +44,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in QuoteModal. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/364) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in RightSidebar.tsx. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/365) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for GitHub Follow/Unfollow API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/366) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Fix Null Pointer Exception in generateMetadata Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/367) - *Status: PENDING REVIEW*
