@@ -48,3 +48,4 @@
 - **REJECTED by Reviewer**: Executor tried to make trivial changes to comment creation API route in git-pulse repo — blocked
 - **REJECTED by Reviewer**: Executor tried to enhance error handling in repost route but search block was not found and lacked implementation details — blocked
 - **REJECTED by Reviewer**: Executor tried to enhance error handling in repost route but search block was not found and replacement lacked specificity — blocked
+- **Repo: git-pulse**: [SEC] Enhance Input Validation in BottomNav Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/372) - *Status: PENDING REVIEW*
