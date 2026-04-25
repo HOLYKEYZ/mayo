@@ -1,9 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in PinnedRepos Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/351) - *Status: APPROVED - Joseph liked this!*
-- **REJECTED by Reviewer**: Executor tried to add input validation but lacked implementation details for the 'validate' method — blocked
-- **REJECTED by Reviewer**: Executor tried to enhance input validation in comment creation API route but was blocked.
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in BackButton Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/352) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in getServerSideToken Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/353) - *Status: PENDING REVIEW*
 <!-- LAST_DISCUSSION_REPLY=1777107439 -->
