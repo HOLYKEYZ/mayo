@@ -44,3 +44,4 @@
 <!-- LAST_PR_JUDGE=1777146547 -->
 - **REJECTED by Reviewer**: Executor tried to fix SQL injection vulnerability in Prisma database queries but used potentially incorrect syntax — blocked
 - **REJECTED by Reviewer**: Executor tried to fix SQL injection vulnerability in Prisma database queries but used invalid syntax — blocked
+- **Repo: git-pulse**: [SEC] Enhance Input Validation for GitHub Follow/Unfollow API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/388) - *Status: PENDING REVIEW*
