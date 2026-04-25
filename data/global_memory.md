@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in FollowButton. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/359) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Reaction Toggle API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/360) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Comment API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/361) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Sanitization for Changelog in ShipItForm. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/362) - *Status: PENDING REVIEW*
