@@ -45,3 +45,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in generateRepoPitch Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/389) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in getRelativeTime Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/390) - *Status: PENDING REVIEW*
 - **REJECTED by Reviewer**: Executor tried to fix SQL injection vulnerability in Prisma database queries but used invalid syntax — blocked
+- **REJECTED by Reviewer**: Executor tried to replace raw SQL query with Prisma findMany call but lacked specificity and substance — blocked
