@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in Collab Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/348) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in generateRepoPitch Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/349) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Validate access token scope and handle errors in getUserTechStack. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/350) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in PinnedRepos Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/351) - *Status: APPROVED - Joseph liked this!*
