@@ -47,3 +47,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in GitHub Profile Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/402) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in PATCH Request Handler. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/403) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/404) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/405) - *Status: PENDING REVIEW*
