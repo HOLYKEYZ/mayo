@@ -46,3 +46,4 @@
 - **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/393) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Authentication Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/394) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in AlgoVisualizationPage. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/395) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Error Handling in getServerSideToken Function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/396) - *Status: PENDING REVIEW*
