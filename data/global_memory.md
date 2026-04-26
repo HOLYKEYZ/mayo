@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in BottomNav Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/372) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for Reactions. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/373) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in QuoteModal. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/374) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Validation for repoUrl Field in PostPayloadSchema. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/375) - *Status: PENDING REVIEW*
