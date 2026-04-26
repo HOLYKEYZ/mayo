@@ -46,3 +46,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Sanitization for GitHub Events. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/391) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/392) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/393) - *Status: PENDING REVIEW*
+- **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Authentication Routes. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/394) - *Status: PENDING REVIEW*
