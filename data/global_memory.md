@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in QuoteModal. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/374) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Validation for repoUrl Field in PostPayloadSchema. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/375) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for User Comments. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/376) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Authentication Flow. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/377) - *Status: PENDING REVIEW*
