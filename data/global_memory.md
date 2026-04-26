@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation for Post Content. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/368) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in PostContentRenderer. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/369) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in User Status Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/370) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Contribution Cache. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/371) - *Status: PENDING REVIEW*
