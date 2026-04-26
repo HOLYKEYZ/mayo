@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in Comment API Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/361) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Sanitization for Changelog in ShipItForm. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/362) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in Notifications Route. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/363) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in QuoteModal. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/364) - *Status: PENDING REVIEW*
