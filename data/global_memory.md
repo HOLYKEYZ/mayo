@@ -47,3 +47,4 @@
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in PostContentRenderer. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/406) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in API Endpoints. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/407) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/408) - *Status: PENDING REVIEW*
+- **REJECTED by Reviewer**: Executor tried to fix SQL injection vulnerability in Prisma database queries but used potentially incorrect syntax — blocked
