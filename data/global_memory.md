@@ -49,3 +49,4 @@
 - **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/408) - *Status: PENDING REVIEW*
 - **REJECTED by Reviewer**: Executor tried to fix SQL injection vulnerability in Prisma database queries but used potentially incorrect syntax — blocked
 - **REJECTED by Reviewer**: Executor tried to fix SQL injection vulnerability in Prisma database queries but used potentially incorrect syntax and introduced unnecessary changes — blocked
+- **Repo: git-pulse**: [SEC] Validate user input in FollowButton component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/409) - *Status: PENDING REVIEW*
