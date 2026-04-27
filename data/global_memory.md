@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation and Error Handling in Authentication Flow. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/377) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Sanitize username in getGitHubAllRepos function. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/378) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in FeedClient Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/379) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in GitHub Profile Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/380) - *Status: PENDING REVIEW*
