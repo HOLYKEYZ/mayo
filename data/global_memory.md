@@ -53,3 +53,4 @@
 <!-- LAST_ISSUE_JUDGE=1777376862 -->
 - **REJECTED by Reviewer**: Executor tried to fix SQL injection vulnerability in Prisma database queries but used potentially incorrect syntax — blocked
 - **REJECTED by Reviewer**: Executor tried to fix SQL injection vulnerability in Prisma database queries but used potentially incorrect syntax — blocked
+- **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/417) - *Status: PENDING REVIEW*
