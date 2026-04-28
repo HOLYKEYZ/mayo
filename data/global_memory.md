@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in ComposeFeed Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/386) - *Status: PENDING REVIEW*
-<!-- LAST_ISSUE_JUDGE=1777334199 -->
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for PostPayloadSchema. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/387) - *Status: PENDING REVIEW*
 <!-- LAST_PR_JUDGE=1777347591 -->
 - **REJECTED by Reviewer**: Executor tried to fix SQL injection vulnerability in Prisma database queries but used potentially incorrect syntax — blocked
