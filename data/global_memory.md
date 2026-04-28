@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Error Handling in Login Page. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/384) - *Status: PENDING REVIEW*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in GitHub Profile Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/385) - *Status: PENDING REVIEW*
 <!-- LAST_PROACTIVE_ISSUE=1777323979 -->
 - **Repo: git-pulse**: [SEC] Enhance Input Validation in ComposeFeed Component. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/386) - *Status: PENDING REVIEW*
