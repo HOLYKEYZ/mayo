@@ -8,8 +8,11 @@ import hashlib
 import time
 from flask import Flask, request, jsonify
 from github import Github, GithubIntegration
+from github.Auth import AppAuth, Token
 
 app = Flask(__name__)
+
+EXCLUDED_REPOS = ['Square-farms', 'Jo-ayanda-real-estate', 'Backend-images-app', 'ecom-stor']
 
 def co_author_msg(msg):
     co_author_name = os.environ.get('CO_AUTHOR_NAME', '')
@@ -28,6 +31,9 @@ GROK_FALLBACK_API_KEY = os.environ.get('GROK_FALLBACK_API_KEY')
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
 FIREWORKS_API_KEY = os.environ.get('FIREWORKS_API_KEY')
 FIREWORKS2_API_KEY = os.environ.get('FIREWORKS2_API_KEY')
+NVIDIA_EXEC_API_KEY = os.environ.get('NVIDIA_EXEC_API_KEY')
+NVIDIA_SCAN_API_KEY = os.environ.get('NVIDIA_SCAN_API_KEY')
+NVIDIA_REVIEW_API_KEY = os.environ.get('NVIDIA_REVIEW_API_KEY')
 GEMINI_NEWCRONS_API_KEY = os.environ.get('GEMINI_NEWCRONS_API_KEY')
 GROQ_NEWCRONS_API_KEY = os.environ.get('GROQ_NEWCRONS_API_KEY')
 APP_ID = os.environ.get('APP_ID')
@@ -66,12 +72,12 @@ def verify_signature(req):
 
 # Helper: Get GitHub Client for Installation
 def get_installation_token(installation_id):
-    integration = GithubIntegration(APP_ID, PRIVATE_KEY)
+    integration = GithubIntegration(auth=AppAuth(APP_ID, PRIVATE_KEY))
     return integration.get_access_token(installation_id).token
 
 def get_github_client(installation_id):
     token = get_installation_token(installation_id)
-    return Github(token)
+    return Github(auth=Token(token))
 
 # Helper: Get Bot Login
 BOT_LOGIN_CACHE = None
@@ -80,7 +86,7 @@ def get_bot_login():
     if BOT_LOGIN_CACHE:
         return BOT_LOGIN_CACHE
     try:
-        integration = GithubIntegration(APP_ID, PRIVATE_KEY)
+        integration = GithubIntegration(auth=AppAuth(APP_ID, PRIVATE_KEY))
         BOT_LOGIN_CACHE = f"{integration.get_app().slug}[bot]"
         return BOT_LOGIN_CACHE
     except Exception as e:
@@ -572,6 +578,47 @@ def _try_fireworks_api(prompt, key, temperature, model="accounts/fireworks/model
         print(f"Fireworks API Error: {e}")
         return None, None
 
+def _try_nvidia_nim_api(prompt, key, temperature, model="deepseek-ai/deepseek-v4-pro", max_tokens=16384, thinking=False):
+    if not key: return None, None
+    headers = {
+        'Authorization': f'Bearer {key}',
+        'Accept': 'application/json'
+    }
+    nim_payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "top_p": 1.00,
+        "stream": False
+    }
+    if thinking:
+        nim_payload["chat_template_kwargs"] = {"thinking": True}
+    print(f"DEBUG: Trying NVIDIA NIM with model={model}, key_prefix={key[:10]}...")
+    try:
+        r = requests.post(
+            "https://integrate.api.nvidia.com/v1/chat/completions",
+            json=nim_payload,
+            headers=headers,
+            timeout=180
+        )
+        r.raise_for_status()
+        result = r.json()
+        content = result['choices'][0]['message']['content']
+        display = f"NVIDIA NIM ({model})"
+        return content, display
+    except requests.exceptions.HTTPError as e:
+        try:
+            err_json = r.json()
+            err_body = err_json.get('error', {}).get('message', r.text[:500])
+        except:
+            err_body = r.text[:500] if r.text else "No response body"
+        print(f"NVIDIA NIM HTTP {r.status_code}: {err_body}")
+        return None, None
+    except Exception as e:
+        print(f"NVIDIA NIM API Error: {e}")
+        return None, None
+
 def _try_gemini_api(prompt, key, temperature, model="gemini-2.5-flash"):
     if not key: return None, None
     headers = {'Content-Type': 'application/json'}
@@ -593,11 +640,15 @@ def _try_gemini_api(prompt, key, temperature, model="gemini-2.5-flash"):
 
 # === TRIPLE-AI FUNCTIONS ===
 def query_gemini_scanner(prompt, temperature=0.2):
-    """Scanner AI (Gemini A) — reads codebase, outputs text-only analysis. Uses Fireworks with GEMINI_FALLBACK_API_KEY."""
+    """Scanner AI — reads codebase, outputs text-only analysis. Uses NVIDIA NIM Gemma-4-31B with NVIDIA_SCAN_API_KEY."""
+    if NVIDIA_SCAN_API_KEY:
+        content, model_name = _try_nvidia_nim_api(prompt, NVIDIA_SCAN_API_KEY, temperature, model="google/gemma-4-31b-it", max_tokens=8192)
+        if content: return content, model_name
+
     if GEMINI_FALLBACK_API_KEY:
         content, model_name = _try_fireworks_api(prompt, GEMINI_FALLBACK_API_KEY, temperature)
         if content: return content, model_name
-    
+
     return None, None
 
 def query_gemini_newcrons(prompt, temperature=0.2):
@@ -679,9 +730,13 @@ def query_gemini_executor(prompt, temperature=0.1):
     return None, None
 
 def query_fireworks_executor(prompt, temperature=0.1):
-    """Fireworks AI Executor Fallback."""
+    """Executor AI — produces surgical code edits. Uses NVIDIA NIM DeepSeek V4 Pro with NVIDIA_EXEC_API_KEY, then Fireworks fallback."""
+    if NVIDIA_EXEC_API_KEY:
+        content, model_name = _try_nvidia_nim_api(prompt, NVIDIA_EXEC_API_KEY, temperature, model="deepseek-ai/deepseek-v4-pro", max_tokens=16384, thinking=True)
+        if content: return content, model_name
+
     if not FIREWORKS_API_KEY:
-        print("DEBUG: FIREWORKS_API_KEY not set, skipping Fireworks executor.")
+        print("DEBUG: FIREWORKS_API_KEY not set, skipping Fireworks executor fallback.")
         return None, None
     
     headers = {'Content-Type': 'application/json'}
@@ -707,11 +762,15 @@ def query_fireworks_executor(prompt, temperature=0.1):
         return None, None
 
 def query_gemini_reviewer(prompt, temperature=0.1):
-    """Reviewer AI (Gemini B) — validates edits, returns verdict JSON. Uses Fireworks with FIREWORKS2_API_KEY."""
+    """Reviewer AI — validates edits, returns verdict JSON. Uses NVIDIA NIM Kimi K2.6 with NVIDIA_REVIEW_API_KEY, then Fireworks fallback."""
+    if NVIDIA_REVIEW_API_KEY:
+        content, model_name = _try_nvidia_nim_api(prompt, NVIDIA_REVIEW_API_KEY, temperature, model="moonshotai/kimi-k2.6", max_tokens=16384, thinking=True)
+        if content: return content, model_name
+
     if FIREWORKS2_API_KEY:
         content, model_name = _try_fireworks_api(prompt, FIREWORKS2_API_KEY, temperature)
         if content: return content, model_name
-    
+
     return None, None
 
 def audit_pending_reviews(gh):
@@ -837,13 +896,13 @@ def home():
 def get_status():
     """Simple dashboard endpoint to check Mayo's health and memory."""
     try:
-        integration = GithubIntegration(APP_ID, PRIVATE_KEY)
+        integration = GithubIntegration(auth=AppAuth(APP_ID, PRIVATE_KEY))
         installations = integration.get_installations()
         if not installations or installations.totalCount == 0:
             return jsonify({'error': 'No installations found'})
-            
+
         token = integration.get_access_token(installations[0].id).token
-        gh = Github(token)
+        gh = Github(auth=Token(token))
         bot_repo = gh.get_repo(os.environ.get('BOT_REPO_NAME', 'HOLYKEYZ/mayo'))
         
         # Get memory length
@@ -862,7 +921,7 @@ def get_status():
             'memory_lines': mem_lines,
             'recent_cycles_logged': cycles,
             'uptime_seconds': int(time.time()),
-            'excluded_repos': ['Square-farms', 'Jo-ayanda-real-estate', 'Backend-images-app', 'ecom-stor']
+            'excluded_repos': EXCLUDED_REPOS
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -878,7 +937,10 @@ def health():
             'APP_ID': bool(APP_ID),
             'PRIVATE_KEY': bool(PRIVATE_KEY and 'BEGIN RSA PRIVATE KEY' in PRIVATE_KEY),
             'WEBHOOK_SECRET': bool(WEBHOOK_SECRET),
-            'GEMINI_KEY': bool(GEMINI_API_KEY)
+            'GEMINI_KEY': bool(GEMINI_API_KEY),
+            'NVIDIA_EXEC_KEY': bool(NVIDIA_EXEC_API_KEY),
+            'NVIDIA_SCAN_KEY': bool(NVIDIA_SCAN_API_KEY),
+            'NVIDIA_REVIEW_KEY': bool(NVIDIA_REVIEW_API_KEY)
         },
         'bot_login': BOT_LOGIN_CACHE or 'Not cached yet'
     }
@@ -888,7 +950,7 @@ def health():
 def permissions_check():
     """Returns the current permissions and events Mayo is subscribed to."""
     try:
-        integration = GithubIntegration(APP_ID, PRIVATE_KEY)
+        integration = GithubIntegration(auth=AppAuth(APP_ID, PRIVATE_KEY))
         installations = integration.get_installations()
         results = []
         for inst in installations:

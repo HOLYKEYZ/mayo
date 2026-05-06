@@ -1,8 +1,10 @@
 import os
 import json
 import time
+import random
 import requests
 from github import Github, GithubIntegration
+from github.Auth import AppAuth, Token
 
 # Add the api directory to sys.path so we can import the core functions
 import sys
@@ -14,7 +16,7 @@ from index import (
     audit_pending_reviews, get_repo_structure, read_file_content, query_gemini_scanner,
     query_groq, extract_json_from_response, apply_surgical_edits, query_gemini_reviewer,
     commit_changes_via_api, update_ai_communication_log, query_gemini_newcrons,
-    query_fireworks_executor, query_gemini_executor
+    query_fireworks_executor, query_gemini_executor, EXCLUDED_REPOS
 )
 
 def co_author_msg(msg):
@@ -29,16 +31,16 @@ def run_cron():
     
     try:
         # Initialize GitHub App
-        integration = GithubIntegration(APP_ID, PRIVATE_KEY)
-        installations = integration.get_installations()
-        
-        if not installations or installations.totalCount == 0:
-            print("DEBUG: No installations found")
-            return
-        
-        installation = installations[0]
-        token = integration.get_access_token(installation.id).token
-        gh = Github(token)
+    integration = GithubIntegration(auth=AppAuth(APP_ID, PRIVATE_KEY))
+    installations = integration.get_installations()
+
+    if not installations or installations.totalCount == 0:
+        print("DEBUG: No installations found")
+        return
+
+    installation = installations[0]
+    token = integration.get_access_token(installation.id).token
+    gh = Github(auth=Token(token))
         
         # === PHASE 0: REVIEWER AUDITS PENDING REVIEWS ===
         print("DEBUG: Phase 0 — Auditing pending reviews")
@@ -539,17 +541,17 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
                 print(f"DEBUG: REST fallback exception: {e2}")
                 global_memory = "No global memory found. Start with fresh excellence."
 
-        # === REPO SELECTION: ONLY git-pulse ===
-        candidates = [r for r in repos_data.get('repositories', []) 
-                      if r.get('name') == 'git-pulse']
-        
-        if not candidates:
-            print("No eligible repos found (git-pulse not found)")
-            return
-        
-        chosen = candidates[0]
-        target_repo = gh.get_repo(chosen['full_name'])
-        print(f"DEBUG: Targeting repo {target_repo.full_name} (git-pulse only mode)")
+# === REPO SELECTION: ALL REPOS EXCEPT BLACKLISTED ===
+candidates = [r for r in repos_data.get('repositories', [])
+                   if not r.get('fork') and r.get('name') not in EXCLUDED_REPOS]
+
+    if not candidates:
+        print("DEBUG: No eligible repos found (all excluded or no repos)")
+        return
+
+    chosen = random.choice(candidates)
+    target_repo = gh.get_repo(chosen['full_name'])
+    print(f"DEBUG: Targeting repo {target_repo.full_name} (random selection, {len(candidates)} eligible)")
 
         # Gather codebase context
         structure = get_repo_structure(target_repo, max_depth=3)
