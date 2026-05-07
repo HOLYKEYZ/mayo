@@ -598,7 +598,7 @@ def _try_nvidia_nim_api(prompt, key, temperature, model="deepseek-ai/deepseek-v4
             "https://integrate.api.nvidia.com/v1/chat/completions",
             json=nim_payload,
             headers=headers,
-            timeout=180
+            timeout=300
         )
         r.raise_for_status()
         result = r.json()
@@ -667,6 +667,12 @@ def query_groq(prompt, api_key=None, temperature=0.1):
     # On retry, rotate to GROK_FALLBACK_API_KEY if available
     retry_key = GROK_FALLBACK_API_KEY if GROK_FALLBACK_API_KEY and GROK_FALLBACK_API_KEY != api_key else api_key
     keys = [api_key, retry_key]
+    
+    # CRITICAL: Trim prompt to fit Groq's 6000 TPM limit (leave room for response)
+    max_prompt_tokens = 4500
+    if len(prompt) > max_prompt_tokens * 4:  # rough char to token estimate
+        print(f"DEBUG: Trimming prompt from {len(prompt)} to {max_prompt_tokens * 4} chars for Groq")
+        prompt = prompt[:max_prompt_tokens * 4] + "\n\n[TRUNCATED FOR TOKEN LIMIT]"
     
     payload = {
         "model": "llama-3.1-8b-instant",

@@ -597,18 +597,19 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
         random.shuffle(code_files)
         random.shuffle(doc_files)
         
-        target_paths = code_files[:2] + doc_files[:1]
+        # Limit to 1 code file + 1 doc to reduce prompt size (prevent Groq/Gemini failures)
+        target_paths = code_files[:1] + doc_files[:1]
         if not target_paths:
-            target_paths = source_files[:3]
-        random.shuffle(target_paths)  # Mix them so Scanner doesn't always see code first
+            target_paths = source_files[:2]
+        random.shuffle(target_paths)
         
         file_contents = ""
         for tp in target_paths:
             content = read_file_content(target_repo, tp)
             if content:
-                # Truncate each file to 7000 chars for the Executor
-                if len(content) > 7000:
-                    content = content[:7000] + "\n...[TRUNCATED FOR LENGTH]..."
+                # Truncate each file to 5000 chars (smaller for Groq/Gemini limits)
+                if len(content) > 5000:
+                    content = content[:5000] + "\n...[TRUNCATED FOR LENGTH]..."
                 
                 # CRITICAL: Remove image file references to prevent NVIDIA NIM from trying to load images
                 import re
