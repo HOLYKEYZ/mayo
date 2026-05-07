@@ -525,37 +525,32 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
             print(f"DEBUG: Global memory fetched (len: {len(global_memory)})")
         except Exception as e:
             print(f"DEBUG: PyGithub failed to fetch global memory: {e}")
-            # Fallback: try direct REST API
-            try:
-                mem_url = f"https://api.github.com/repos/{bot_repo_name}/contents/data/global_memory.md"
-                mem_resp = requests.get(mem_url, headers=headers)
-                print(f"DEBUG: REST API fallback status: {mem_resp.status_code}")
-                if mem_resp.status_code == 200:
-                    import base64
-                    global_memory = base64.b64decode(mem_resp.json()['content']).decode('utf-8')
-                    print(f"DEBUG: Global memory fetched via REST (len: {len(global_memory)})")
-                else:
-                    print(f"DEBUG: REST fallback also failed: {mem_resp.text[:200]}")
-                    global_memory = "No global memory found. Start with fresh excellence."
-            except Exception as e2:
-                print(f"DEBUG: REST fallback exception: {e2}")
+            mem_url = f"https://api.github.com/repos/{bot_repo_name}/contents/data/global_memory.md"
+            mem_resp = requests.get(mem_url, headers=headers)
+            print(f"DEBUG: REST API fallback status: {mem_resp.status_code}")
+            if mem_resp.status_code == 200:
+                import base64
+                global_memory = base64.b64decode(mem_resp.json()['content']).decode('utf-8')
+                print(f"DEBUG: Global memory fetched via REST (len: {len(global_memory)})")
+            else:
+                print(f"DEBUG: REST fallback also failed: {mem_resp.text[:200]}")
                 global_memory = "No global memory found. Start with fresh excellence."
 
 # === REPO SELECTION: ALL REPOS EXCEPT BLACKLISTED ===
-candidates = [r for r in repos_data.get('repositories', [])
-                   if not r.get('fork') and r.get('name') not in EXCLUDED_REPOS]
+        candidates = [r for r in repos_data.get('repositories', [])
+                       if not r.get('fork') and r.get('name') not in EXCLUDED_REPOS]
 
-    if not candidates:
-        print("DEBUG: No eligible repos found (all excluded or no repos)")
-        return
+        if not candidates:
+            print("DEBUG: No eligible repos found (all excluded or no repos)")
+            return
 
-    chosen = random.choice(candidates)
-    target_repo = gh.get_repo(chosen['full_name'])
-    print(f"DEBUG: Targeting repo {target_repo.full_name} (random selection, {len(candidates)} eligible)")
+        chosen = random.choice(candidates)
+        target_repo = gh.get_repo(chosen['full_name'])
+        print(f"DEBUG: Targeting repo {target_repo.full_name} (random selection, {len(candidates)} eligible)")
 
         # Gather codebase context
         structure = get_repo_structure(target_repo, max_depth=3)
-        readme_content = read_file_content(target_repo, "README.md") or "(No README found)"
+        readme_content = read_file_content(target_repo, "README.md") or "(No README)"
         
         # === DEEP RECURSIVE FILE SCANNING (v3) ===
         # ONE API call gets entire repo tree — no more shallow root + hardcoded dirs
