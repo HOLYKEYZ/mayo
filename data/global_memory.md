@@ -49,3 +49,4 @@
 - **Repo: Kelegam-Tech**: [LOGIC] Fix broken image path and remove unused import in EduConnect page. (Ref: https://github.com/HOLYKEYZ/Kelegam-Tech/pull/16) - *Status: COMMENTED - Joseph had feedback*
 - **Repo: VULNRIX**: [SEC] Add GitHub URL validation in repo scanner handleScan. (Ref: https://github.com/HOLYKEYZ/VULNRIX/pull/27) - *Status: PENDING REVIEW*
 - **Repo: nextphase-realestate**: [LOGIC] Fix price filtering thresholds and contact price handling. (Ref: https://github.com/HOLYKEYZ/nextphase-realestate/pull/3) - *Status: PENDING REVIEW*
+- **Repo: Joseph-Portfolio**: [PERF] Throttle scroll event listener with requestAnimationFrame. (Ref: https://github.com/HOLYKEYZ/Joseph-Portfolio/pull/12) - *Status: PENDING REVIEW*
