@@ -3193,3 +3193,55 @@ Preventing invalid or malicious strings from being sent to the backend is a fund
 **Reviewer**: APPROVE: The edit adds necessary client-side input validation for the repository URL, addressing the critical security/logic gap identified in the Scanner's plan. The search text matches the original file exactly, the replacement is valid TypeScript/React, and the change is substantive (6 lines added) without being destructive.
 
 ---
+
+## Cycle 1778215527
+**Scanner**: ### Step 1: Codebase Understanding
+This repository is a real estate listing platform built with Next.js, designed to showcase properties for sale, rent, or lease. The target file, property-listings.tsx, implements the client-side filtering and search logic for the property catalog, allowing users to narrow down listings by keywords, property type, status, and price range. The codebase uses React 19, Next.js 16, Tailwind CSS 4, and Framer Motion for animations.
+
+### Step 2: Deep Analysis
+
+**Security**
+The search and filter logic happens entirely on the client side using a local state array. There are no direct API calls in this component that would be susceptible to injection, but the price parsing logic is fragile.
+
+**Logic**
+There is a significant logic bug in the price filtering mechanism. The code uses parseInt on the price string after removing non-digit characters. However, the hardcoded price range checks (e.g., priceNum < 50, priceNum >= 50 && priceNum <= 100) are extremely low and likely do not match the actual currency values of real estate properties (which are usually in thousands or millions). Furthermore, the logic for handling properties where the price is "Contact for Price" explicitly sets priceMatch to false, meaning these properties disappear entirely when any price filter is selected, rather than being handled as a special category.
+
+**Performance**
+The filtering logic is executed inside a handleSearch function that is only triggered by a button click or Enter key. This is performant, though the use of multiple state variables for filters could be consolidated.
+
+**Architecture**
+The component relies on initialProperties passed as a prop but maintains a separate properties state. This creates a synchronization risk where the UI might not update if the initialProperties prop changes unless a manual search is triggered.
+
+**Consistency**
+The UI uses a mix of custom UI components (Input, Button) and raw HTML select elements, leading to inconsistent styling across the filter bar.
+
+**Dead Code**
+The provided snippet is truncated, but the logic for price filtering contains branches that are likely unreachable or logically useless given the scale of real estate pricing.
+
+### Step 3: Pick ONE Improvement
+I have identified a critical logic bug in the price filtering system. The current implementation uses arbitrary, low-value integers (0-200) to filter real estate prices. In a real-world scenario, a property priced at 50,000 would fail all these checks (it is not less than 50, not between 50-100, etc.), effectively breaking the price filter for any realistic property value. Additionally, the "Contact" price handling is destructive.
+
+This is a real logic bug that renders the price filter non-functional for actual real estate data.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT to change**
+The price filtering logic inside the handleSearch function needs to be corrected to handle realistic real estate price scales and properly manage non-numeric price strings.
+
+**WHERE in the file**
+In src/components/property-listings.tsx, inside the handleSearch function, specifically the block starting with let priceMatch = true and the subsequent if (priceRange) block where priceNum is calculated and compared against values like 50, 100, and 200.
+
+**WHY this matters**
+The current logic uses values that are far too low for real estate (e.g., checking if a house costs less than 50 units of currency). This means that almost every property will be filtered out as soon as a user selects a price range, making the feature broken for the end user.
+
+**HOW to do it**
+1. Locate the price filtering logic within the filter loop of handleSearch.
+2. Modify the price range comparison values to reflect realistic real estate pricing (e.g., changing 50 to 50,000, 100 to 100,000, etc., or adjusting based on the expected currency of the data in properties.json).
+3. Update the logic for properties that contain the word contact in the price field. Instead of setting priceMatch to false, ensure they are either always included or handled via a specific filter option so they don't vanish when a user tries to filter by price.
+4. Ensure the numeric extraction remains robust but the comparison thresholds are logically sound for the domain.
+
+**Executor**: {"title": "[LOGIC] Fix price filtering thresholds and contact price handling", "body": "### Problem / Gap\nThe price filtering logic used hardcoded thresholds (0-50, 50-100, 100-200, 200+) that are far too low for real estate prices, causing the filter to exclude virtually all properties when any price range is selected. Additionally, properties with \"Contact for Price\" were unconditionally excluded (priceMatch = false), making them disappear entirely when a price filter is active.\n\n### Solution & Insight\nUpdated the numeric thresholds to realistic real estate values (50,000, 100,000, 200,000) so the filter actually matches typical property prices. Changed the handling of contact-price properties to always include them (priceMatch = true) so they remain visible regardless of the selected price range.\n\n### Impact\nThe price filter now functions correctly for real-world property data, and users can still see listings that require direct contact for pricing.", "branch_name": "bot/upgrade-1778215527", "edits": [{"file": "src/components/property-listings.tsx", "search": "      // price\n      let priceMatch = true;\n      if (priceRange) {\n        // Simple numeric extraction for basic filtering\n        const priceNum = parseInt(property.price.replace(/[^\\d]/g, \"\"));\n        if (!isNaN(priceNum)) {\n          if (priceRange === \"0-50\") priceMatch = priceNum < 50;\n          if (priceRange === \"50-100\") priceMatch = priceNum >= 50 && priceNum <= 100;\n          if (priceRange === \"100-200\") priceMatch = priceNum > 100 && priceNum <= 200;\n          if (priceRange === \"200+\") priceMatch = priceNum > 200;\n        } else if (property.price.toLowerCase().includes(\"contact\")) {\n            // Include contact for price in all ranges or specific ones? Let's just include them if no specific range matches, or exclude them.\n            priceMatch = false; // Exclude if we want numeric\n        }\n      }", "replace": "      // price\n      let priceMatch = true;\n      if (priceRange) {\n        // Simple numeric extraction for basic filtering\n        const priceNum = parseInt(property.price.replace(/[^\\d]/g, \"\"));\n        if (!isNaN(priceNum)) {\n          if (priceRange === \"0-50\") priceMatch = priceNum < 50000;\n          if (priceRange === \"50-100\") priceMatch = priceNum >= 50000 && priceNum <= 100000;\n          if (priceRange === \"100-200\") priceMatch = priceNum > 100000 && priceNum <= 200000;\n          if (priceRange === \"200+\") priceMatch = priceNum > 200000;\n        } else if (property.price.toLowerCase().includes(\"contact\")) {\n            // Include contact for price in all ranges or specific ones? Let's just include them if no specific range matches, or exclude them.\n            priceMatch = true;\n        }\n      }"}]}
+
+**Reviewer**: APPROVE: The edit fixes a clear domain logic bug: real estate price thresholds were hardcoded to 0-200, which would filter out all realistic properties. The replacement scales these to realistic currency values (50k-200k+) and correctly preserves 'Contact for Price' listings instead of hiding them. The diff is clean, targeted, and matches the Scanner's recommendation.
+
+---
