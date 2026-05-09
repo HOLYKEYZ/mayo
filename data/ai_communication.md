@@ -3125,59 +3125,7 @@ Preventing invalid or malicious strings from being sent to the backend is a fund
 
 ---
 
-## Cycle 1778215527
-**Scanner**: ### Step 1: Codebase Understanding
-This repository is a real estate listing platform built with Next.js, designed to showcase properties for sale, rent, or lease. The target file, property-listings.tsx, implements the client-side filtering and search logic for the property catalog, allowing users to narrow down listings by keywords, property type, status, and price range. The codebase uses React 19, Next.js 16, Tailwind CSS 4, and Framer Motion for animations.
-
-### Step 2: Deep Analysis
-
-**Security**
-The search and filter logic happens entirely on the client side using a local state array. There are no direct API calls in this component that would be susceptible to injection, but the price parsing logic is fragile.
-
-**Logic**
-There is a significant logic bug in the price filtering mechanism. The code uses parseInt on the price string after removing non-digit characters. However, the hardcoded price range checks (e.g., priceNum < 50, priceNum >= 50 && priceNum <= 100) are extremely low and likely do not match the actual currency values of real estate properties (which are usually in thousands or millions). Furthermore, the logic for handling properties where the price is "Contact for Price" explicitly sets priceMatch to false, meaning these properties disappear entirely when any price filter is selected, rather than being handled as a special category.
-
-**Performance**
-The filtering logic is executed inside a handleSearch function that is only triggered by a button click or Enter key. This is performant, though the use of multiple state variables for filters could be consolidated.
-
-**Architecture**
-The component relies on initialProperties passed as a prop but maintains a separate properties state. This creates a synchronization risk where the UI might not update if the initialProperties prop changes unless a manual search is triggered.
-
-**Consistency**
-The UI uses a mix of custom UI components (Input, Button) and raw HTML select elements, leading to inconsistent styling across the filter bar.
-
-**Dead Code**
-The provided snippet is truncated, but the logic for price filtering contains branches that are likely unreachable or logically useless given the scale of real estate pricing.
-
-### Step 3: Pick ONE Improvement
-I have identified a critical logic bug in the price filtering system. The current implementation uses arbitrary, low-value integers (0-200) to filter real estate prices. In a real-world scenario, a property priced at 50,000 would fail all these checks (it is not less than 50, not between 50-100, etc.), effectively breaking the price filter for any realistic property value. Additionally, the "Contact" price handling is destructive.
-
-This is a real logic bug that renders the price filter non-functional for actual real estate data.
-
-### Step 4: Write the Executor's Plan
-
-**WHAT to change**
-The price filtering logic inside the handleSearch function needs to be corrected to handle realistic real estate price scales and properly manage non-numeric price strings.
-
-**WHERE in the file**
-In src/components/property-listings.tsx, inside the handleSearch function, specifically the block starting with let priceMatch = true and the subsequent if (priceRange) block where priceNum is calculated and compared against values like 50, 100, and 200.
-
-**WHY this matters**
-The current logic uses values that are far too low for real estate (e.g., checking if a house costs less than 50 units of currency). This means that almost every property will be filtered out as soon as a user selects a price range, making the feature broken for the end user.
-
-**HOW to do it**
-1. Locate the price filtering logic within the filter loop of handleSearch.
-2. Modify the price range comparison values to reflect realistic real estate pricing (e.g., changing 50 to 50,000, 100 to 100,000, etc., or adjusting based on the expected currency of the data in properties.json).
-3. Update the logic for properties that contain the word contact in the price field. Instead of setting priceMatch to false, ensure they are either always included or handled via a specific filter option so they don't vanish when a user tries to filter by price.
-4. Ensure the numeric extraction remains robust but the comparison thresholds are logically sound for the domain.
-
-**Executor**: {"title": "[LOGIC] Fix price filtering thresholds and contact price handling", "body": "### Problem / Gap\nThe price filtering logic used hardcoded thresholds (0-50, 50-100, 100-200, 200+) that are far too low for real estate prices, causing the filter to exclude virtually all properties when any price range is selected. Additionally, properties with \"Contact for Price\" were unconditionally excluded (priceMatch = false), making them disappear entirely when a price filter is active.\n\n### Solution & Insight\nUpdated the numeric thresholds to realistic real estate values (50,000, 100,000, 200,000) so the filter actually matches typical property prices. Changed the handling of contact-price properties to always include them (priceMatch = true) so they remain visible regardless of the selected price range.\n\n### Impact\nThe price filter now functions correctly for real-world property data, and users can still see listings that require direct contact for pricing.", "branch_name": "bot/upgrade-1778215527", "edits": [{"file": "src/components/property-listings.tsx", "search": "      // price\n      let priceMatch = true;\n      if (priceRange) {\n        // Simple numeric extraction for basic filtering\n        const priceNum = parseInt(property.price.replace(/[^\\d]/g, \"\"));\n        if (!isNaN(priceNum)) {\n          if (priceRange === \"0-50\") priceMatch = priceNum < 50;\n          if (priceRange === \"50-100\") priceMatch = priceNum >= 50 && priceNum <= 100;\n          if (priceRange === \"100-200\") priceMatch = priceNum > 100 && priceNum <= 200;\n          if (priceRange === \"200+\") priceMatch = priceNum > 200;\n        } else if (property.price.toLowerCase().includes(\"contact\")) {\n            // Include contact for price in all ranges or specific ones? Let's just include them if no specific range matches, or exclude them.\n            priceMatch = false; // Exclude if we want numeric\n        }\n      }", "replace": "      // price\n      let priceMatch = true;\n      if (priceRange) {\n        // Simple numeric extraction for basic filtering\n        const priceNum = parseInt(property.price.replace(/[^\\d]/g, \"\"));\n        if (!isNaN(priceNum)) {\n          if (priceRange === \"0-50\") priceMatch = priceNum < 50000;\n          if (priceRange === \"50-100\") priceMatch = priceNum >= 50000 && priceNum <= 100000;\n          if (priceRange === \"100-200\") priceMatch = priceNum > 100000 && priceNum <= 200000;\n          if (priceRange === \"200+\") priceMatch = priceNum > 200000;\n        } else if (property.price.toLowerCase().includes(\"contact\")) {\n            // Include contact for price in all ranges or specific ones? Let's just include them if no specific range matches, or exclude them.\n            priceMatch = true;\n        }\n      }"}]}
-
-**Reviewer**: APPROVE: The edit fixes a clear domain logic bug: real estate price thresholds were hardcoded to 0-200, which would filter out all realistic properties. The replacement scales these to realistic currency values (50k-200k+) and correctly preserves 'Contact for Price' listings instead of hiding them. The diff is clean, targeted, and matches the Scanner's recommendation.
-
----
-
-## Cycle 1778241734
+1778241734
 **Scanner**: ### Step 1: Codebase Understanding
 This repository is a personal portfolio website built using Next.js, designed to showcase projects and professional information. The target file, script.js, handles client-side interactivity such as mobile navigation toggling and header scroll effects, while package.json defines the project dependencies and build scripts. The codebase follows a modern React/Next.js framework convention with Tailwind CSS for styling.
 
@@ -3374,5 +3322,64 @@ The current implementation performs a "Query in a Loop" (N+1 problem). If there 
 **Executor**: {"title": "[PERF] Optimize governance risk report generation with GROUP BY queries", "body": "### Problem / Gap\nThe `generate_risk_report` method in `GovernanceEngine` suffers from an N+1 query pattern. It loops over every `RiskLevel`, verdict string, and `ModuleType` enum, executing a separate `COUNT` query for each. This results in over 15 database round-trips per report, causing linear latency growth and potential database exhaustion under load.\n\n### Solution & Insight\nReplaced the per-enum loops with single `GROUP BY` queries using SQLAlchemy's `func.count` and `func.avg`. The risk distribution, verdict distribution, and module breakdown are now computed in three queries total, regardless of the number of enum members. The output dictionary structures remain identical to preserve the frontend API contract.\n\n### Impact\n- Reduces database queries from O(N) to O(1) per metric.\n- Significantly lowers report generation latency and database load.\n- No change to the API response shape.\n\nNote: The `generate_incident_report` method was truncated in the provided file content, so only the risk report was optimized. The same pattern should be applied to the incident report when the full file is available.", "branch_name": "bot/upgrade-1778302671", "edits": [{"file": "backend/app/services/governance.py", "search": "        # Risk level distribution\n        risk_distribution = {}\n        for level in RiskLevel:\n            count = query.filter(RiskScore.risk_level == level).count()\n            risk_distribution[level.value] = count\n\n        # Verdict distribution\n        verdict_distribution = {}\n        for verdict in [\"blocked\", \"allowed\", \"flagged\", \"sanitized\"]:\n            count = query.filter(RiskScore.verdict == verdict).count()\n            verdict_distribution[verdict] = count\n\n        # Module breakdown\n        module_breakdown = {}\n        for module in ModuleType:\n            module_query = query.filter(RiskScore.module_type == module)\n            module_count = module_query.count()\n            if module_count > 0:\n                module_avg = (\n                    module_query.with_entities(func.avg(RiskScore.risk_score)).scalar()\n                    or 0.0\n                )\n                module_breakdown[module.value] = {\n                    \"count\": module_count,\n                    \"avg_risk_score\": round(module_avg, 2),\n                }", "replace": "        # Risk level distribution\n        risk_distribution = {level.value: 0 for level in RiskLevel}\n        risk_level_counts = query.with_entities(\n            RiskScore.risk_level, func.count(RiskScore.id)\n        ).group_by(RiskScore.risk_level).all()\n        for level, count in risk_level_counts:\n            risk_distribution[level.value] = count\n\n        # Verdict distribution\n        verdict_distribution = {\n            \"blocked\": 0,\n            \"allowed\": 0,\n            \"flagged\": 0,\n            \"sanitized\": 0,\n        }\n        verdict_counts = query.with_entities(\n            RiskScore.verdict, func.count(RiskScore.id)\n        ).group_by(RiskScore.verdict).all()\n        for verdict, count in verdict_counts:\n            if verdict in verdict_distribution:\n                verdict_distribution[verdict] = count\n\n        # Module breakdown\n        module_breakdown = {}\n        module_stats = query.with_entities(\n            RiskScore.module_type,\n            func.count(RiskScore.id),\n            func.avg(RiskScore.risk_score),\n        ).group_by(RiskScore.module_type).all()\n        for module_type, count, avg_score in module_stats:\n            if count > 0:\n                module_breakdown[module_type.value] = {\n                    \"count\": count,\n                    \"avg_risk_score\": round(avg_score or 0.0, 2),\n                }"}]}
 
 **Reviewer**: APPROVE: The edits correctly address the N+1 query performance issue in generate_risk_report by replacing enum-looping count queries with SQLAlchemy group_by/aggregate queries. The search text matches the original file exactly, the replacement preserves the output dictionary structure and keys (including initializing missing keys to 0), and the logic is functionally equivalent while being significantly more efficient. The change is substantive, aligned with the Scanner's plan, and safe for the repo.
+
+---
+
+## Cycle 1778335870
+**Scanner**: ### Step 1: Codebase Understanding
+IntellectSafe is a production-grade AI safety and security platform designed to protect users and organizations from AI-driven threats like prompt injections, hallucinations, and deepfakes using a multi-layered defense architecture.
+
+The target file, backend/app/api/routes/scan.py, serves as the primary API gateway for the safety scanning services. It defines the endpoints that receive prompts, LLM outputs, or media content and routes them through the appropriate detection modules (Prompt Injection, Output Safety, and Deepfake Detection) to return a risk assessment.
+
+The codebase utilizes FastAPI for the REST API, Pydantic for request/response validation, SQLAlchemy for database persistence, and a custom modular architecture where safety logic is decoupled into specialized modules and services.
+
+### Step 2: Deep Analysis
+
+**Security**
+The scan_prompt endpoint accepts a prompt with a maximum length of 100,000 characters. While Pydantic enforces the limit, passing extremely large strings directly into the AI-powered detection and RAG system without pre-processing or chunking could lead to Denial of Service (DoS) via resource exhaustion (memory/timeout) on the backend or the upstream LLM providers.
+
+**Logic**
+In the scan_prompt function, the code creates a ScanRequest record and commits it to the database before running the AI detection. If the AI detection fails or the system crashes, the database is left with a record of a request that never received a result, potentially skewing audit logs and risk metrics.
+
+**Performance**
+The scan_prompt endpoint performs a synchronous database commit (db.commit) and refresh (db.refresh) before calling an asynchronous AI detection method. This blocks the event loop for database I/O before entering the long-running AI scan, which can degrade throughput under high load.
+
+**Architecture**
+The error handling in scan_prompt is a generic try-except block that catches all exceptions and returns a 500 error. This masks specific failure modes (e.g., upstream API timeouts vs. database connection errors), making debugging difficult and providing poor feedback to the client.
+
+**Consistency**
+The scan_prompt endpoint uses datetime.utcnow() for the response timestamp, which is deprecated in newer Python versions in favor of timezone-aware datetimes.
+
+**Dead Code**
+The scan_output function is truncated in the provided snippet, but the imports suggest a consistent pattern of using the EnhancedLLMCouncil across all scan types.
+
+### Step 3: Pick ONE Improvement
+I have identified a critical reliability and data integrity issue in the scan_prompt endpoint.
+
+The current implementation commits the ScanRequest to the database before the actual scan is performed. If the prompt_detector.scan call fails (which is highly likely given it relies on external LLM APIs and RAG systems), the system returns a 500 error, but the ScanRequest remains in the database without a corresponding RiskScore. This creates "orphaned" scan requests and breaks the integrity of the safety audit trail.
+
+This is a meaningful improvement because it ensures that the database accurately reflects completed scans and prevents the accumulation of "ghost" requests in the audit logs.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT to change**
+Modify the transaction logic in the scan_prompt function to ensure that the ScanRequest and the resulting RiskScore are handled as a single atomic unit of work, or ensure the ScanRequest is only finalized if the scan succeeds.
+
+**WHERE in the file**
+In backend/app/api/routes/scan.py, inside the scan_prompt function. Specifically, the area starting from where the ScanRequest is instantiated and committed, through the call to prompt_detector.scan, and ending where the risk_score is added to the database.
+
+**WHY this matters**
+Currently, the code calls db.commit() immediately after creating the ScanRequest. If the subsequent AI scan fails, the request is permanently recorded as having happened, but no result is ever linked to it. In a production safety system, audit logs must be accurate. This change prevents orphaned records and ensures data consistency between the request log and the risk assessment log.
+
+**HOW to do it**
+1. Locate the first instance of db.commit() and db.refresh(scan_request) immediately following the ScanRequest instantiation.
+2. Remove these two lines so the ScanRequest remains in the session's pending state.
+3. Keep the call to prompt_detector.scan as is.
+4. After the prompt_detector.scan returns the risk_score and the risk_score is added to the database via db.add(risk_score), call a single db.commit() to persist both the ScanRequest and the RiskScore simultaneously.
+5. Ensure the db.rollback() in the except block remains to clean up the session if either the scan or the final commit fails.
+
+**Executor**: {"title": "[LOGIC] Fix orphaned scan requests by deferring database commit until after scan succeeds", "body": "### Problem / Gap\nThe scan_prompt endpoint commits the ScanRequest to the database before running the AI detection. If the detection fails (e.g., upstream API timeout), the request remains in the database without a corresponding RiskScore, creating orphaned records and breaking audit trail integrity.\n\n### Solution & Insight\nRemove the premature `db.commit()` and `db.refresh()` after adding the ScanRequest. The ScanRequest stays in the session's pending state until the scan completes successfully. After the RiskScore is added, a single `db.commit()` persists both objects atomically. The existing `db.rollback()` in the exception handler cleans up if anything fails.\n\n### Impact\nEliminates ghost scan requests, ensures data consistency between request logs and risk assessments, and maintains accurate audit trails for production safety systems.", "branch_name": "bot/upgrade-1778335870", "edits": [{"file": "backend/app/api/routes/scan.py", "search": "        db.add(scan_request)\n        db.commit()\n        db.refresh(scan_request)", "replace": "        db.add(scan_request)"}]}
+
+**Reviewer**: APPROVE: The edit correctly removes the premature db.commit() and db.refresh() in scan_prompt, ensuring the ScanRequest is only persisted if the AI scan succeeds and the RiskScore is generated. This prevents orphaned records and maintains audit integrity. The change is small but fixes a real data consistency issue, satisfying the 'fixes something that breaks' clause.
 
 ---
