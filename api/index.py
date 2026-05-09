@@ -1015,6 +1015,8 @@ def webhook():
     try:
         if event_type == 'issue_comment' and payload.get('action') == 'created':
             handle_issue_comment(payload)
+        elif event_type == 'pull_request_review_comment' and payload.get('action') == 'created':
+            handle_pull_request_review_comment(payload)
         elif event_type == 'pull_request' and payload.get('action') in ['opened', 'synchronize']:
              handle_pr(payload)
         elif event_type == 'pull_request_review' and payload.get('action') == 'submitted':
@@ -1408,7 +1410,8 @@ Files already read (from memory):
             files_to_read = [f for f_idx, f in enumerate(ftr_filtered) if f_idx < 5]
             
             if files_to_read:
-                issue_obj.create_comment(f"👀 Checking: `{', '.join(files_to_read)}`...")
+                # DISABLED: Triggers email spam
+                # issue_obj.create_comment(f"👀 Checking: `{', '.join(files_to_read)}`...")
                 
                 file_contents = ""
                 for file_path in files_to_read:
@@ -1435,7 +1438,8 @@ Instructions:
 """
         plan, reviewer_model = query_gemini_reviewer(reviewer_prompt)
         if not plan:
-            issue_obj.create_comment("⚠️ **Reviewer (Mayo) Error:** I failed to generate a technical plan after multiple attempts. Please re-trigger me or check my API health.")
+            # DISABLED: Triggers email spam
+            # issue_obj.create_comment("⚠️ **Reviewer (Mayo) Error:** I failed to generate a technical plan after multiple attempts. Please re-trigger me or check my API health.")
             return
         
         all_files_for_mem = []
@@ -1468,7 +1472,8 @@ Instructions:
         if "[REQUIRES_EXECUTION]" in plan:
             used_model = None
             executor_model_display = f" ({used_model})" if used_model else ""
-            issue_obj.create_comment(f"⚡ *Executor{executor_model_display} is now writing the code changes...*")
+            # DISABLED: Triggers email spam
+            # issue_obj.create_comment(f"⚡ *Executor{executor_model_display} is now writing the code changes...*")
             
             # Re-read the exact file contents for the Executor (with clear delimiters)
             exact_files_context_list = []
@@ -1639,18 +1644,25 @@ OUTPUT FORMAT (Strict JSON, nothing else):
                         if not issue_obj.pull_request:
                             try:
                                 repo.create_pull(title=commit_title, body=f"Automated fix.\n{final_payload.get('body', '')}", head=branch, base=repo.default_branch)
-                                issue_obj.create_comment(f"🚀 Created new PR for `{branch}`")
+                                # DISABLED: Triggers email spam
+                                # issue_obj.create_comment(f"🚀 Created new PR for `{branch}`")
                             except Exception as e:
                                 print(f"PR Creation error: {e}")
                     else:
-                        issue_obj.create_comment(f"⚠️ Executor generated edits, but the commit failed. Check logs.\n\n```\n{commit_err}\n```")
+                        # DISABLED: Triggers email spam
+                        # issue_obj.create_comment(f"⚠️ Executor generated edits, but the commit failed. Check logs.\n\n```\n{commit_err}\n```")
+                        pass
                 else:
                     safe_preview = [f"- {fe}" for i, fe in enumerate(failed_edits) if i < 5]
                     
                     debug_info = "\n".join(safe_preview) if failed_edits else "No debug info available"
-                    issue_obj.create_comment(f"⚠️ Executor generated edits, but none matched the file contents.\n\n**Failed search blocks:**\n{debug_info}\n\n*Retrying on next trigger.*")
+                    # DISABLED: Triggers email spam
+                    # issue_obj.create_comment(f"⚠️ Executor generated edits, but none matched the file contents.\n\n**Failed search blocks:**\n{debug_info}\n\n*Retrying on next trigger.*")
+                    pass
             else:
-                 issue_obj.create_comment("⚠️ Executor failed to generate valid JSON edits.")
+                 # DISABLED: Triggers email spam
+                 # issue_obj.create_comment("⚠️ Executor failed to generate valid JSON edits.")
+                 pass
     except Exception as e:
         import traceback
         err_msg = traceback.format_exc()
@@ -1658,13 +1670,373 @@ OUTPUT FORMAT (Strict JSON, nothing else):
         try:
             # Fallback reporting: If issue_obj is set, use it. 
             # If not, try to recreate the client to report the crash.
-            if issue_obj:
-                issue_obj.create_comment(f"⚠️ **Mayo Internal Webhook Error:**\n\n```python\n{err_msg}\n```")
-            elif installation:
-                temp_gh = get_github_client(installation['id'])
-                temp_repo = temp_gh.get_repo(payload['repository']['full_name'])
-                temp_issue = temp_repo.get_issue(payload['issue']['number'])
-                temp_issue.create_comment(f"⚠️ **Mayo Initialization Crash:**\n\n```python\n{err_msg}\n```")
+            # DISABLED: Triggers email spam
+            # if issue_obj:
+            #     issue_obj.create_comment(f"⚠️ **Mayo Internal Webhook Error:**\n\n```python\n{err_msg}\n```")
+            # elif installation:
+            #     temp_gh = get_github_client(installation['id'])
+            #     temp_repo = temp_gh.get_repo(payload['repository']['full_name'])
+            #     temp_issue = temp_repo.get_issue(payload['issue']['number'])
+            #     temp_issue.create_comment(f"⚠️ **Mayo Initialization Crash:**\n\n```python\n{err_msg}\n```")
+            pass
+        except:
+            pass
+
+def handle_pull_request_review_comment(payload):
+    """Handle comments on PR review threads (not the review itself, but inline/file comments)."""
+    # 0. Robust Early Initialization
+    installation = payload.get('installation')
+    issue_obj = None
+    try:
+        if not installation:
+            print("ERROR: No installation in payload")
+            return
+
+        gh = get_github_client(installation['id'])
+        repo_info = payload['repository']
+        repo = gh.get_repo(repo_info['full_name'])
+        comment = payload['comment']
+        
+        # PR review comments are associated with a PR, not an issue
+        pr_number = payload['pull_request']['number']
+        pr = repo.get_pull(pr_number)
+        
+        bot_login = get_bot_login()
+        
+        # CRITICAL: Do not reply to self!
+        if comment.get('user', {}).get('login') == bot_login:
+            return
+
+        body = comment.get('body', '').lower()
+        
+        # CRITICAL SECURITY: Ignore own comments (Double Check)
+        if comment.get('user', {}).get('login') == bot_login:
+            return
+        if comment.get('user', {}).get('type') == 'Bot':
+            return
+        if '<!-- [memory]' in body or '<!-- [memory]' in comment.get('body', ''):
+            return
+
+        # Check mentions & replies
+        mentioned = False
+        if "mayo" in body.lower() or "joe-gemini" in body.lower():
+            mentioned = True
+        else:
+            try:
+                # Get review comments for this PR to check if this is a reply to bot
+                review_comments = list(pr.get_review_comments())
+                if len(review_comments) > 1:
+                    # Sort by ID to find the previous comment
+                    review_comments.sort(key=lambda c: c.id)
+                    # Find current comment in list
+                    current_idx = -1
+                    for idx, rc in enumerate(review_comments):
+                        if str(rc.id) == str(comment.get('id')):
+                            current_idx = idx
+                            break
+                    # Check if previous comment was from bot
+                    if current_idx > 0:
+                        prev_comment = review_comments[current_idx - 1]
+                        if prev_comment.user.login == bot_login:
+                            mentioned = True
+            except: pass
+        
+        if not mentioned: return
+
+        # 1. Fetch Memory - use PR number as the identifier
+        memory = fetch_memory(repo, pr_number, bot_login)
+        files_already_read = memory.get('files_read', [])
+        
+        # 2. Get repo structure
+        repo_structure = get_repo_structure(repo)
+        
+        # 3. PR Context
+        try:
+            diff_content = requests.get(pr.diff_url).text[:20000]
+            pr_context = f"PR Title: {pr.title}\nPR Description: {pr.body}\nDiff:\n{diff_content}"
+        except: 
+            pr_context = f"PR Title: {pr.title}\nPR Description: {pr.body}"
+    
+        # Get preceding review comments for context
+        comment_history = ""
+        try:
+            all_comments = list(pr.get_review_comments())
+            # Get up to 5 preceding comments, excluding the current one
+            filtered_comments = [c for c in all_comments if str(c.id) != str(comment.get('id'))]
+            recent_comments = [c for c_idx, c in enumerate(filtered_comments) if c_idx >= len(filtered_comments) - 5]
+            if recent_comments:
+                comment_history = "\nRecent Conversation History:\n"
+                for c in recent_comments:
+                    comment_history += f"@{c.user.login}: {c.body}\n---\n"
+        except: pass
+        
+        base_context = f"""
+Repository Structure:
+{repo_structure}
+
+Files already read (from memory):
+{', '.join(files_already_read) if files_already_read else 'None'}
+
+{pr_context}
+{comment_history}
+"""
+        
+        # 4. Ask Gemini what files it needs
+        needed_files = get_context_expansion_files(comment['body'], base_context)
+        
+        expanded_context = base_context
+        new_files_read = []
+        
+        if needed_files and isinstance(needed_files, list):
+            ftr_filtered = [f for f in needed_files if f not in files_already_read]
+            files_to_read = [f for f_idx, f in enumerate(ftr_filtered) if f_idx < 5]
+            
+            if files_to_read:
+                # DISABLED: Triggers email spam
+                # pr.create_issue_comment(f"👀 Checking: `{', '.join(files_to_read)}`...")
+                
+                file_contents = ""
+                for file_path in files_to_read:
+                    if ".." in file_path or file_path.startswith("/"):
+                        continue
+                    content = read_file_content(repo, file_path)
+                    if content:
+                        file_contents += f"\n--- {file_path} ---\n{content}\n"
+                        new_files_read.append(file_path)
+                
+                expanded_context += f"\n\nFile Contents:\n{file_contents}"
+        
+        # 5. Generate response (Reviewer)
+        reviewer_prompt = f"""You are Mayo, the Senior Quality Assurance & Reviewer AI.
+Joseph (the human owner) has made a comment on a PR review: "{comment['body']}"
+
+Context:
+{expanded_context}
+
+Instructions:
+1. Address Joseph's comment clearly and concisely.
+2. If Joseph is providing feedback, rejecting something, or explaining a preferred pattern, state clearly how you understand his instruction.
+3. If Joseph's request requires code changes, explain the technical plan for the fix and end your ENTIRE response with the exact marker: [REQUIRES_EXECUTION]
+"""
+        plan, reviewer_model = query_gemini_reviewer(reviewer_prompt)
+        if not plan:
+            # DISABLED: Triggers email spam
+            # pr.create_issue_comment("⚠️ **Reviewer (Mayo) Error:** I failed to generate a technical plan after multiple attempts. Please re-trigger me or check my API health.")
+            return
+        
+        all_files_for_mem = []
+        if isinstance(files_already_read, list):
+            all_files_for_mem += files_already_read
+        if isinstance(new_files_read, list):
+            all_files_for_mem += new_files_read
+            
+        memory_block = format_memory_block({"files_read": all_files_for_mem})
+        
+        model_display = f" ({reviewer_model})" if reviewer_model else ""
+        pr.create_issue_comment(f"🛡️ **Reviewer (Mayo){model_display}:**\n{plan}{memory_block}")
+        
+        # Save Joseph's feedback to memory
+        try:
+            bot_repo = gh.get_repo(os.environ.get('BOT_REPO_NAME', 'HOLYKEYZ/mayo'))
+            mem_file = bot_repo.get_contents("data/global_memory.md")
+            old_mem = mem_file.decoded_content.decode('utf-8')
+            feedback_note = f"\n- **Joseph's Feedback on {repo.name}#PR{pr_number}**: \"{comment['body'][:120]}\" — Mayo acknowledged and responded."
+            bot_repo.update_file(
+                "data/global_memory.md",
+                co_author_msg(f"feat(memory): save Joseph's feedback on {repo.name}#PR{pr_number}"),
+                old_mem + feedback_note,
+                mem_file.sha
+            )
+        except Exception as e:
+            print(f"DEBUG: Failed to save feedback to memory: {e}")
+        
+        # 6. Execute Code Changes (Executor) - same logic as issue comments
+        if "[REQUIRES_EXECUTION]" in plan:
+            used_model = None
+            executor_model_display = f" ({used_model})" if used_model else ""
+            # DISABLED: Triggers email spam
+            # pr.create_issue_comment(f"⚡ *Executor{executor_model_display} is now writing the code changes...*")
+            
+            # Re-read the exact file contents for the Executor (with clear delimiters)
+            exact_files_context_list = []
+            files_for_executor = []
+            if isinstance(new_files_read, list) and new_files_read:
+                files_for_executor = new_files_read
+            elif isinstance(files_already_read, list):
+                for f_idx, f in enumerate(files_already_read):
+                    if f_idx < 3:
+                        files_for_executor.append(f)
+            
+            for fp in files_for_executor:
+                fc = read_file_content(repo, fp)
+                if isinstance(fc, str):
+                    # Truncate to avoid 413 Payload Too Large on Groq
+                    if len(fc) > 7000:
+                        fc_trunc = []
+                        for char_idx, char in enumerate(fc):
+                            if char_idx < 7000:
+                                fc_trunc.append(char)
+                            else:
+                                break
+                        fc = "".join(fc_trunc) + "\n...[TRUNCATED FOR LENGTH]..."
+                    exact_files_context_list.append(f"\n--- START OF FILE: {fp} ---\n{fc}\n--- END OF FILE: {fp} ---\n")
+            
+            exact_files_context = "".join(exact_files_context_list)
+            
+            executor_prompt = f"""You are Mayo, the Executor AI (Surgical Code Engineer).
+The Reviewer AI has established this plan based on Joseph's feedback:
+{plan}
+
+Repository: {repo.full_name}
+Available files: {', '.join(files_for_executor)}
+
+{exact_files_context}
+
+Generate surgical search/replace edits to fulfill this plan.
+
+HARD RULES:
+1. FULL CONTEXT EDITS: You are fully authorized to replace entire functions, large sections of code, or update multiple files across the repository.
+2. EXACT MATCH: The "search" field must be an EXACT copy of the original code from the file contents above. Character-for-character, including indentation.
+3. NO PLACEHOLDERS: Never use "...", "// rest of code", or "# code remains".
+4. NO UNINTENDED DELETIONS: Ensure you are not accidentally deleting important surrounding context.
+5. PRESERVE EVERYTHING: Indentation, comments, blank lines outside your edit MUST remain untouched.
+6. COPY DIRECTLY: Copy the search text DIRECTLY from the file contents shown above. Do NOT retype from memory.
+7. NEW FILES: If you need to CREATE a new file that doesn't exist yet, use an EMPTY "search" field ("") and put the ENTIRE file content in "replace".
+8. JSON ESCAPING: You MUST strictly escape all newlines (`\n`) and quotes (`\"`) inside your JSON string values! NEVER use literal line breaks inside the string. "json.loads" will crash if you do.
+
+OUTPUT FORMAT (Strict JSON, nothing else):
+{{
+  "title": "[TYPE] Brief technical title",
+  "body": "What was fixed and why.",
+  "edits": [
+    {{
+      "file": "path/to/existing_file",
+      "search": "EXACT lines from original (max 10 lines)",
+      "replace": "Your improved replacement"
+    }},
+    {{
+      "file": "path/to/new_file.yml",
+      "search": "",
+      "replace": "Full content of the new file here"
+    }}
+  ]
+}}
+            """
+            # Run Fireworks AI first (most reliable), then Groq, then Gemini
+            fireworks_resp, fireworks_model = query_fireworks_executor(executor_prompt)
+            fireworks_data = extract_json_from_response(fireworks_resp) if fireworks_resp else None
+            used_model = fireworks_model or "Fireworks AI"
+            
+            if fireworks_data and isinstance(fireworks_data, dict) and 'edits' in fireworks_data:
+                final_payload = fireworks_data
+            else:
+                # Try Groq dual keys
+                executor1_resp, _ = query_groq(executor_prompt, api_key=os.environ.get('GROQ_API_KEY'))
+                executor2_resp, _ = query_groq(executor_prompt, api_key=os.environ.get('GROK_2ND_EXECUTOR_API_KEY'))
+                
+                data1 = extract_json_from_response(executor1_resp) if executor1_resp else None
+                data2 = extract_json_from_response(executor2_resp) if executor2_resp else None
+                
+                if data1 and isinstance(data1, dict) and 'edits' in data1:
+                    final_payload = data1
+                    used_model = "Groq (llama-3.1-8b-instant)"
+                    if data2 and isinstance(data2, dict) and 'edits' in data2:
+                        final_payload['edits'] = final_payload.get('edits', []) + data2.get('edits', [])
+                elif data2 and isinstance(data2, dict) and 'edits' in data2:
+                    final_payload = data2
+                    used_model = "Groq (llama-3.1-8b-instant)"
+                else:
+                    # Try Groq fallback key
+                    fb1_resp, _ = query_groq(executor_prompt, api_key=os.environ.get('GROK_FALLBACK_API_KEY'))
+                    final_payload = extract_json_from_response(fb1_resp) if fb1_resp else None
+                    
+                    if not isinstance(final_payload, dict) or 'edits' not in final_payload:
+                        # Use Fireworks if not already tried
+                        if not fireworks_data:
+                            final_payload = fireworks_data
+                        
+                        # Gemini as last resort
+                        if not isinstance(final_payload, dict) or 'edits' not in final_payload:
+                            fb2_resp, fb2_model = query_gemini_executor(executor_prompt)
+                            used_model = fb2_model or used_model
+                            if fb2_resp:
+                                final_payload = extract_json_from_response(fb2_resp)
+            
+            if isinstance(final_payload, dict) and isinstance(final_payload.get('edits'), list):
+                # Group edits by file
+                file_edits = {}
+                for edit in final_payload['edits']:
+                    if not isinstance(edit, dict): continue
+                    fpath = edit['file'] if 'file' in edit else None
+                    if not fpath: continue
+                    if fpath not in file_edits:
+                        file_edits[fpath] = []
+                    file_edits[fpath].append(edit)
+                
+                # Apply edits
+                file_changes = {}
+                failed_edits = []
+                for fpath, edits in file_edits.items():
+                    content = read_file_content(repo, fpath)
+                    if not content:
+                        # File doesn't exist — check if the executor wants to CREATE it
+                        # (search is empty/missing but replace has full content)
+                        new_file_content = ""
+                        for edit in edits:
+                            replace_val = edit.get('replace', '')
+                            search_val = edit.get('search', '')
+                            if replace_val and (not search_val or search_val.strip() == ''):
+                                new_file_content += replace_val
+                        if new_file_content:
+                            file_changes[fpath] = new_file_content
+                            print(f"DEBUG: New file will be created: {fpath}")
+                        else:
+                            failed_edits.append(f"`{fpath}`: file not found or empty")
+                        continue
+                    new_content = apply_surgical_edits(content, edits)
+                    if new_content != content:
+                        file_changes[fpath] = new_content
+                    else:
+                        for edit in edits:
+                            search_preview = (edit.get('search', ''))[:80].replace('\n', '\\n')
+                            failed_edits.append(f"`{fpath}`: `{search_preview}...`")
+                
+                if file_changes:
+                    # Commit to PR branch
+                    branch = pr.head.ref
+                    commit_title = final_payload.get('title', f"Fix: Addressed feedback in PR #{pr_number}")
+                    success, commit_err = commit_changes_via_api(repo, branch, file_changes, commit_title)
+                    executor_model_display = f" (via {used_model})" if used_model else ""
+                    if success:
+                        msg = f"✅ Committed changes to `{branch}`{executor_model_display}.\n\nDescription: {final_payload.get('body', commit_title)}"
+                        if failed_edits:
+                            safe_preview = [f"- {fe}" for i, fe in enumerate(failed_edits) if i < 5]
+                            msg += f"\n\n⚠️ Some edits failed to match:\n" + "\n".join(safe_preview)
+                        pr.create_issue_comment(msg)
+                    else:
+                        # DISABLED: Triggers email spam
+                        # pr.create_issue_comment(f"⚠️ Executor generated edits, but the commit failed. Check logs.\n\n```\n{commit_err}\n```")
+                        pass
+                else:
+                    safe_preview = [f"- {fe}" for i, fe in enumerate(failed_edits) if i < 5]
+                    
+                    debug_info = "\n".join(safe_preview) if failed_edits else "No debug info available"
+                    # DISABLED: Triggers email spam
+                    # pr.create_issue_comment(f"⚠️ Executor generated edits, but none matched the file contents.\n\n**Failed search blocks:**\n{debug_info}\n\n*Retrying on next trigger.*")
+                    pass
+            else:
+                 # DISABLED: Triggers email spam
+                 # pr.create_issue_comment("⚠️ Executor failed to generate valid JSON edits.")
+                 pass
+    except Exception as e:
+        import traceback
+        err_msg = traceback.format_exc()
+        print(f"Error processing PR review comment: {e}")
+        try:
+            # DISABLED: Triggers email spam
+            # if pr:
+            #     pr.create_issue_comment(f"⚠️ **Mayo Internal Webhook Error:**\n\n```python\n{err_msg}\n```")
+            pass
         except:
             pass
 
