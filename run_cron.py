@@ -854,9 +854,9 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
                         break
                 
                 if not valid_corrections:
-                    print("DEBUG: Reviewer's corrected edits failed safety guards or found no matches. Aborting.")
-                    final_edits = []  # Clear edits so no PR is made
-                    reviewer_verdict_text = "CORRECT (but corrected edits failed safety checks)"
+                    print("DEBUG: Reviewer's corrected edits failed safety guards. Falling back to original Executor edits.")
+                    final_edits = improvement_data.get('edits', [])
+                    reviewer_verdict_text = "CORRECT (fallback to original edits)"
                     break
                 
                 final_edits = corrected
