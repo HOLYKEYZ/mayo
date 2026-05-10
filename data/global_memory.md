@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 3 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Enhance Input Validation in GitHub Profile Update API. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/412) - *Status: APPROVED - Joseph liked this!*
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [SEC] Enhance Error Handling in Rate Limiting. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/413) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_DISCUSSION_REPLY=1778427623 -->
 - **REJECTED by Reviewer**: Executor tried to add BOT_PATTERNS constant and isBot function but did not fix SQL injection vulnerability — blocked
