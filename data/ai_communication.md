@@ -3210,68 +3210,7 @@ HOW to do it:
 
 ---
 
-## Cycle 1778302671
-**Scanner**: ### Step 1: Codebase Understanding
-IntellectSafe is a production-grade AI safety and security platform that implements a five-layer defense architecture to protect users and organizations from prompt injections, hallucinations, PII leaks, and deepfakes. It utilizes a multi-model LLM Council for consensus-based validation and a universal proxy to intercept and secure traffic to frontier AI models.
-
-The target file, backend/app/services/governance.py, contains the GovernanceEngine class. This service is responsible for aggregating data from the database to generate risk reports and incident reports, providing the analytical backend for the platform's compliance and audit dashboards.
-
-The codebase uses FastAPI for the backend, SQLAlchemy for ORM, and Pydantic for data validation. It follows a service-oriented architecture where business logic is decoupled from API routes.
-
-### Step 2: Deep Analysis
-
-**Security**:
-The current implementation of the GovernanceEngine does not perform any input validation or sanitization on the start_date and end_date parameters. While these are typed as Optional[datetime], if they are passed from an API endpoint as raw strings or manipulated objects, it could lead to unexpected behavior. However, the primary security risk is the lack of pagination or limits on the queries.
-
-**Logic**:
-There is a significant logic flaw in the GovernanceEngine constructor. It checks if the db.bind is None and, if so, attempts to re-initialize self.db by creating a new Session instance using the engine. This is a dangerous pattern because it replaces the injected session (which is likely managed by a FastAPI dependency for transaction control) with a manually managed session that may not be closed properly, leading to connection leaks.
-
-**Performance**:
-The generate_risk_report and generate_incident_report methods suffer from a severe N+1 query pattern. Specifically, the code iterates through every member of the RiskLevel, ModuleType, and IncidentStatus enums and executes a separate database count query for each member. For example, in risk_distribution, it runs a query for every possible risk level. In module_breakdown, it runs a query for every module type and then another query for the average risk score of that module. This results in dozens of round-trips to the database for a single report.
-
-**Architecture**:
-The error handling is minimal. If a database connection fails during one of the many aggregate queries, the entire report generation fails without a graceful fallback or specific error context.
-
-**Consistency**:
-The use of datetime.utcnow() is deprecated in newer Python versions in favor of timezone-aware datetimes, though it is consistent within this file.
-
-**Dead Code**:
-No obvious dead code was identified in the provided snippet.
-
-### Step 3: Pick ONE Improvement
-I have identified a critical performance and scalability issue: the N+1 query pattern in the report generation methods.
-
-The current implementation executes a separate SQL query for every single enum value (RiskLevel, ModuleType, IncidentStatus) to calculate distributions. As the number of modules or risk levels grows, the latency of generating a report increases linearly. This can be replaced with a single GROUP BY query per metric, reducing the database load from O(N) queries to O(1) per section.
-
-This is a meaningful improvement because it prevents database exhaustion under load and significantly reduces the response time for the Governance dashboard.
-
-### Step 4: Executor's Plan
-
-**WHAT to change**:
-Refactor the data aggregation logic in the generate_risk_report and generate_incident_report methods to use SQLAlchemy group_by and func.count instead of looping through enums and executing individual queries.
-
-**WHERE to change**:
-In backend/app/services/governance.py, within the GovernanceEngine class:
-1. Inside the generate_risk_report method, specifically the sections calculating risk_distribution, verdict_distribution, and module_breakdown.
-2. Inside the generate_incident_report method, specifically the sections calculating severity_distribution, status_distribution, and module_breakdown.
-
-**WHY this matters**:
-The current implementation performs a "Query in a Loop" (N+1 problem). If there are 5 risk levels, 5 module types, and 4 verdicts, the system makes over 15 separate database calls to generate one report. By using GROUP BY, the system can retrieve all distribution data in 3 queries, regardless of how many enum members exist. This reduces latency and prevents the database from being overwhelmed by redundant requests.
-
-**HOW to do it**:
-1. In generate_risk_report, replace the loop over RiskLevel with a single query that selects RiskScore.risk_level and func.count, grouped by RiskScore.risk_level. Convert the resulting list of tuples into the risk_distribution dictionary.
-2. Repeat this process for the verdict_distribution by grouping by RiskScore.verdict.
-3. For the module_breakdown, replace the loop over ModuleType with a single query that selects RiskScore.module_type, func.count, and func.avg(RiskScore.risk_score), grouped by RiskScore.module_type.
-4. In generate_incident_report, apply the same logic: replace the loops over RiskLevel (for severity), IncidentStatus (for status), and ModuleType (for module breakdown) with grouped queries.
-5. Ensure that the final dictionary formats remain identical to the original implementation to avoid breaking the frontend API contract.
-
-**Executor**: {"title": "[PERF] Optimize governance risk report generation with GROUP BY queries", "body": "### Problem / Gap\nThe `generate_risk_report` method in `GovernanceEngine` suffers from an N+1 query pattern. It loops over every `RiskLevel`, verdict string, and `ModuleType` enum, executing a separate `COUNT` query for each. This results in over 15 database round-trips per report, causing linear latency growth and potential database exhaustion under load.\n\n### Solution & Insight\nReplaced the per-enum loops with single `GROUP BY` queries using SQLAlchemy's `func.count` and `func.avg`. The risk distribution, verdict distribution, and module breakdown are now computed in three queries total, regardless of the number of enum members. The output dictionary structures remain identical to preserve the frontend API contract.\n\n### Impact\n- Reduces database queries from O(N) to O(1) per metric.\n- Significantly lowers report generation latency and database load.\n- No change to the API response shape.\n\nNote: The `generate_incident_report` method was truncated in the provided file content, so only the risk report was optimized. The same pattern should be applied to the incident report when the full file is available.", "branch_name": "bot/upgrade-1778302671", "edits": [{"file": "backend/app/services/governance.py", "search": "        # Risk level distribution\n        risk_distribution = {}\n        for level in RiskLevel:\n            count = query.filter(RiskScore.risk_level == level).count()\n            risk_distribution[level.value] = count\n\n        # Verdict distribution\n        verdict_distribution = {}\n        for verdict in [\"blocked\", \"allowed\", \"flagged\", \"sanitized\"]:\n            count = query.filter(RiskScore.verdict == verdict).count()\n            verdict_distribution[verdict] = count\n\n        # Module breakdown\n        module_breakdown = {}\n        for module in ModuleType:\n            module_query = query.filter(RiskScore.module_type == module)\n            module_count = module_query.count()\n            if module_count > 0:\n                module_avg = (\n                    module_query.with_entities(func.avg(RiskScore.risk_score)).scalar()\n                    or 0.0\n                )\n                module_breakdown[module.value] = {\n                    \"count\": module_count,\n                    \"avg_risk_score\": round(module_avg, 2),\n                }", "replace": "        # Risk level distribution\n        risk_distribution = {level.value: 0 for level in RiskLevel}\n        risk_level_counts = query.with_entities(\n            RiskScore.risk_level, func.count(RiskScore.id)\n        ).group_by(RiskScore.risk_level).all()\n        for level, count in risk_level_counts:\n            risk_distribution[level.value] = count\n\n        # Verdict distribution\n        verdict_distribution = {\n            \"blocked\": 0,\n            \"allowed\": 0,\n            \"flagged\": 0,\n            \"sanitized\": 0,\n        }\n        verdict_counts = query.with_entities(\n            RiskScore.verdict, func.count(RiskScore.id)\n        ).group_by(RiskScore.verdict).all()\n        for verdict, count in verdict_counts:\n            if verdict in verdict_distribution:\n                verdict_distribution[verdict] = count\n\n        # Module breakdown\n        module_breakdown = {}\n        module_stats = query.with_entities(\n            RiskScore.module_type,\n            func.count(RiskScore.id),\n            func.avg(RiskScore.risk_score),\n        ).group_by(RiskScore.module_type).all()\n        for module_type, count, avg_score in module_stats:\n            if count > 0:\n                module_breakdown[module_type.value] = {\n                    \"count\": count,\n                    \"avg_risk_score\": round(avg_score or 0.0, 2),\n                }"}]}
-
-**Reviewer**: APPROVE: The edits correctly address the N+1 query performance issue in generate_risk_report by replacing enum-looping count queries with SQLAlchemy group_by/aggregate queries. The search text matches the original file exactly, the replacement preserves the output dictionary structure and keys (including initializing missing keys to 0), and the logic is functionally equivalent while being significantly more efficient. The change is substantive, aligned with the Scanner's plan, and safe for the repo.
-
----
-
-## Cycle 1778335870
+1778335870
 **Scanner**: ### Step 1: Codebase Understanding
 IntellectSafe is a production-grade AI safety and security platform designed to protect users and organizations from AI-driven threats like prompt injections, hallucinations, and deepfakes using a multi-layered defense architecture.
 
@@ -3591,5 +3530,71 @@ HOW to do it:
 **Executor**: {"title": "[SEC] Add maximum length validation to hashApiKey to prevent DoS", "body": "### Problem / Gap\nThe `hashApiKey` function accepts an API key string of any length and passes it directly to `createHash`, a synchronous CPU-intensive operation. An attacker could supply an extremely long string, causing excessive CPU usage and blocking the Node.js event loop, leading to a Denial of Service.\n\n### Solution & Insight\nAdd a maximum length check (4096 characters) to the input validation. This prevents resource exhaustion while still accommodating any realistic API key. Additionally, remove the unnecessary `async`/`Promise` wrapper since the function is entirely synchronous, reducing overhead and clarifying the API contract.\n\n### Impact\nPrevents CPU-based DoS attacks via oversized API key inputs. Improves performance by eliminating unnecessary Promise creation for a synchronous operation.", "branch_name": "bot/upgrade-1778422452", "edits": [{"file": "apps/web/src/lib/security.ts", "search": "export async function hashApiKey(key: string): Promise<string> {\n  if (typeof key !== 'string' || key.length === 0) {\n    throw new Error('Invalid API key: Key must be a non-empty string.');\n  }\n  try {\n    const hashedKey = createHash(\"sha256\").update(key).digest(\"hex\");\n    return hashedKey;\n  } catch (error) {\n    // Log the error for debugging and security auditing purposes\n    console.error('Error hashing API key:', error);\n    // Wrap the original error to provide context while preserving the cause\n    throw new Error(`Failed to hash API key: ${error instanceof Error ? error.message : String(error)}`);\n  }\n}", "replace": "export function hashApiKey(key: string): string {\n  const MAX_KEY_LENGTH = 4096;\n  if (typeof key !== 'string' || key.length === 0) {\n    throw new Error('Invalid API key: Key must be a non-empty string.');\n  }\n  if (key.length > MAX_KEY_LENGTH) {\n    throw new Error(`Invalid API key: Key must be at most ${MAX_KEY_LENGTH} characters.`);\n  }\n  try {\n    const hashedKey = createHash(\"sha256\").update(key).digest(\"hex\");\n    return hashedKey;\n  } catch (error) {\n    // Log the error for debugging and security auditing purposes\n    console.error('Error hashing API key:', error);\n    // Wrap the original error to provide context while preserving the cause\n    throw new Error(`Failed to hash API key: ${error instanceof Error ? error.message : String(error)}`);\n  }\n}"}]}
 
 **Reviewer**: APPROVE: The edit correctly implements the Scanner's plan by adding a MAX_KEY_LENGTH check (4096) to prevent CPU-based DoS attacks from unbounded input hashing, and removes the unnecessary `async`/`Promise` wrapper from a purely synchronous function. The search string matches the original exactly, the replacement is valid TypeScript, and the change is substantive and security-relevant.
+
+---
+
+## Cycle 1778442623
+**Scanner**: ### Step 1: Codebase Understanding
+The Model Unfetter repository is a specialized framework for removing refusal behaviors (unalignment) from Large Language Models using a process called ablation. It uses orthogonal projection to remove "refusal directions" from model weights, allowing models to bypass safety filters for research and red-teaming.
+
+The target file, unfetter/backends/distributed.py, implements the DistributedBackend class. This class handles the loading and processing of models that are too large for a single GPU by utilizing HuggingFace Accelerate's device_map="auto" to split the model across multiple GPUs and ensuring that the ablation vectors are moved to the correct device for each specific layer during processing.
+
+The codebase uses PyTorch for tensor operations, HuggingFace Transformers/Accelerate for model management, and a backend-pattern architecture to support different hardware (CPU, GPU, Distributed).
+
+### Step 2: Deep Analysis
+
+Security:
+- No hardcoded secrets found.
+- Input validation for model_path is handled by the Transformers library, but there is no validation on the strength parameter or layer_indices within the DistributedBackend itself (though this is likely handled in the CLI/Core layer).
+
+Logic:
+- The ablate method iterates through layer_indices and retrieves the layer via layers[layer_idx]. If layer_indices contains indices outside the range of the model's layers, it will trigger an IndexError and crash the entire process.
+- The load_model method sets torch_dtype to torch.float16. While common, this may cause precision issues or crashes on certain hardware (like some CPUs or older GPUs) if not handled dynamically, though this is a distributed backend specifically requiring CUDA.
+
+Performance:
+- Memory Management: The DistributedBackend imports gc but never calls it. In a multi-GPU environment, especially when moving tensors (refusal_vector) and processing layers, failing to explicitly clear the cache or collect garbage between heavy operations can lead to Out-of-Memory (OOM) errors during the ablation loop.
+- Tensor Movement: The refusal vector is moved to the layer_device inside the loop: rv = refusal_vector.to(layer_device). While necessary, if multiple layers reside on the same device, this is a redundant operation.
+
+Architecture:
+- Error Handling: The load_model method lacks a try-except block around AutoModelForCausalLM.from_pretrained. If a model is too large for the combined VRAM of all GPUs, the process will crash with a CUDA OOM error without a clean exit or informative log.
+
+Consistency:
+- The DistributedBackend inherits from Backend and follows the established pattern of load_model, ablate, and save_model.
+
+Dead Code:
+- The import of gc is unused.
+
+### Step 3: Pick ONE Improvement
+The most critical issue is the lack of memory management and error handling during the ablation loop in a distributed environment. Specifically, the current implementation does not handle potential CUDA OOM errors during the ablation of large layers, nor does it perform memory cleanup. However, a more immediate "broken" logic risk is the lack of validation for layer_indices.
+
+Wait, looking closer at the performance/stability: In distributed settings, the most common failure point is the OOM during the weight modification process. But the most "correctable" bug is the redundant tensor movement and the unused gc import combined with the lack of memory clearing.
+
+Actually, the most significant "real" bug is the potential for a crash when processing layers if the indices are invalid or if the model is loaded in a way that doesn't align with the expected layer structure.
+
+However, looking at the DistributedBackend.ablate method, there is a significant performance and stability gap: it does not call torch.cuda.empty_cache() or gc.collect() during the loop. In a distributed environment, fragmented memory across multiple GPUs often leads to crashes during the ablation of the final few layers.
+
+But per the "Senior Engineer" criteria, I will focus on the Logic/Stability: The current implementation of ablate() assumes the refusal_vector is always compatible with the layer's dtype. If the model is loaded in float16 (as forced in load_model) but the refusal_vector is float32, the operation `ablate_layer` will likely fail with a dtype mismatch error.
+
+Actually, the most impactful fix is the missing memory cleanup in the distributed loop. In multi-GPU ablation, memory fragmentation is the primary cause of failure.
+
+### Step 4: Executor's Plan
+
+WHAT: Implement explicit memory management and dtype synchronization within the ablation loop to prevent CUDA OOM crashes and dtype mismatch errors.
+
+WHERE: In unfetter/backends/distributed.py, inside the DistributedBackend.ablate method, specifically within the for loop that iterates over layer_indices.
+
+WHY: 
+1. Dtype Mismatch: The load_model method forces torch.float16. If the refusal_vector (calculated in core/vectors.py) is float32, the ablation operation will crash.
+2. Memory Fragmentation: Distributed models push VRAM to the limit. Without calling torch.cuda.empty_cache() and gc.collect() periodically, the process is highly susceptible to OOM errors as it modifies weights across different devices.
+
+HOW:
+1. Inside the ablate method loop, after moving the refusal vector to the layer_device (rv = refusal_vector.to(layer_device)), add a step to ensure the refusal vector matches the dtype of the layer's parameters (e.g., using the dtype of the first parameter of the layer).
+2. After the ablate_layer call and before the next iteration of the loop, add a call to gc.collect().
+3. Add a call to torch.cuda.empty_cache() to clear fragmented memory from the GPUs.
+4. Ensure the gc import (already present) is actually utilized.
+
+**Executor**: {"title": "[PERF] Add dtype synchronization and memory cleanup in distributed ablation loop", "body": "### Problem / Gap\nThe distributed ablation loop in `DistributedBackend.ablate` does not ensure the refusal vector matches the layer's dtype (model is loaded in float16, but the vector may be float32), causing potential dtype mismatch errors. Additionally, no explicit memory cleanup is performed between layers, leading to GPU memory fragmentation and possible CUDA OOM crashes on large models.\n\n### Solution & Insight\n- After moving the refusal vector to the layer's device, also cast it to the layer's parameter dtype using `refusal_vector.to(device=layer_device, dtype=layer_dtype)`.\n- After each layer ablation, call `gc.collect()` and `torch.cuda.empty_cache()` to release fragmented memory and reduce peak VRAM usage.\n- The existing `gc` import is now utilized.\n\n### Impact\nPrevents dtype mismatch crashes and significantly reduces the risk of out-of-memory errors during multi-GPU ablation, improving stability and success rate on large models.", "branch_name": "bot/upgrade-1778442623", "edits": [{"file": "unfetter/backends/distributed.py", "search": "    def ablate(\n        self,\n        model: nn.Module,\n        tokenizer,\n        refusal_vector: torch.Tensor,\n        layer_indices: List[int],\n        strength: float = 1.0,\n        target_modules: Optional[List[str]] = None,\n        progress_callback=None,\n        **kwargs,\n    ) -> Dict[str, Any]:\n        \"\"\"\n        Ablation across distributed model.\n\n        Handles the fact that different layers may be on different\n        devices by moving the refusal vector to match each layer's device.\n        \"\"\"\n        from unfetter.core.ablation import ablate_layer, _get_model_layers\n\n        if target_modules is None:\n            target_modules = [\"self_attn.o_proj\", \"mlp.down_proj\"]\n\n        layers = _get_model_layers(model)\n        total = len(layer_indices)\n        results = {\"layer_stats\": {}, \"backend\": \"distributed\"}\n\n        logger.info(f\"[Distributed] Starting ablation: {total} layers, strength={strength}\")\n        start_time = time.time()\n\n        for i, layer_idx in enumerate(layer_indices):\n            layer = layers[layer_idx]\n\n            # Determine which device this layer is on\n            layer_device = next(layer.parameters()).device\n\n            # Move refusal vector to the layer's device\n            rv = refusal_vector.to(layer_device)\n\n            stats = ablate_layer(\n                layer, rv,\n                strength=strength,\n                target_modules=target_modules,\n            )\n            results[\"layer_stats\"][layer_idx] = stats\n\n            if progress_callback:\n                progress_callback(i + 1, total)\n\n        results[\"total_time\"] = round(time.time() - start_time, 2)\n        results[\"layers_processed\"] = total\n\n        logger.info(\n            f\"[Distributed] Ablation complete: {total} layers in {results['total_time']}s\"\n        )\n        return results", "replace": "    def ablate(\n        self,\n        model: nn.Module,\n        tokenizer,\n        refusal_vector: torch.Tensor,\n        layer_indices: List[int],\n        strength: float = 1.0,\n        target_modules: Optional[List[str]] = None,\n        progress_callback=None,\n        **kwargs,\n    ) -> Dict[str, Any]:\n        \"\"\"\n        Ablation across distributed model.\n\n        Handles the fact that different layers may be on different\n        devices by moving the refusal vector to match each layer's device.\n        \"\"\"\n        from unfetter.core.ablation import ablate_layer, _get_model_layers\n\n        if target_modules is None:\n            target_modules = [\"self_attn.o_proj\", \"mlp.down_proj\"]\n\n        layers = _get_model_layers(model)\n        total = len(layer_indices)\n        results = {\"layer_stats\": {}, \"backend\": \"distributed\"}\n\n        logger.info(f\"[Distributed] Starting ablation: {total} layers, strength={strength}\")\n        start_time = time.time()\n\n        for i, layer_idx in enumerate(layer_indices):\n            layer = layers[layer_idx]\n\n            # Determine which device this layer is on\n            layer_device = next(layer.parameters()).device\n            layer_dtype = next(layer.parameters()).dtype\n\n            # Move refusal vector to the layer's device and match dtype\n            rv = refusal_vector.to(device=layer_device, dtype=layer_dtype)\n\n            stats = ablate_layer(\n                layer, rv,\n                strength=strength,\n                target_modules=target_modules,\n            )\n            results[\"layer_stats\"][layer_idx] = stats\n\n            if progress_callback:\n                progress_callback(i + 1, total)\n\n            # Memory cleanup to prevent fragmentation across GPUs\n            gc.collect()\n            torch.cuda.empty_cache()\n\n        results[\"total_time\"] = round(time.time() - start_time, 2)\n        results[\"layers_processed\"] = total\n\n        logger.info(\n            f\"[Distributed] Ablation complete: {total} layers in {results['total_time']}s\"\n        )\n        return results"}]}
+
+**Reviewer**: APPROVE: The edits correctly address two real stability issues in the distributed ablation loop: (1) dtype mismatch between the refusal vector and layer parameters (the model is forced to float16 in load_model, but the vector may be float32), and (2) memory fragmentation across multiple GPUs, which frequently causes OOM crashes during long ablation runs. The search/replace blocks match the original file exactly, the existing `gc` import is now properly utilized, and the changes are substantive and production-ready.
 
 ---
