@@ -3611,3 +3611,45 @@ The missing `httpx` import in `unfetter_proxy/providers/base.py` is a critical r
 **Reviewer**: APPROVE: The `Provider` base class in `unfetter_proxy/providers/base.py` uses `httpx.AsyncClient` and `httpx.Response` in the `send_request` signature. While `from __future__ import annotations` defers runtime evaluation, the missing import breaks static analysis, runtime type introspection (e.g., `get_type_hints`), and general module correctness. This is a critical, targeted fix for a real bug in the base adapter that would affect all inheriting providers.
 
 ---
+
+## Cycle 1778452443
+**Scanner**: ### Step 1: Codebase Understanding
+- **Repository Purpose**: git-pulse is a developer-centric social platform that integrates with GitHub to allow users to share updates, announce releases, and track trending repositories.
+- **Target File Purpose**: The file `apps/web/src/app/api/notifications/stream/route.ts` implements a Server-Sent Events (SSE) endpoint that streams the count of unread notifications to the client in real-time via polling.
+- **Patterns & Frameworks**: Next.js 15 (App Router), TypeScript, Prisma ORM, NextAuth.js for authentication, and the `validator` library for input sanitization.
+
+### Step 2: Deep Analysis
+
+- **Security**: 
+    - The code uses `validator.escape(session.user.login)` to sanitize the username. While this prevents XSS if the username were reflected in HTML, it is unnecessary and potentially harmful for a database query. Prisma uses parameterized queries by default, so escaping is not needed for SQL injection prevention.
+    - More importantly, if the `login` contains characters that `validator.escape` modifies (e.g., `&` becoming `&amp;`), the database query will look for a user with the escaped name rather than the actual username, leading to a logic failure where notifications are not found.
+- **Logic**:
+    - The `setInterval` is created inside the `start` method of the `ReadableStream`. However, the `interval` variable is declared inside `start` but the `req.signal` listener is also inside `start`. 
+    - There is a potential memory leak/zombie interval: if the stream closes for reasons other than the `abort` signal (e.g., internal error in `sendCount`), the `clearInterval` is called, but the `req.signal` listener remains attached.
+- **Performance**:
+    - The endpoint polls the database every 30 seconds per connected client. While acceptable for low traffic, this is inefficient compared to a pub/sub model, though acceptable within the current architecture.
+- **Architecture**:
+    - The error handling in `sendCount` attempts to close the controller and clear the interval, but it does so inside a `try...catch` that might be redundant or insufficient depending on how the stream is consumed.
+- **Consistency**:
+    - The `tsconfig.json` in `packages/ui` is standard for a monorepo setup and requires no changes.
+
+### Step 3: Pick ONE Improvement
+The most critical issue is the use of `validator.escape()` on the `session.user.login` variable. 
+
+**Reasoning**: This is a logic bug that breaks functionality. `validator.escape` is designed for HTML output to prevent XSS. By applying it to a value used in a Prisma `where` clause, the code changes the actual value of the username before querying the database. If a user's GitHub login contains characters like `&`, `<`, or `>`, the query will fail to find the user because it will search for the HTML-entity encoded version of their name. Since Prisma already handles parameterization to prevent SQL injection, this "security" measure actually introduces a bug.
+
+### Step 4: Write the Executor's Plan
+
+- **WHAT**: Remove the `validator.escape` wrapper from the username assignment to ensure the database query uses the literal username from the session.
+- **WHERE**: In `apps/web/src/app/api/notifications/stream/route.ts`, locate the line: `const username = validator.escape(session.user.login);`
+- **WHY**: `validator.escape` is for HTML escaping, not database sanitization. It modifies the string (e.g., converting `&` to `&amp;`), which causes the Prisma query to look for a non-existent username in the database. Prisma's `equals` filter already prevents SQL injection via parameterized queries.
+- **HOW**: 
+    1. Locate the variable declaration `const username = validator.escape(session.user.login);`.
+    2. Change it to `const username = session.user.login;`.
+    3. Remove the unused `import validator from "validator";` at the top of the file to clean up the codebase.
+
+**Executor**: {"title": "[LOGIC] Remove validator.escape from username to fix notification query", "body": "### Problem / Gap\nThe SSE notification stream endpoint uses `validator.escape()` on the GitHub username before querying the database. This HTML-escapes characters (e.g., `&` \u2192 `&amp;`), causing Prisma to search for a non-existent escaped username and breaking the notification count for users with special characters in their login.\n\n### Solution & Insight\nRemove the `validator.escape()` wrapper and use the raw `session.user.login` directly. Prisma already uses parameterized queries, so SQL injection is not a concern. Also remove the now-unused `validator` import to keep the code clean.\n\n### Impact\nFixes a logic bug that prevented notifications from loading for users whose GitHub usernames contain characters like `&`, `<`, or `>`. Restores correct functionality without any security regression.", "branch_name": "bot/upgrade-1778452443", "edits": [{"file": "apps/web/src/app/api/notifications/stream/route.ts", "search": "import validator from \"validator\";", "replace": ""}, {"file": "apps/web/src/app/api/notifications/stream/route.ts", "search": "const username = validator.escape(session.user.login);", "replace": "const username = session.user.login;"}]}
+
+**Reviewer**: APPROVE: The edit correctly removes harmful HTML-escaping (`validator.escape`) applied to a username before a Prisma database query. `validator.escape` is designed for XSS prevention in rendered output, not for database queries. Applying it here mutates the string (e.g., `&` → `&amp;`), causing the Prisma `where` clause to fail to match the actual username in the database. Prisma already uses parameterized queries, making this 'sanitization' unnecessary and actively buggy. The removal of the now-unused import is also correct cleanup.
+
+---
