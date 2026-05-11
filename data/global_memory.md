@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/419) - *Status: MERGED - Joseph approved!*
 - **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/420) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Fix SQL Injection Vulnerability in Prisma Database Queries. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/421) - *Status: APPROVED - Joseph liked this!*
 - **Repo: git-pulse**: [SEC] Enhance Input Validation for getGitHubStarredRepos. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/422) - *Status: APPROVED - Joseph liked this!*
@@ -36,7 +35,7 @@
 - **Repo: mayo**: [LOGIC] Fix UnboundLocalError in JSON extraction fallback. (Ref: https://github.com/HOLYKEYZ/mayo/pull/10) - *Status: PENDING REVIEW*
 <!-- LAST_PROACTIVE_ISSUE=1778464083 -->
 - **Repo: Kelegam-Tech**: Opened issue — Services Page Logic Cleanup and Potential Feature Expansion. (Ref: https://github.com/HOLYKEYZ/Kelegam-Tech/issues/17) - *Status: AWAITING JOSEPH'S INPUT*
-- **Repo: SWARMs-Debate-Primitive**: [LOGIC] Add error state handling to LivePipeline component. (Ref: https://github.com/HOLYKEYZ/SWARMs-Debate-Primitive/pull/4) - *Status: PENDING REVIEW*
+- **Repo: SWARMs-Debate-Primitive**: [LOGIC] Add error state handling to LivePipeline component. (Ref: https://github.com/HOLYKEYZ/SWARMs-Debate-Primitive/pull/4) - *Status: REJECTED - Joseph closed this Comment: '[vc]: #wOWmkx6nQ0nq2rXO0P3FwMIG5B+WPLUgcmL22OImJvk=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 <!-- LAST_ISSUE_JUDGE=1778489529 -->
 - **Repo: Alexcathe**: [LOGIC] Fix clipped dropdown by removing forced viewport height. (Ref: https://github.com/HOLYKEYZ/Alexcathe/pull/18) - *Status: PENDING REVIEW*
 - **Repo: HOLYKEYZ**: Opened issue — Profile Repository Analysis - No Functional Bugs Found. (Ref: https://github.com/HOLYKEYZ/HOLYKEYZ/issues/13) - *Status: AWAITING JOSEPH'S INPUT*
