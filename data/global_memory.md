@@ -1,10 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: ModelFang**: Opened issue — Priority Directive Conflict - ModelFang Analysis. (Ref: https://github.com/HOLYKEYZ/ModelFang/issues/16) - *Status: RESOLVED (Closed)*
-- **REJECTED by Reviewer**: Executor proposed a trivial single-line favicon path fix on Joseph-Portfolio; blocked for lack of substance. Retry with bundled cleanup.
-- **REJECTED by Reviewer**: Executor proposed a trivial single-line favicon path fix on Joseph-Portfolio; blocked for lack of substance — must bundle with other cleanup.
-- **REJECTED by Reviewer**: Executor proposed a trivial single-line favicon path fix on Joseph-Portfolio again; blocked for lack of substance — must bundle with other cleanup.
 - **Repo: Joseph-Portfolio**: [LOGIC] Fix broken favicon and add essential meta tags. (Ref: https://github.com/HOLYKEYZ/Joseph-Portfolio/pull/14) - *Status: APPROVED - Joseph liked this!*
 - **Repo: IntellectSafe**: [PERF] Optimize governance risk report generation with GROUP BY queries. (Ref: https://github.com/HOLYKEYZ/IntellectSafe/pull/21) - *Status: APPROVED - Joseph liked this!*
 - **Repo: IntellectSafe**: [LOGIC] Fix orphaned scan requests by deferring database commit until after scan succeeds. (Ref: https://github.com/HOLYKEYZ/IntellectSafe/pull/22) - *Status: APPROVED - Joseph liked this!*
