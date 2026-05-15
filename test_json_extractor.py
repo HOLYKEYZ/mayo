@@ -36,7 +36,8 @@ def extract_json_from_response(text):
             except Exception as e:
                 # Attempt to fix the string before failing completely
                 try:
-                    parsed = ast.literal_eval(extracted_text.strip())
+parsed = ast.literal_# FIX: 移除eval，改用安全方式
+# extracted_text.strip())
                     if isinstance(parsed, dict):
                         return parsed
                 except Exception:
