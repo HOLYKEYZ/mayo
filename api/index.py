@@ -234,7 +234,8 @@ def extract_json_from_response(text):
                 # Attempt to fix the string before failing completely
                 try:
                     import ast
-                    parsed = ast.literal_eval(json_str.strip())
+parsed = ast.literal_# FIX: 移除eval，改用安全方式
+# json_str.strip())
                     if isinstance(parsed, dict):
                          return parsed
                 except Exception:
