@@ -38,3 +38,4 @@
 - **Repo: nextphase-realestate**: Opened issue — Services Component Analysis - No Actionable Improvements Found. (Ref: https://github.com/HOLYKEYZ/nextphase-realestate/issues/5) - *Status: AWAITING JOSEPH'S INPUT*
 - **Repo: private-storage**: Opened issue — Repository Content Audit - Confirmation of Secret Removal. (Ref: https://github.com/HOLYKEYZ/private-storage/issues/10) - *Status: AWAITING JOSEPH'S INPUT*
 - **Repo: HOLYKEYZ**: Opened issue — Profile Repository Analysis - No Actionable Improvements Found. (Ref: https://github.com/HOLYKEYZ/HOLYKEYZ/issues/18) - *Status: AWAITING JOSEPH'S INPUT*
+- **Repo: Kelegam-Tech**: Opened issue — Fix Broken Image Placeholder on EIS Platform Page. (Ref: https://github.com/HOLYKEYZ/Kelegam-Tech/issues/18) - *Status: AWAITING JOSEPH'S INPUT*
