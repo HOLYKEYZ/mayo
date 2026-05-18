@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: model-unfetter**: [PERF] Add dtype synchronization and memory cleanup in distributed ablation loop. (Ref: https://github.com/HOLYKEYZ/model-unfetter/pull/11) - *Status: PENDING REVIEW*
 - **Repo: unfetter_proxy**: [LOGIC] Fix UnboundLocalError in token ID retrieval and remove dead code. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/13) - *Status: APPROVED - Joseph liked this!*
 - **Repo: unfetter_proxy**: [LOGIC] Add missing httpx import to prevent NameError in Provider.send_request. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/14) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_DISCUSSION_REPLY=1779114167 -->
