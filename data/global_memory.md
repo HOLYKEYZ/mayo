@@ -38,3 +38,4 @@
 - **Repo: HOLYKEYZ**: Opened issue — Profile Repository Analysis - No Actionable Improvements Found. (Ref: https://github.com/HOLYKEYZ/HOLYKEYZ/issues/18) - *Status: AWAITING JOSEPH'S INPUT*
 - **Repo: Kelegam-Tech**: Opened issue — Fix Broken Image Placeholder on EIS Platform Page. (Ref: https://github.com/HOLYKEYZ/Kelegam-Tech/issues/18) - *Status: AWAITING JOSEPH'S INPUT*
 - **Repo: ModelFang**: Opened issue — Dataset Schema Validation for Attack Chains. (Ref: https://github.com/HOLYKEYZ/ModelFang/issues/18) - *Status: AWAITING JOSEPH'S INPUT*
+- **Repo: Kelegam-Tech**: Opened issue — Repository Configuration Audit - Next.config.ts. (Ref: https://github.com/HOLYKEYZ/Kelegam-Tech/issues/19) - *Status: AWAITING JOSEPH'S INPUT*
