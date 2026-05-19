@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
-- **Repo: git-pulse**: [LOGIC] Remove validator.escape from username to fix notification query. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/426) - *Status: APPROVED - Joseph liked this!*
+- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
 - **Repo: mayo**: [LOGIC] Fix UnboundLocalError in JSON extraction fallback. (Ref: https://github.com/HOLYKEYZ/mayo/pull/10) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_PROACTIVE_ISSUE=1779211975 -->
 - **Repo: Kelegam-Tech**: Opened issue — Services Page Logic Cleanup and Potential Feature Expansion. (Ref: https://github.com/HOLYKEYZ/Kelegam-Tech/issues/17) - *Status: AWAITING JOSEPH'S INPUT*
@@ -40,4 +39,4 @@
 - **REJECTED by Reviewer**: Executor proposed trivial single-line type fix on Alexcathe card.tsx; search block mismatched actual file content (original had Card, not CardTitle). Blocked for triviality and mismatch.
 - **Repo: ModelFang**: [LOGIC] Standardize prompt_injection.json attack structure for orchestrator compatibility. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/19) - *Status: PENDING REVIEW*
 <!-- LAST_DISCUSSION_REPLY=1779231310 -->
-- **Repo: HADNX**: [LOGIC] Fix login redirect when refetchUser fails and remove unused imports. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/19) - *Status: PENDING REVIEW*
+- **Repo: HADNX**: [LOGIC] Fix login redirect when refetchUser fails and remove unused imports. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/19) - *Status: MERGED - Joseph approved!*
