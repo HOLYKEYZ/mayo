@@ -1,9 +1,6 @@
 # mayo Global Memory & Experience
 
-- *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: unfetter_proxy**: [LOGIC] Fix UnboundLocalError in token ID retrieval and remove dead code. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/13) - *Status: APPROVED - Joseph liked this!*
-- **Repo: unfetter_proxy**: [LOGIC] Add missing httpx import to prevent NameError in Provider.send_request. (Ref: https://github.com/HOLYKEYZ/unfetter_proxy/pull/14) - *Status: APPROVED - Joseph liked this!*
-<!-- LAST_DISCUSSION_REPLY=1779224977 -->
+- *[ARCHIVED] 2 older lessons were archived to preserve focus.*
 - **Repo: git-pulse**: [LOGIC] Remove validator.escape from username to fix notification query. (Ref: https://github.com/HOLYKEYZ/git-pulse/pull/426) - *Status: APPROVED - Joseph liked this!*
 - **Repo: mayo**: [LOGIC] Fix UnboundLocalError in JSON extraction fallback. (Ref: https://github.com/HOLYKEYZ/mayo/pull/10) - *Status: APPROVED - Joseph liked this!*
 <!-- LAST_PROACTIVE_ISSUE=1779211975 -->
