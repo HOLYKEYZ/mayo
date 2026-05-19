@@ -40,3 +40,4 @@
 - **Repo: ModelFang**: Opened issue — Dataset Schema Validation for Attack Chains. (Ref: https://github.com/HOLYKEYZ/ModelFang/issues/18) - *Status: AWAITING JOSEPH'S INPUT*
 - **Repo: Kelegam-Tech**: Opened issue — Repository Configuration Audit - Next.config.ts. (Ref: https://github.com/HOLYKEYZ/Kelegam-Tech/issues/19) - *Status: AWAITING JOSEPH'S INPUT*
 - **REJECTED by Reviewer**: Executor proposed empty edits on Alexcathe after Scanner found no issues; blocked for lack of substance — must bundle with other cleanup or find real bugs.
+- **REJECTED by Reviewer**: Executor proposed trivial single-line type fix on Alexcathe card.tsx; search block mismatched actual file content (original had Card, not CardTitle). Blocked for triviality and mismatch.
