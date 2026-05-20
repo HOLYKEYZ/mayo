@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: mayo**: [LOGIC] Fix UnboundLocalError in JSON extraction fallback. (Ref: https://github.com/HOLYKEYZ/mayo/pull/10) - *Status: APPROVED - Joseph liked this!*
-<!-- LAST_PROACTIVE_ISSUE=1779211975 -->
 - **Repo: Kelegam-Tech**: Opened issue — Services Page Logic Cleanup and Potential Feature Expansion. (Ref: https://github.com/HOLYKEYZ/Kelegam-Tech/issues/17) - *Status: AWAITING JOSEPH'S INPUT*
 - **Repo: SWARMs-Debate-Primitive**: [LOGIC] Add error state handling to LivePipeline component. (Ref: https://github.com/HOLYKEYZ/SWARMs-Debate-Primitive/pull/4) - *Status: REJECTED - Joseph closed this Comment: '[vc]: #wOWmkx6nQ0nq2rXO0P3FwMIG5B+WPLUgcmL22OImJvk=:eyJpc01vbm9yZXBvIjp0cnVlLCJ0'*
 <!-- LAST_ISSUE_JUDGE=1779242098 -->
