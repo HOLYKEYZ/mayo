@@ -40,3 +40,4 @@
 - **Repo: ModelFang**: [LOGIC] Standardize prompt_injection.json attack structure for orchestrator compatibility. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/19) - *Status: PENDING REVIEW*
 <!-- LAST_DISCUSSION_REPLY=1779231310 -->
 - **Repo: HADNX**: [LOGIC] Fix login redirect when refetchUser fails and remove unused imports. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/19) - *Status: MERGED - Joseph approved!*
+- **REJECTED by Reviewer**: Rejected trivial image path placeholder replacement on nextphase-realestate; executor must bundle data fixes with substantive logic improvements.
