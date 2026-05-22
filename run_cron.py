@@ -20,10 +20,6 @@ from index import (
 )
 
 def co_author_msg(msg):
-    co_author_name = os.environ.get('CO_AUTHOR_NAME', '')
-    co_author_email = os.environ.get('CO_AUTHOR_EMAIL', '')
-    if co_author_name and co_author_email:
-        return f"{msg}\n\nCo-authored-by: {co_author_name} <{co_author_email}>"
     return msg
 
 def run_cron():
@@ -187,12 +183,9 @@ def run_cron():
                                 
                                 success, err = commit_changes_via_api(issue_repo, branch, file_changes, title)
                                 if success:
-                                    co_author_name = os.environ.get('CO_AUTHOR_NAME', '')
-                                    co_author_email = os.environ.get('CO_AUTHOR_EMAIL', '')
-                                    co_author_line = f"\n\nCo-authored-by: {co_author_name} <{co_author_email}>" if co_author_name and co_author_email else ""
                                     pr = issue_repo.create_pull(
                                         title=f"[DRAFT] {title}",
-                                        body=f"Approved by Joseph in {issue_url}\n\n{improvement_data.get('body', '')}{co_author_line}\n\n**This is a DRAFT PR — review and merge when ready.**",
+                                        body=f"Approved by Joseph in {issue_url}\n\n{improvement_data.get('body', '')}\n\n**This is a DRAFT PR — review and merge when ready.**",
                                         head=branch,
                                         base=issue_repo.default_branch,
                                         draft=True
@@ -251,10 +244,6 @@ def run_cron():
             try:
                 mem_file = bot_repo_obj.get_contents("data/global_memory.md")
                 timing_msg = f"chore(timing): update {phase_key}"
-                co_author_name = os.environ.get('CO_AUTHOR_NAME', '')
-                co_author_email = os.environ.get('CO_AUTHOR_EMAIL', '')
-                if co_author_name and co_author_email:
-                    timing_msg = f"{timing_msg}\n\nCo-authored-by: {co_author_name} <{co_author_email}>"
                 bot_repo_obj.update_file("data/global_memory.md", timing_msg, new_mem, mem_file.sha)
             except Exception as e:
                 print(f"DEBUG: Failed to update {phase_key} timestamp: {e}")
@@ -918,9 +907,6 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
         
         if success:
             owner_login = target_repo.owner.login
-            co_author_name = os.environ.get('CO_AUTHOR_NAME', '')
-            co_author_email = os.environ.get('CO_AUTHOR_EMAIL', '')
-            co_author_line = f"\n\nCo-authored-by: {co_author_name} <{co_author_email}>" if co_author_name and co_author_email else ""
             
             scanner_display = f"Scanner ({scanner_model})" if scanner_model else "Scanner"
             executor_display = f"Executor ({used_model})" if used_model else "Executor (Groq Llama)"
@@ -928,7 +914,7 @@ Write a helpful, concise reply. Be friendly and technical. If it's a question, a
             
             pr = target_repo.create_pull(
                 title=f"[DRAFT] {final_title}",
-                body=f"{final_body}\n\n---\n*Validated by Triple-AI: {scanner_display} → {executor_display} → {reviewer_display}*{co_author_line}\n\n**This is a DRAFT PR — review and merge when ready.**",
+                body=f"{final_body}\n\n---\n*Validated by Triple-AI: {scanner_display} → {executor_display} → {reviewer_display}*\n\n**This is a DRAFT PR — review and merge when ready.**",
                 head=final_branch,
                 base=target_repo.default_branch,
                 draft=True

@@ -15,10 +15,6 @@ app = Flask(__name__)
 EXCLUDED_REPOS = ['Square-farms', 'Jo-ayanda-real-estate', 'Backend-images-app', 'ecom-stor']
 
 def co_author_msg(msg):
-    co_author_name = os.environ.get('CO_AUTHOR_NAME', '')
-    co_author_email = os.environ.get('CO_AUTHOR_EMAIL', '')
-    if co_author_name and co_author_email:
-        return f"{msg}\n\nCo-authored-by: {co_author_name} <{co_author_email}>"
     return msg
 
 # Config
@@ -280,11 +276,6 @@ def commit_changes_via_api(repo, branch_name, file_changes, commit_message):
             sb = repo.get_branch(repo.default_branch)
             repo.create_git_ref(ref=f"refs/heads/{branch_name}", sha=sb.commit.sha)
         
-        # Add co-author if configured
-        co_author_name = os.environ.get('CO_AUTHOR_NAME', '')
-        co_author_email = os.environ.get('CO_AUTHOR_EMAIL', '')
-        if co_author_name and co_author_email:
-            commit_message = f"{commit_message}\n\nCo-authored-by: {co_author_name} <{co_author_email}>"
         
         for path, content in file_changes.items():
             try:
