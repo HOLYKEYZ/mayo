@@ -4040,3 +4040,75 @@ The most critical issue is the **compilation failure** in the syntax highlightin
 **Reviewer**: CORRECT: First edit correctly fixes the invalid character literal '''. Second edit's intent is correct (completing the truncated statement and closing the if block), but the search block '            prev_s' was too short and failed to match in the diff preview. Providing a corrected edit with additional surrounding context to ensure a clean, exact match.
 
 ---
+
+## Cycle 1779483761
+**Scanner**: ### Step 1: Codebase Understanding
+VULNRIX is an all-in-one security platform providing code vulnerability scanning (via AI and regex) and digital footprint analysis (OSINT).
+
+The target files are:
+1. frontend/package.json: Defines the dependencies and scripts for the Next.js 14+ frontend.
+2. vuln_scan/nodes/views.py: Implements the API endpoints for a distributed scanning node, allowing the main system to send code snippets to a node for analysis via a security pipeline.
+
+The codebase uses a Django backend for the API and a Next.js/TypeScript/Tailwind frontend. It employs a "fallback architecture (C modules) for performance-critical OSINT tasks.
+
+### Step 2: Deep Analysis
+
+Security:
+- In vuln_scan/nodes/views.py, the scan function uses tempfile.NamedTemporaryFile with delete=False. While it attempts to unlink the file in a finally block, a hard crash of the process between file creation and unlinking could leave sensitive user code residing in the system's temporary directory.
+- The scan function accepts a filename from the user (data.get("filename", "scan_target.py")). This filename is used to determine the extension for the temporary file. While it doesn't directly lead to Path Traversal because it's passed to NamedTemporaryFile (which generates its own random name), it allows a user to spoof the file extension, potentially tricking the SecurityPipeline into using the wrong parser/analyzer for the code provided.
+
+Logic:
+- In vuln_scan/nodes/views.py, the get_pipeline function uses a global variable _pipeline. If the pipeline fails to initialize once, it sets _pipeline = None. However, the logic in get_pipeline does not attempt to re-initialize if it was previously failed; it simply returns None. If the failure was transient (e.g., a temporary resource lock), the node remains broken until a restart.
+
+Performance:
+- The use of temp files for every single scan request introduces disk I/O overhead. For small snippets, in-memory buffers or StringIO would be significantly faster.
+
+Architecture:
+- The scan function in vuln_scan/nodes/views.py catches a generic Exception and returns it as a string in the JsonResponse. This can leak internal system paths or stack trace details to the API caller.
+
+Consistency:
+- The frontend package.json uses Next.js 16.0.0 and React 19.0.0. These are bleeding-edge/experimental versions, but per the Anti-Hallucination rules, these are treated as correct.
+
+### Step 3: Pick ONE Improvement
+
+The most critical issue is the potential for Resource Exhaustion/Disk Pollution and the lack of robust error recovery in the pipeline initialization. However, the most immediate "real bug" is the insecure error handling in the scan endpoint that leaks internal server details.
+
+Actually, looking closer at vuln_scan/nodes/views.py, there is a more significant logic flaw: The pipeline initialization failure is permanent for the life of the process. If the first request hits a transient error during SecurityPipeline() instantiation, every subsequent request will fail with "Scanner engine not available" without ever trying to recover.
+
+Wait, looking at the security aspect: The scan function takes a user-provided filename and uses its extension to create a temporary file. If the SecurityPipeline relies on the file extension to determine which security rules to apply (e.g., .py vs .js), a user can bypass specific language checks by providing a filename with a misleading extension while sending code from a different language.
+
+However, the most impactful "crash/failure" prevention is the pipeline initialization. If the pipeline fails to load, the node is dead.
+
+Let's refine: The generic Exception catch in the scan function is a security risk (Information Exposure).
+
+But the most substantive logic fix is the Pipeline initialization.
+
+Actually, I will focus on the Information Exposure in the scan function. Returning str(e) in a production-facing API is a vulnerability.
+
+Wait, looking at the requirements: "MUST fix actual broken functionality".
+
+The most broken part is the pipeline initialization logic. If it fails once, it never tries again.
+
+### Step 4: Write the Executor's Plan
+
+WHAT to change:
+Modify the pipeline initialization logic to allow for recovery attempts if the pipeline failed to initialize previously, and sanitize the error response in the scan endpoint to prevent internal system leakage.
+
+WHERE in the file:
+In vuln_scan/nodes/views.py:
+1. Inside the get_pipeline function, specifically the block where _pipeline is checked and the try-except block for SecurityPipeline().
+2. Inside the scan function, specifically the except Exception as e block at the end of the function.
+
+WHY this matters:
+1. Currently, if the SecurityPipeline fails to initialize on the first call (due to a transient error), the node becomes permanently unavailable until a manual restart. This reduces the reliability of the distributed scanning network.
+2. Returning str(e) to the client in the scan function can expose sensitive server-side information, such as absolute file paths, library versions, or internal logic structures, which can be used by an attacker to map the system.
+
+HOW to do it:
+1. In get_pipeline: Remove the assignment of _pipeline = None inside the except block. By not assigning None to the global variable upon failure, the next call to get_pipeline will enter the if _pipeline is None block again and attempt a fresh initialization.
+2. In the scan function's final except block: Change the JsonResponse to return a generic error message (e.g., "An internal error occurred during scanning") instead of str(e), while keeping the logger.error(f"Scan failed: {e}") call to ensure administrators can still see the actual error in the logs.
+
+**Executor**: {"title": "[LOGIC] Fix pipeline recovery and sanitize error response in scan endpoint", "body": "### Problem / Gap\n1. The `get_pipeline` function permanently sets `_pipeline = None` on initialization failure, preventing any recovery from transient errors. The node becomes dead until restart.\n2. The `scan` endpoint returns the raw exception string to the client, leaking internal server details (paths, stack traces).\n\n### Solution & Insight\n- Remove the `_pipeline = None` assignment in the except block so that the next call will re-attempt initialization.\n- Replace the error response with a generic message while keeping the detailed log for administrators.\n\n### Impact\n- Node can recover from transient pipeline initialization failures, improving reliability.\n- Prevents information disclosure via API error responses.", "branch_name": "bot/upgrade-1779483761", "edits": [{"file": "vuln_scan/nodes/views.py", "search": "def get_pipeline():\n    \"\"\"Lazy load the security pipeline.\"\"\"\n    global _pipeline\n    if _pipeline is None:\n        try:\n            from engine.pipeline import SecurityPipeline\n            _pipeline = SecurityPipeline()\n            logger.info(\"Node SecurityPipeline initialized\")\n        except Exception as e:\n            logger.error(f\"Failed to initialize pipeline: {e}\")\n            _pipeline = None\n    return _pipeline", "replace": "def get_pipeline():\n    \"\"\"Lazy load the security pipeline.\"\"\"\n    global _pipeline\n    if _pipeline is None:\n        try:\n            from engine.pipeline import SecurityPipeline\n            _pipeline = SecurityPipeline()\n            logger.info(\"Node SecurityPipeline initialized\")\n        except Exception as e:\n            logger.error(f\"Failed to initialize pipeline: {e}\")\n    return _pipeline"}, {"file": "vuln_scan/nodes/views.py", "search": "    except Exception as e:\n        logger.error(f\"Scan failed: {e}\")\n        return JsonResponse({\"status\": \"ERROR\", \"error\": str(e)}, status=500)", "replace": "    except Exception as e:\n        logger.error(f\"Scan failed: {e}\")\n        return JsonResponse({\"status\": \"ERROR\", \"error\": \"An internal error occurred during scanning\"}, status=500)"}]}
+
+**Reviewer**: CORRECT: The second edit is a valid security fix that prevents information disclosure (CWE-209) by replacing a detailed exception message with a generic error response. However, the first edit removing `_pipeline = None` is functionally a no-op — the variable is already `None` at that point, so this does not actually enable retry logic as claimed. It should be dropped to avoid trivial diffs.
+
+---
