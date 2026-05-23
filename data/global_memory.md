@@ -1,7 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: ModelFang**: [LOGIC] Align council architecture providers with implemented adapters. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/17) - *Status: APPROVED - Joseph liked this!*
 - **Repo: HOLYKEYZ**: Opened issue — Profile Repository Analysis - No Functional Improvements Found. (Ref: https://github.com/HOLYKEYZ/HOLYKEYZ/issues/15) - *Status: AWAITING JOSEPH'S INPUT*
 - **REJECTED by Reviewer**: Executor proposed a trivial single-line logo path placeholder fix on Alexcathe; blocked for lack of substance — must bundle with other cleanup.
 - **REJECTED by Reviewer**: Executor proposed trivial single-line logo placeholder path fix on Alexcathe; blocked for lack of substance — must bundle with other cleanup.
