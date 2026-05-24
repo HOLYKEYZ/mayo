@@ -4232,3 +4232,71 @@ The most critical issue is the broken code in `editorUpdateSyntax`. The line `pr
 **Reviewer**: Reviewer unavailable — used Executor's edits directly
 
 ---
+
+## Cycle 1779658980
+**Scanner**: ### Step 1: Codebase Understanding
+The repository provides a Windows system information utility written in C, designed to aggregate hardware and OS specs into a single view. It also includes a tribute folder containing HolyC versions of the tool for TempleOS.
+
+The target file, sysinfo.c, is the primary implementation of the Windows utility. It uses the Windows API (Win32) to query system metrics, registry keys for CPU details, and memory/disk management functions to display system health and specifications.
+
+The codebase follows a procedural C pattern, utilizing standard Windows headers (windows.h, tlhelp32.h, winreg.h) and basic console output for the UI.
+
+### Step 2: Deep Analysis
+
+**Security**:
+- The code uses `sprintf` to construct drive paths (e.g., `sprintf(drive_path, "%c:\\", drive_letter)`). While the input is a controlled loop from 'C' to 'Z', `sprintf` is generally discouraged in favor of `snprintf` to prevent buffer overflows.
+- Registry access is read-only, which is safe.
+
+**Logic**:
+- **Integer Overflow/Precision**: In `print_disk_info`, the calculation `(total_bytes - free_bytes) * 100 / total_bytes` is performed using `unsigned __int64`. While the logic is mostly sound, the truncation to `int` is acceptable for a percentage.
+- **Buffer Safety**: `GetComputerNameA` and `GetUserNameA` are called with buffers of 256. If the system name exceeds this, the API will fail or truncate.
+
+**Performance**:
+- The disk scanning loop iterates through every letter from 'C' to 'Z'. This is standard for this type of tool and not a performance bottleneck.
+
+**Architecture**:
+- **Missing Error Handling**: Several Windows API calls are made without checking the return value. For example, `GetComputerNameA` and `GetUserNameA` can fail, but the code proceeds to print the buffer regardless.
+- **Resource Management**: The registry key is closed correctly using `RegCloseKey`.
+
+**Features**:
+- The tool lacks a way to handle Unicode characters in computer or user names (it uses the 'A' suffix functions like `GetComputerNameA` instead of 'W' wide-character functions).
+
+**Testing**:
+- There is no validation for cases where `GetDiskFreeSpaceA` fails for specific drive types or permissions, though it is wrapped in an `if` statement.
+
+**DX**:
+- The README is comprehensive and provides clear build instructions for TCC and GCC.
+
+**Consistency**:
+- The formatting is consistent throughout the file.
+
+**Dead Code**:
+- No obvious dead code detected in the provided snippets.
+
+### Step 3: Pick ONE Improvement
+
+The most critical issue is the lack of error handling for the primary identity functions (`GetComputerNameA` and `GetUserNameA`). If these functions fail (due to permission issues or system restrictions), the program will print "Unknown" or potentially uninitialized memory/garbage if the buffer wasn't zeroed, leading to misleading output. However, a more substantive logic bug exists in the Disk Info section: the use of `GetDiskFreeSpaceA` is deprecated and fails for disks larger than 2GB.
+
+Modern Windows systems use `GetDiskFreeSpaceExA` to handle large volumes. Using the older `GetDiskFreeSpaceA` will result in incorrect capacity reporting or failure on almost any modern hard drive. This is a functional bug that renders the "Disk Information" module broken for modern hardware.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT**: Replace the deprecated `GetDiskFreeSpaceA` function with `GetDiskFreeSpaceExA` to support disks larger than 2GB.
+
+**WHERE**: In `sysinfo.c`, inside the `print_disk_info` function. Specifically, locate the block where `GetDiskFreeSpaceA` is called and the subsequent calculations involving `sectors_per_cluster`, `bytes_per_sector`, `free_clusters`, and `total_clusters`.
+
+**WHY**: `GetDiskFreeSpaceA` uses 32-bit integers for cluster counts, meaning it cannot accurately report the size of any disk larger than 2GB. Since almost all modern disks are larger than this, the tool currently provides incorrect or failed data for disk capacity. `GetDiskFreeSpaceExA` uses 64-bit integers (`ULARGE_INTEGER`), which is the industry standard for modern Windows volume querying.
+
+**HOW**:
+1. Remove the local variables `sectors_per_cluster`, `bytes_per_sector`, `free_clusters`, and `total_clusters`.
+2. Declare three `ULARGE_INTEGER` variables: `freeBytesAvailable`, `totalNumberOfBytes`, and `totalNumberOfFreeBytes`.
+3. Replace the `if (GetDiskFreeSpaceA(...))` call with a call to `GetDiskFreeSpaceExA`, passing the `drive_path` and the three `ULARGE_INTEGER` variables.
+4. Remove the manual calculation of `bytes_per_cluster`, `total_bytes`, and `free_bytes`.
+5. Update the `total_gb` and `free_gb` calculations to use the `.QuadPart` member of the `totalNumberOfBytes` and `totalNumberOfFreeBytes` variables respectively.
+6. Update the `percent` calculation to use the `.QuadPart` values of the new `ULARGE_INTEGER` variables.
+
+**Executor**: {"title": "[LOGIC] Replace deprecated GetDiskFreeSpaceA with GetDiskFreeSpaceExA for large disk support", "body": "### Problem / Gap\nThe `print_disk_info` function uses `GetDiskFreeSpaceA`, which is limited to 32\u2011bit cluster counts and fails or reports incorrect sizes for disks larger than 2\u202fGB. On modern systems this renders the disk information module broken.\n\n### Solution & Insight\nReplace `GetDiskFreeSpaceA` with `GetDiskFreeSpaceExA`, which uses 64\u2011bit `ULARGE_INTEGER` values. Remove the manual cluster\u2011based calculations and directly use the returned byte counts. The progress bar is preserved and now uses the correctly computed percentage.\n\n### Impact\nAccurate disk capacity and free space reporting for all modern drives, eliminating a functional bug that affected every disk larger than 2\u202fGB.", "branch_name": "bot/upgrade-1779658980", "edits": [{"file": "sysinfo.c", "search": "void print_disk_info(void) {\n    print_header(\"DISK INFORMATION\");\n    \n    char drive_letter;\n    char drive_path[4];\n    DWORD sectors_per_cluster, bytes_per_sector, free_clusters, total_clusters;\n    \n    for (drive_letter = 'C'; drive_letter <= 'Z'; drive_letter++) {\n        sprintf(drive_path, \"%c:\\\\\", drive_letter);\n        \n        if (GetDriveTypeA(drive_path) == DRIVE_FIXED) {\n            if (GetDiskFreeSpaceA(drive_path, &sectors_per_cluster, &bytes_per_sector, \n                                  &free_clusters, &total_clusters)) {\n                unsigned __int64 bytes_per_cluster = (unsigned __int64)sectors_per_cluster * bytes_per_sector;\n                unsigned __int64 total_bytes = bytes_per_cluster * total_clusters;\n                unsigned __int64 free_bytes = bytes_per_cluster * free_clusters;\n                double total_gb = (double)total_bytes / (1024.0 * 1024.0 * 1024.0);\n                double free_gb = (double)free_bytes / (1024.0 * 1024.0 * 1024.0);\n                int percent = (total_bytes > 0) ? (int)(((total_bytes - free_bytes) * 100) / total_bytes) : 0;\n                \n                printf(\"  |  Drive %c: %6.1fGB total, %6.1fGB free |\\n\", drive_letter, total_gb, free_gb);\n                printf(\"  |  [\");\n                int bar_len = 32;\n                int filled = (percent * bar_len) / 100;\n                int i;\n                for (i = 0; i < bar_len; i++) {\n                    if (i < filled) printf(\"#\");\n                    else printf(\"-\");\n                }\n                printf(\"]|\\n\");\n            }\n        }\n    }\n    print_footer();\n}", "replace": "void print_disk_info(void) {\n    print_header(\"DISK INFORMATION\");\n    \n    char drive_letter;\n    char drive_path[4];\n    ULARGE_INTEGER freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes;\n    \n    for (drive_letter = 'C'; drive_letter <= 'Z'; drive_letter++) {\n        sprintf(drive_path, \"%c:\\\\\", drive_letter);\n        \n        if (GetDriveTypeA(drive_path) == DRIVE_FIXED) {\n            if (GetDiskFreeSpaceExA(drive_path, &freeBytesAvailable, &totalNumberOfBytes, &totalNumberOfFreeBytes)) {\n                double total_gb = (double)totalNumberOfBytes.QuadPart / (1024.0 * 1024.0 * 1024.0);\n                double free_gb = (double)totalNumberOfFreeBytes.QuadPart / (1024.0 * 1024.0 * 1024.0);\n                int percent = (totalNumberOfBytes.QuadPart > 0) ? (int)(((totalNumberOfBytes.QuadPart - totalNumberOfFreeBytes.QuadPart) * 100) / totalNumberOfBytes.QuadPart) : 0;\n                \n                printf(\"  |  Drive %c: %6.1fGB total, %6.1fGB free |\\n\", drive_letter, total_gb, free_gb);\n                printf(\"  |  [\");\n                int bar_len = 32;\n                int filled = (percent * bar_len) / 100;\n                int i;\n                for (i = 0; i < bar_len; i++) {\n                    if (i < filled) printf(\"#\");\n                    else printf(\"-\");\n                }\n                printf(\"]|\\n\");\n            }\n        }\n    }\n    print_footer();\n}"}]}
+
+**Reviewer**: CORRECT: The core fix is correct and valuable: replacing GetDiskFreeSpaceA with GetDiskFreeSpaceExA fixes the >2GB disk size bug. However, the Executor's search block does not match the original file content. The original printf for drive info was split across two lines, and the disk bar originally included the percentage (%%3d%%). The provided search text omitted both, so it would fail an exact match. Corrected edits preserve the original formatting and percentage display while applying the API upgrade.
+
+---
