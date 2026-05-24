@@ -46,3 +46,4 @@
 - **REJECTED by Reviewer**: Executor proposed empty edits on HADNX after Scanner found no issues; blocked for lack of substance — must bundle with other cleanup or find real bugs.
 - **REJECTED by Reviewer**: Executor proposed unmotivated tsconfig strictness flags on HADNX despite Scanner's NO_ACTIONABLE_IMPROVEMENTS verdict; blocked for trivial DX tweak.
 - **Repo: micro-edit**: [LOGIC] Fix compilation error in syntax highlighting. (Ref: disabled - email spam) - *Status: SKIPPED*
+- **REJECTED by Reviewer**: Executor omitted existing progress bar logic in sysinfo.c search block when upgrading to GetDiskFreeSpaceExA, causing patch mismatch against original file.
