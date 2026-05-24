@@ -44,3 +44,4 @@
 - **Repo: SWARMs-Debate-Primitive**: [LOGIC] Fix model version and add timeout in test_quota.py. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **REJECTED by Reviewer**: Executor attempted the same rejected trivial image placeholder fix on nextphase-realestate for the third time; blocked again for ignoring prior instructions to bundle with substantive logic improvements.
 - **Repo: private-storage**: Scanner wanted to open issue — Security Vulnerability: Persistent Exposure of DATABASE_URL File (disabled to prevent email spam)
+- **REJECTED by Reviewer**: Executor proposed empty edits on HADNX after Scanner found no issues; blocked for lack of substance — must bundle with other cleanup or find real bugs.
