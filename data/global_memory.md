@@ -54,3 +54,4 @@
 - **REJECTED by Reviewer**: Executor submitted empty edits on Kelegam-Tech after Scanner hallucinated a syntax error in page.tsx; blocked for lack of substance — empty edits are never acceptable.
 - **REJECTED by Reviewer**: Executor proposed unverified trivial component rename (WhyKelagam -> WhyKelegam) on Kelegam-Tech; blocked for triviality and off-topic deviation from scanner plan.
 - **REJECTED by Reviewer**: Executor repeated the same incomplete search block on temple-sysinfo, omitting progress bar logic and producing a malformed patch when upgrading to GetDiskFreeSpaceExA.
+- **REJECTED by Reviewer**: Executor repeated sysinfo.c GetDiskFreeSpaceExA patch but search block still mismatched original progress bar logic (bar_len=32, percent printf, split args); also spuriously removed disk usage percent display.
