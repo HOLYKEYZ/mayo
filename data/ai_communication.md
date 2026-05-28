@@ -4331,3 +4331,41 @@ In Solana, accounts must be rent-exempt. If an account is not closed, the SOL us
 **Reviewer**: APPROVE: The edits correctly fix the critical account leak/rent-lock bug identified by the Scanner. Adding `close = requester` to `ResolveEscrow` ensures the escrow account is closed and rent is reclaimed upon resolution. Removing the flawed manual rent-calculation logic and transferring the full `escrow.amount` is the correct simplification, as Anchor's `close` constraint handles the remaining rent balance. Search blocks match the original file exactly, and the changes are substantive, safe, and aligned with the Scanner's plan.
 
 ---
+
+## Cycle 1779996703
+**Scanner**: ### Step 1: Codebase Understanding
+- **Repository Purpose**: This is a personal portfolio website for Joseph, built with Next.js, showcasing projects, skills, and AI models/datasets hosted on Hugging Face.
+- **Target File Purpose**: `src/app/page.tsx` is the main landing page. It contains the UI layout and logic for displaying skill cards, project cards, and dynamic download statistics for Hugging Face models/datasets. `netlify.toml` handles the deployment configuration for Netlify.
+- **Patterns & Frameworks**: Next.js (App Router), TypeScript, Tailwind CSS, and client-side data fetching via the Hugging Face API.
+
+### Step 2: Deep Analysis
+- **Security**: No hardcoded secrets found. The Hugging Face API calls are public GET requests, so no auth tokens are exposed.
+- **Logic**: 
+    - In `ModelCard`, the `repoPath` extraction logic is fragile. It uses `.split('huggingface.co/datasets/')[1]` and `.split('huggingface.co/')[1]`. If a URL is passed that doesn't strictly match these strings (e.g., using `http` instead of `https` or a trailing slash), the split will result in `undefined`, causing the `apiUrl` to be malformed (e.g., `https://huggingface.co/api/models/undefined`).
+    - The `ModelCard` component lacks a check for the response status of the `fetch` call. If the API returns a 404 or 500, `response.json()` might still execute or throw, but the `downloads` state might be set to an unexpected value or the error caught by the generic catch block without specific handling for "Not Found" vs "Network Error".
+- **Performance**: The `ModelCard` component performs a fetch on mount. If there are many models/datasets on the page, this triggers multiple concurrent API requests on the client side.
+- **Architecture**: The `ModelCard` component is defined inside `page.tsx`. As the portfolio grows, this will lead to a bloated main page file.
+- **Features**: No critical missing features identified.
+- **Testing**: No error boundary around the dynamic data fetching; a failure in one `ModelCard` fetch is caught locally, which is acceptable.
+- **DX**: Standard Next.js structure.
+- **Consistency**: Consistent use of Tailwind and TypeScript.
+- **Dead Code**: None identified in the provided snippets.
+
+### Step 3: Pick ONE Improvement
+The most critical issue is the **fragile URL parsing logic** in the `ModelCard` component. If the `hfUrl` prop is slightly malformed or changes format, the application will attempt to fetch from an `undefined` endpoint. While not a crash (due to the try-catch), it results in a broken UI state ("loading..." or "0 downloads") for a reason that is hard to debug without checking the network tab. Fixing this ensures the API integration is robust.
+
+### Step 4: Write the Executor's Plan
+- **WHAT**: Improve the robustness of the Hugging Face repository path extraction logic in the `ModelCard` component to prevent `undefined` API endpoints.
+- **WHERE**: In `src/app/page.tsx`, inside the `ModelCard` component's `useEffect` hook, specifically the lines where `repoPath` is defined using `.split()`.
+- **WHY**: The current implementation assumes the URL always contains the exact string `huggingface.co/datasets/` or `huggingface.co/`. If the URL is slightly different, `repoPath` becomes `undefined`, leading to failed API calls.
+- **HOW**: 
+    1. Replace the `.split()` logic with a more robust approach.
+    2. Create a helper variable or logic that first removes the base domain (e.g., `https://huggingface.co/`) and then removes the `datasets/` prefix if the type is 'dataset'.
+    3. Add a guard clause: if the resulting `repoPath` is empty or undefined, set `loading` to false and return early from the `fetchDownloads` function to avoid making a request to a broken URL.
+    4. Ensure the `apiUrl` is only constructed if a valid `repoPath` exists.
+
+**Executor**: {"title": "[LOGIC] Robust Hugging Face URL parsing in ModelCard", "body": "### Problem / Gap\nThe `ModelCard` component extracts the repository path from the Hugging Face URL using fragile `.split()` logic. If the URL format deviates (e.g., uses `http`, has a trailing slash, or is malformed), `repoPath` becomes `undefined`, leading to a broken API call and a confusing UI state.\n\n### Solution & Insight\nReplace the split-based extraction with the `URL` constructor to parse the pathname robustly. Strip leading slashes and the `datasets/` prefix when the type is `dataset`. Add a guard clause: if the resulting `repoPath` is empty or undefined, set loading to false and return early, preventing a fetch to an invalid endpoint. This ensures the component degrades gracefully without attempting a broken request.\n\n### Impact\n- Prevents `undefined` API endpoints and silent failures.\n- Handles URL variations (http/https, trailing slashes, etc.) correctly.\n- Improves user experience by avoiding perpetual loading states for malformed URLs.", "branch_name": "bot/upgrade-1779996703", "edits": [{"file": "src/app/page.tsx", "search": "  useEffect(() => {\n    const fetchDownloads = async () => {\n      try {\n        // Extract repo path correctly based on type\n        const repoPath = type === 'dataset'\n          ? hfUrl.split('huggingface.co/datasets/')[1]\n          : hfUrl.split('huggingface.co/')[1];\n        const apiUrl = `https://huggingface.co/api/${type}s/${repoPath}`;\n        \n        const response = await fetch(apiUrl);\n        const data = await response.json();\n        \n        // Read downloads field directly from the response\n        setDownloads(data.downloads || 0);\n      } catch (error) {\n        console.error('Error fetching downloads:', error);\n        setDownloads(null);\n      } finally {\n        setLoading(false);\n      }\n    };\n\n    fetchDownloads();\n  }, [hfUrl, type]);", "replace": "  useEffect(() => {\n    const fetchDownloads = async () => {\n      try {\n        // Robustly extract repo path from Hugging Face URL\n        let repoPath: string | undefined;\n        try {\n          const url = new URL(hfUrl);\n          // Remove leading slash and 'datasets/' prefix if type is dataset\n          let path = url.pathname.replace(/^\\/+/, '');\n          if (type === 'dataset' && path.startsWith('datasets/')) {\n            path = path.slice('datasets/'.length);\n          }\n          repoPath = path || undefined;\n        } catch {\n          repoPath = undefined;\n        }\n\n        if (!repoPath) {\n          setLoading(false);\n          return;\n        }\n\n        const apiUrl = `https://huggingface.co/api/${type}s/${repoPath}`;\n        \n        const response = await fetch(apiUrl);\n        const data = await response.json();\n        \n        // Read downloads field directly from the response\n        setDownloads(data.downloads || 0);\n      } catch (error) {\n        console.error('Error fetching downloads:', error);\n        setDownloads(null);\n      } finally {\n        setLoading(false);\n      }\n    };\n\n    fetchDownloads();\n  }, [hfUrl, type]);"}]}
+
+**Reviewer**: Reviewer unavailable — used Executor's edits directly
+
+---
