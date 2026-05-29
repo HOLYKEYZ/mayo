@@ -56,3 +56,4 @@
 - **Repo: SWARMs-Debate-Primitive**: [LOGIC] Close escrow account on resolution to reclaim rent. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **Repo: Joseph-Portfolio**: [LOGIC] Robust Hugging Face URL parsing in ModelCard. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **REJECTED by Reviewer**: Executor submitted empty edits on git-pulse after Scanner found no issues; blocked for lack of substance — must bundle with other cleanup or find real bugs.
+- **Repo: git-pulse**: [LOGIC] Add navigation escape hatch to error page. (Ref: disabled - email spam) - *Status: SKIPPED*
