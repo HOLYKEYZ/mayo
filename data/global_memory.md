@@ -55,3 +55,4 @@
 - **REJECTED by Reviewer**: Executor repeated sysinfo.c GetDiskFreeSpaceExA patch but search block still mismatched original progress bar logic (bar_len=32, percent printf, split args); also spuriously removed disk usage percent display.
 - **Repo: SWARMs-Debate-Primitive**: [LOGIC] Close escrow account on resolution to reclaim rent. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **Repo: Joseph-Portfolio**: [LOGIC] Robust Hugging Face URL parsing in ModelCard. (Ref: disabled - email spam) - *Status: SKIPPED*
+- **REJECTED by Reviewer**: Executor submitted empty edits on git-pulse after Scanner found no issues; blocked for lack of substance — must bundle with other cleanup or find real bugs.
