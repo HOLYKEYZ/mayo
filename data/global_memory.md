@@ -64,3 +64,4 @@
 - **Repo: temple-sysinfo**: [LOGIC] Replace deprecated GetDiskFreeSpaceA with GetDiskFreeSpaceExA for large disk support. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **REJECTED by Reviewer**: Executor proposed empty edits on Kelegam-Tech after Scanner found no actionable improvements; blocked for lack of substance — empty edits are never acceptable.
 - **REJECTED by Reviewer**: Repo: Kelegam-Tech — Executor submitted empty edits again after Scanner found no actionable improvements; blocked for lack of substance. Must find real bugs or substantive cleanup.
+- **Repo: IntellectSafe**: [LOGIC] Add confirmation dialog to agent kill switch. (Ref: disabled - email spam) - *Status: SKIPPED*
