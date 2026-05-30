@@ -58,3 +58,4 @@
 - **Repo: IntellectSafe**: [LOGIC] Fix false-positive success and add exit codes in Gemini test. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **Repo: IntellectSafe**: [LOGIC] Fix false-positive success in RAG hallucination test. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **Repo: SWARMs-Debate-Primitive**: [LOGIC] Add schema validation to _parse_response to prevent KeyError. (Ref: disabled - email spam) - *Status: SKIPPED*
+- **REJECTED by Reviewer**: Executor proposed empty edits on Kelegam-Tech after Scanner found no issues; blocked for lack of substance — empty edits are never acceptable.
