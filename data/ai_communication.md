@@ -4636,3 +4636,59 @@ NO_ACTIONABLE_IMPROVEMENTS
 **Reviewer**: REJECTED x2: Do not submit empty edits when the scanner finds no issues. Empty PRs are automatically rejected. You must either find a real bug, security issue, logic flaw, or performance problem in the repo (possibly in other files), or bundle changes with substantive cleanup. If the scanner says NO_ACTIONABLE_IMPROVEMENTS, look deeper or move to another repo rather than submitting a no-op patch.
 
 ---
+
+## Cycle 1780159839
+**Scanner**: ### Step 1: Codebase Understanding
+The repository is a professional business website for Alexcathe Services Nig Ltd, a construction and engineering firm. It is built using Next.js 15 (App Router), TypeScript, Tailwind CSS v4, and Framer Motion for high-performance animations.
+
+The target file, components/PageHeader.tsx, is a reusable UI component used to create consistent, visually appealing headers for different pages (About, Contact, Projects, etc.), featuring a title, subtitle, and decorative background elements.
+
+### Step 2: Deep Analysis
+
+Security: No vulnerabilities found. The component only renders static props.
+
+Logic: There is a logic flaw in the layout alignment. The `alignment` prop allows for "center" or "left", and while the container's text alignment is updated via `text-center` or `text-left`, the paragraph (`p`) tag has a hardcoded `mx-auto` class. This forces the subtitle to remain centered even when `alignment="left"` is passed, creating a visual mismatch where the title is left-aligned but the subtitle is centered.
+
+Performance: No issues. The component is lightweight and uses standard Tailwind classes.
+
+Architecture: The component is well-structured and follows the project's design system.
+
+Features: No missing critical functionality.
+
+Testing: No runtime errors expected as props are typed.
+
+DX: The component is easy to use and well-typed.
+
+Consistency: The use of `cn` utility for class merging is consistent with the rest of the codebase.
+
+Dead Code: No unused variables or unreachable code.
+
+### Step 3: Pick ONE Improvement
+The logic flaw regarding the `alignment` prop is a real UI bug. When a developer sets `alignment="left"`, the `h1` aligns left, but the `p` tag remains centered due to `mx-auto`. This breaks the intended layout logic of the component and results in a broken user interface on any page utilizing left-alignment.
+
+This is a meaningful improvement because it fixes broken layout functionality and ensures the component behaves as its API (the `alignment` prop) promises.
+
+### Step 4: Write the Executor's Plan
+
+WHAT to change:
+Modify the paragraph element's margin classes to respond to the alignment prop instead of being hardcoded to center.
+
+WHERE in the file:
+In components/PageHeader.tsx, locate the paragraph tag (`p`) which currently contains the classes `text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200`.
+
+WHY this matters:
+The `mx-auto` class on the paragraph forces it to be centered regardless of the `alignment` prop. If `alignment="left"` is passed to the PageHeader, the title will be left-aligned but the subtitle will stay centered, which is a visual bug and inconsistent behavior.
+
+HOW to do it:
+1. Locate the paragraph (`p`) element.
+2. Remove the hardcoded `mx-auto` class.
+3. Wrap the margin class in a conditional check using the `alignment` prop.
+4. If `alignment` is "center", apply `mx-auto`.
+5. If `alignment` is "left", apply `ml-0` (or simply omit `mx-auto` to allow default left alignment).
+6. Use the `cn` utility to merge these conditional classes with the existing styles.
+
+**Executor**: {"title": "[LOGIC] Fix subtitle alignment to respect alignment prop", "body": "### Problem / Gap\nThe `PageHeader` component's subtitle paragraph had a hardcoded `mx-auto` class, forcing it to always be centered regardless of the `alignment` prop. When `alignment=\"left\"` was used, the title aligned left but the subtitle remained centered, creating a visual mismatch and broken layout.\n\n### Solution & Insight\nRemoved the hardcoded `mx-auto` and conditionally applied margin classes using the `cn` utility: `mx-auto` when `alignment=\"center\"`, and `ml-0` when `alignment=\"left\"`. This ensures the subtitle follows the intended alignment, fixing the UI bug without altering any other behavior.\n\n### Impact\n- Fixes broken left-aligned page headers.\n- Component now behaves as its API promises.\n- No performance or security impact.", "branch_name": "bot/upgrade-1780159839", "edits": [{"file": "components/PageHeader.tsx", "search": "            <p className=\"text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-200\">", "replace": "            <p className={cn(\"text-xl text-muted-foreground max-w-2xl leading-relaxed animate-fade-in-up delay-200\", alignment === \"center\" ? \"mx-auto\" : \"ml-0\")}>"}]}
+
+**Reviewer**: Reviewer unavailable — used Executor's edits directly
+
+---
