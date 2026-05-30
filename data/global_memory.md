@@ -56,3 +56,4 @@
 - **REJECTED by Reviewer**: Executor submitted empty edits on git-pulse after Scanner found no issues; blocked for lack of substance — must bundle with other cleanup or find real bugs.
 - **Repo: git-pulse**: [LOGIC] Add navigation escape hatch to error page. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **Repo: DR-OPIC**: [LOGIC] Validate delta spans and repair content in test_forge_artifacts_are_written. (Ref: disabled - email spam) - *Status: SKIPPED*
+- **Repo: nextphase-realestate**: [LOGIC] Fix broken hero image placeholder with valid asset. (Ref: disabled - email spam) - *Status: SKIPPED*
