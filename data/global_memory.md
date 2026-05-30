@@ -56,3 +56,4 @@
 - **Repo: DR-OPIC**: [LOGIC] Validate delta spans and repair content in test_forge_artifacts_are_written. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **Repo: nextphase-realestate**: [LOGIC] Fix broken hero image placeholder with valid asset. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **Repo: HADNX**: [NO_ACTION] No actionable improvements found. (Ref: disabled - email spam) - *Status: SKIPPED*
+- **REJECTED by Reviewer**: Executor proposed single-line broken image placeholder removal on Kelegam-Tech; blocked for triviality and search block quote mismatch. Must bundle with substantive fixes.
