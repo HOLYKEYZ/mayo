@@ -4199,47 +4199,7 @@ HOW to do it:
 
 ---
 
-## Cycle 1779836327
-**Scanner**: ### Step 1: Codebase Understanding
-- **Repository Purpose**: A Windows system information utility that provides a centralized view of hardware and OS specs, including a tribute version written in HolyC for TempleOS.
-- **Target File (`sysinfo.c`)**: The primary C source code that interfaces with the Windows API (Win32) to retrieve and display system, CPU, memory, disk, and process information.
-- **Patterns/Conventions**: Uses standard C with Windows-specific headers (`windows.h`, `tlhelp32.h`, `winreg.h`). It follows a procedural pattern where each system module has its own `print_...` function.
-
-### Step 2: Deep Analysis
-- **Security**: No immediate injection vulnerabilities found as there is minimal user input. However, `sprintf` is used for drive paths, which is generally risky, though the input here is controlled by a loop.
-- **Logic**: 
-    - **Integer Overflow/Precision**: In `print_disk_info`, the code uses `GetDiskFreeSpaceA`. This function is deprecated and returns `DWORD` (32-bit) values for clusters and sectors. On modern disks (larger than 2TB or with large cluster sizes), this will cause integer overflows, resulting in incorrect disk size and free space reporting.
-    - **Memory**: No obvious leaks as no dynamic memory (`malloc`) is used; everything is stack-allocated.
-- **Performance**: The process listing (truncated in view but present in logic) typically involves a snapshot of all processes, which is standard for this type of tool.
-- **Architecture**: Error handling is minimal. If a registry key or system call fails, it often just prints "Unknown" or skips the section without notifying the user why.
-- **DX**: Build instructions are clear in the README.
-- **Consistency**: The code uses `A` suffix functions (e.g., `GetComputerNameA`), indicating it is locked to the ANSI character set rather than Unicode/Wide characters.
-
-### Step 3: Pick ONE Improvement
-**Selected Improvement**: Replace `GetDiskFreeSpaceA` with `GetDiskFreeSpaceExA`.
-
-**Justification**: 
-This is a critical logic bug. `GetDiskFreeSpaceA` is limited to 32-bit values for the number of clusters. On any modern hard drive or SSD larger than 2TB (or even smaller drives depending on cluster size), the values will wrap around (overflow), leading to completely incorrect and misleading disk capacity and free space calculations. `GetDiskFreeSpaceExA` was specifically introduced by Microsoft to handle large disks using 64-bit integers (`ULARGE_INTEGER`). This is a functional failure for the "Disk Information" feature on modern hardware.
-
-### Step 4: Executor's Plan
-- **WHAT**: Replace the deprecated `GetDiskFreeSpaceA` function call and its associated 32-bit variable logic with `GetDiskFreeSpaceExA` to support large disk capacities.
-- **WHERE**: In `sysinfo.c`, inside the `print_disk_info` function. Specifically, locate the loop starting with `for (drive_letter = 'C'; drive_letter <= 'Z'; drive_letter++)` and the subsequent call to `GetDiskFreeSpaceA`.
-- **WHY**: `GetDiskFreeSpaceA` uses 32-bit integers for cluster counts, which overflow on modern large drives. `GetDiskFreeSpaceExA` provides 64-bit values, ensuring accurate reporting for disks larger than 2TB.
-- **HOW**:
-    1. Remove the 32-bit variables `sectors_per_cluster`, `bytes_per_sector`, `free_clusters`, and `total_clusters` from the `print_disk_info` function.
-    2. Declare three `ULARGE_INTEGER` variables: `freeBytesAvailable`, `totalNumberOfBytes`, and `totalNumberOfFreeBytes`.
-    3. Replace the `if (GetDiskFreeSpaceA(...))` block with a call to `GetDiskFreeSpaceExA(drive_path, &freeBytesAvailable, &totalNumberOfBytes, &totalNumberOfFreeBytes)`.
-    4. Remove the manual calculation of `bytes_per_cluster`, `total_bytes`, and `free_bytes` since `GetDiskFreeSpaceExA` returns the byte totals directly.
-    5. Update the `total_gb`, `free_gb`, and `percent` calculations to use the `.QuadPart` member of the `ULARGE_INTEGER` variables.
-    6. Ensure the `printf` statement remains intact to display the calculated GB values.
-
-**Executor**: {"title": "[LOGIC] Replace GetDiskFreeSpaceA with GetDiskFreeSpaceExA for large disk support", "body": "### Problem / Gap\n`GetDiskFreeSpaceA` uses 32-bit cluster counts, causing integer overflow on modern drives larger than 2TB. This results in completely incorrect disk capacity and free space reporting.\n\n### Solution & Insight\nReplace the deprecated call with `GetDiskFreeSpaceExA`, which returns 64-bit byte counts directly via `ULARGE_INTEGER`. The progress bar logic is updated to use `freeBytesAvailable.QuadPart` and `totalNumberOfBytes.QuadPart` for accurate percentage calculation.\n\n### Impact\nAccurate disk information on all modern hardware, eliminating the overflow bug.", "branch_name": "bot/upgrade-1779836327", "edits": [{"file": "sysinfo.c", "search": "void print_disk_info(void) {\n    print_header(\"DISK INFORMATION\");\n    \n    char drive_letter;\n    char drive_path[4];\n    DWORD sectors_per_cluster, bytes_per_sector, free_clusters, total_clusters;\n    \n    for (drive_letter = 'C'; drive_letter <= 'Z'; drive_letter++) {\n        sprintf(drive_path, \"%c:\\\\\", drive_letter);\n        \n        if (GetDriveTypeA(drive_path) == DRIVE_FIXED) {\n            if (GetDiskFreeSpaceA(drive_path, &sectors_per_cluster, &bytes_per_sector, \n                                  &free_clusters, &total_clusters)) {\n                unsigned __int64 bytes_per_cluster = (unsigned __int64)sectors_per_cluster * bytes_per_sector;\n                unsigned __int64 total_bytes = bytes_per_cluster * total_clusters;\n                unsigned __int64 free_bytes = bytes_per_cluster * free_clusters;\n                double total_gb = (double)total_bytes / (1024.0 * 1024.0 * 1024.0);\n                double free_gb = (double)free_bytes / (1024.0 * 1024.0 * 1024.0);\n                int percent = (total_bytes > 0) ? (int)(((total_bytes - free_bytes) * 100) / total_bytes) : 0;\n                \n                printf(\"  |  Drive %c: %6.1fGB total, %6.1fGB free |\\n\", drive_letter, total_gb, free_gb);\n                printf(\"  |  [\");\n                int bar_len = 34;\n                int filled = (percent * bar_len) / 100;\n                int i;\n                for (i = 0; i < bar_len; i++) {\n                    if (i < filled) printf(\"#\");\n                    else printf(\"-\");\n                }\n                printf(\"]|\\n\");\n            }\n        }\n    }\n    print_footer();\n}", "replace": "void print_disk_info(void) {\n    print_header(\"DISK INFORMATION\");\n    \n    char drive_letter;\n    char drive_path[4];\n    ULARGE_INTEGER freeBytesAvailable, totalNumberOfBytes, totalNumberOfFreeBytes;\n    \n    for (drive_letter = 'C'; drive_letter <= 'Z'; drive_letter++) {\n        sprintf(drive_path, \"%c:\\\\\", drive_letter);\n        \n        if (GetDriveTypeA(drive_path) == DRIVE_FIXED) {\n            if (GetDiskFreeSpaceExA(drive_path, &freeBytesAvailable, &totalNumberOfBytes, &totalNumberOfFreeBytes)) {\n                double total_gb = (double)totalNumberOfBytes.QuadPart / (1024.0 * 1024.0 * 1024.0);\n                double free_gb = (double)freeBytesAvailable.QuadPart / (1024.0 * 1024.0 * 1024.0);\n                int percent = (totalNumberOfBytes.QuadPart > 0) ? (int)(((totalNumberOfBytes.QuadPart - freeBytesAvailable.QuadPart) * 100) / totalNumberOfBytes.QuadPart) : 0;\n                \n                printf(\"  |  Drive %c: %6.1fGB total, %6.1fGB free |\\n\", drive_letter, total_gb, free_gb);\n                printf(\"  |  [\");\n                int bar_len = 34;\n                int filled = (percent * bar_len) / 100;\n                int i;\n                for (i = 0; i < bar_len; i++) {\n                    if (i < filled) printf(\"#\");\n                    else printf(\"-\");\n                }\n                printf(\"]|\\n\");\n            }\n        }\n    }\n    print_footer();\n}"}]}
-
-**Reviewer**: REJECTED x2: Fix the search block to exactly match the original file content. The original has: (1) the `printf` arguments split across two lines, (2) `int bar_len = 32;`, and (3) `printf("] %3d%%|\n", percent);`. Your search block must contain these exact original lines. Do not change `bar_len` or remove the percent display; keep all original UI formatting intact and only replace the `GetDiskFreeSpaceA` call, its associated 32-bit variables, and the byte-calculation logic as the Scanner specified.
-
----
-
-## Cycle 1779923221
+1779923221
 **Scanner**: ### Step 1: Codebase Understanding
 The repository implements a multi-agent AI deliberation system where specialized agents debate or vote on questions, with the final consensus anchored to the Solana blockchain as a verifiable receipt.
 
@@ -4449,5 +4409,46 @@ This is a meaningful improvement because it transforms a "smoke test" (does it c
 **Executor**: {"title": "[LOGIC] Validate delta spans and repair content in test_forge_artifacts_are_written", "body": "### Problem / Gap\nThe test `test_forge_artifacts_are_written` only checks that artifact files are created, but does not verify the actual content of the most critical outputs: `delta_spans.json` and `verified_repairs.jsonl`. If the delta logic or repair saving breaks silently, the test would still pass.\n\n### Solution & Insight\nAdd assertions that read the generated delta spans and repair records, confirming that the delta contains the expected repair logic (`' '.join(reversed(s.split()))`) and that the repairs file includes the repair code. This transforms a smoke test into a functional correctness check.\n\n### Impact\nPrevents regressions in the core value proposition of DR-OPIC (iterative correction and delta spans) by catching silent failures in artifact generation.", "branch_name": "bot/upgrade-1780084998", "edits": [{"file": "tests/test_core.py", "search": "def test_forge_artifacts_are_written(tmp_path):\n    task = Task(\n        task_id=\"demo\",\n        prompt=\"Implement reverse_words(s).\",\n        entrypoint=\"reverse_words\",\n        tests=\"assert reverse_words('one two') == 'two one'\",\n    )\n\n    def student(_: Task, __: int) -> str:\n        return \"def reverse_words(s):\\n    return s\\n\"\n\n    def repair(_: Task, __: Candidate, ___: int) -> str:\n        return \"def reverse_words(s):\\n    return ' '.join(reversed(s.split()))\\n\"\n\n    group = rollout_python_task(task, student, k=1)\n    repairs = repair_failures(group, repair)\n    artifacts = build_round_artifacts(group, repairs)\n    paths = save_round_artifacts(tmp_path, artifacts)\n    assert set(paths) == {\"summary\", \"rollouts\", \"repairs\", \"winner\", \"delta\"}\n    assert json.loads((tmp_path / \"round_summary.json\").read_text(encoding=\"utf-8\"))[\"task_id\"] == \"demo\"", "replace": "def test_forge_artifacts_are_written(tmp_path):\n    task = Task(\n        task_id=\"demo\",\n        prompt=\"Implement reverse_words(s).\",\n        entrypoint=\"reverse_words\",\n        tests=\"assert reverse_words('one two') == 'two one'\",\n    )\n\n    def student(_: Task, __: int) -> str:\n        return \"def reverse_words(s):\\n    return s\\n\"\n\n    def repair(_: Task, __: Candidate, ___: int) -> str:\n        return \"def reverse_words(s):\\n    return ' '.join(reversed(s.split()))\\n\"\n\n    group = rollout_python_task(task, student, k=1)\n    repairs = repair_failures(group, repair)\n    artifacts = build_round_artifacts(group, repairs)\n    paths = save_round_artifacts(tmp_path, artifacts)\n    assert set(paths) == {\"summary\", \"rollouts\", \"repairs\", \"winner\", \"delta\"}\n    assert json.loads((tmp_path / \"round_summary.json\").read_text(encoding=\"utf-8\"))[\"task_id\"] == \"demo\"\n\n    # Validate delta spans content\n    delta_path = paths[\"delta\"]\n    delta_data = json.loads(delta_path.read_text(encoding=\"utf-8\"))\n    assert len(delta_data) > 0, \"delta_spans.json should not be empty\"\n    assert any(\"' '.join(reversed(s.split()))\" in span[\"fixed_text\"] for span in delta_data), \\\n        \"delta spans should contain the repair logic\"\n\n    # Validate verified repairs content\n    repairs_path = paths[\"repairs\"]\n    repairs_lines = repairs_path.read_text(encoding=\"utf-8\").strip().splitlines()\n    repairs_data = [json.loads(line) for line in repairs_lines]\n    assert any(\"' '.join(reversed(s.split()))\" in r.get(\"code\", \"\") for r in repairs_data), \\\n        \"verified repairs should contain the repair code\""}]}
 
 **Reviewer**: APPROVE: The edit substantively strengthens `test_forge_artifacts_are_written` by validating the actual content of `delta_spans.json` and `verified_repairs.jsonl`, transforming a smoke test into a functional test. It directly addresses the Scanner-identified gap where the framework's core artifact generation could break silently. The search block matches the original file exactly, the added code is valid and production-ready, and there are no destructive changes.
+
+---
+
+## Cycle 1780099190
+**Scanner**: ### Step 1: Codebase Understanding
+- **Repository Purpose**: A real estate landing page and management system for NextPhase Real Estate Ltd, built with Next.js, focusing on property listings and investment services.
+- **Target File Purpose**: The `src/components/hero.tsx` file implements the primary landing section (Hero) of the homepage, featuring a background image, value proposition, call-to-action buttons, and key business statistics.
+- **Patterns and Frameworks**: Next.js (App Router), Tailwind CSS for styling, Lucide-React for iconography, and TypeScript.
+
+### Step 2: Deep Analysis
+- **Security**: No immediate security vulnerabilities found in this presentational component.
+- **Logic**: The component is largely static. No complex logic to fail.
+- **Performance**: The `Image` component uses `priority`, which is correct for an LCP (Largest Contentful Paint) element.
+- **Architecture**: The component is a "use client" component, though it contains no state or effects that strictly require client-side rendering (it could potentially be a Server Component if the `id="home"` anchor isn't handled by a client-side router).
+- **Features**: The background image source is currently a placeholder.
+- **Testing**: No runtime error paths to test as there are no API calls.
+- **DX**: The use of `[IMAGE_FILE]` as a source is a clear indicator of a missing asset or a template placeholder.
+- **Consistency**: Styling is consistent with Tailwind utility patterns.
+- **Dead Code**: No unused variables or imports.
+
+### Step 3: Pick ONE Improvement
+The `Image` component in `src/components/hero.tsx` uses `src="/[IMAGE_FILE]"`. This is a broken image path that will result in a 404 error in production and a broken UI for the most prominent part of the website (the Hero section). 
+
+Based on the provided REPO STRUCTURE, there are several high-quality property images available in `public/images/` (e.g., `estate.jpg`, `property.jpg`, `real estate.jpg`). Replacing the placeholder with a valid asset from the existing repository is a functional fix for a broken UI element.
+
+This meets the criteria:
+- ✅ Fixes broken functionality (broken image/404).
+- ✅ Measurable impact (fixes the primary visual element of the landing page).
+- ✅ Not a trivial style change, but a correction of a missing data reference.
+
+### Step 4: Write the Executor's Plan
+- **WHAT**: Replace the placeholder image source string with a valid path to an existing image asset from the public directory.
+- **WHERE**: In `src/components/hero.tsx`, inside the `Hero` function, locate the `Image` component. Specifically, the `src` prop currently set to `"/[IMAGE_FILE]"`.
+- **WHY**: The current value is a template placeholder. This causes the browser to attempt to load a non-existent file, resulting in a broken image icon and a poor user experience on the homepage.
+- **HOW**: 
+  1. Locate the `Image` component at the start of the `return` statement.
+  2. Change the `src` attribute from `"/[IMAGE_FILE]"` to `"/images/estate.jpg"` (or another valid image from the `public/images` folder identified in the repo structure).
+
+**Executor**: {"title": "[LOGIC] Fix broken hero image placeholder with valid asset", "body": "### Problem / Gap\nThe Hero component uses a placeholder image path `/[IMAGE_FILE]` which results in a 404 and a broken UI on the homepage.\n\n### Solution & Insight\nReplace the placeholder with an existing image from the repository's public directory (`/images/estate.jpg`). This restores the primary visual element of the landing page.\n\n### Impact\nFixes a broken image on the most prominent section of the site, improving user experience and preventing a 404 error.", "branch_name": "bot/upgrade-1780099190", "edits": [{"file": "src/components/hero.tsx", "search": "      <Image\n        src=\"/[IMAGE_FILE]\"\n        alt=\"NextPhase Real Estate property\"\n        fill\n        className=\"object-cover\"\n        sizes=\"100vw\"\n        priority\n      />", "replace": "      <Image\n        src=\"/images/estate.jpg\"\n        alt=\"NextPhase Real Estate property\"\n        fill\n        className=\"object-cover\"\n        sizes=\"100vw\"\n        priority\n      />"}]}
+
+**Reviewer**: Reviewer unavailable — used Executor's edits directly
 
 ---
