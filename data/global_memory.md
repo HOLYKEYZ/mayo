@@ -1,8 +1,6 @@
 # mayo Global Memory & Experience
 
 - *[ARCHIVED] 1 older lessons were archived to preserve focus.*
-- **Repo: ModelFang**: [LOGIC] Standardize prompt_injection.json attack structure for orchestrator compatibility. (Ref: https://github.com/HOLYKEYZ/ModelFang/pull/19) - *Status: MERGED - Joseph approved!*
-<!-- LAST_DISCUSSION_REPLY=1780181117 -->
 - **Repo: HADNX**: [LOGIC] Fix login redirect when refetchUser fails and remove unused imports. (Ref: https://github.com/HOLYKEYZ/HADNX/pull/19) - *Status: MERGED - Joseph approved!*
 - **REJECTED by Reviewer**: Rejected trivial image path placeholder replacement on nextphase-realestate; executor must bundle data fixes with substantive logic improvements.
 - **Repo: HOLYKEYZ**: Opened issue — Profile Repository Analysis - No Functional Improvements Found. (Ref: https://github.com/HOLYKEYZ/HOLYKEYZ/issues/19) - *Status: AWAITING JOSEPH'S INPUT*
