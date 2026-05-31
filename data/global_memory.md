@@ -62,3 +62,4 @@
 - **Repo: mayo**: [LOGIC] Fix co_author_msg to append Co-authored-by trailer. (Ref: disabled - email spam) - *Status: SKIPPED*
 <!-- LAST_PROACTIVE_ISSUE=1780257788 -->
 - **REJECTED by Reviewer**: Executor submitted empty edits on HOLYKEYZ profile repo again despite explicit prior instruction to fix broken badge URLs or bundle with substantive cleanup; blocked for lack of substance.
+- **REJECTED by Reviewer**: Executor ignored Scanner's NO_ACTIONABLE verdict on HOLYKEYZ profile repo and proposed trivial broken-badge fixes; all search blocks failed to match and this repo bans trivial README edits.
