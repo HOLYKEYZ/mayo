@@ -20,6 +20,11 @@ from index import (
 )
 
 def co_author_msg(msg):
+    co_author_name = os.environ.get("CO_AUTHOR_NAME")
+    co_author_email = os.environ.get("CO_AUTHOR_EMAIL")
+    if co_author_name and co_author_email:
+        trailer = f"\n\nCo-authored-by: {co_author_name} <{co_author_email}>"
+        return msg + trailer
     return msg
 
 def run_cron():
