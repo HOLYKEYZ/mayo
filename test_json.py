@@ -14,8 +14,14 @@ def extract_json_from_response(text):
         if match:
             print('Matched pattern:', pattern[:15], '...')
             try:
-                json_str = match.group(1) if '```' in pattern else match.group(0)
-                return json.loads(json_str)
+                if '```' in pattern:
+                    json_str = match.group(1)
+                    return json.loads(json_str)
+                else:
+                    json_str = match.group(0)
+                    decoder = json.JSONDecoder()
+                    obj, end = decoder.raw_decode(json_str)
+                    return obj
             except json.JSONDecodeError as e:
                 print('JSON parse error:', e)
                 lines = json_str.split('\n')
@@ -37,7 +43,7 @@ if __name__ == '__main__':
         log_content = f.read()
 
     # Find ALL Executor JSON blocks
-    blocks = re.findall(r'\*\*Executor\*\*: ```json\n(.*?)\n```', log_content, re.DOTALL)
+    blocks = re.findall(r'\*\*Executor\*\*: ```json\s*(.*?)\s*```', log_content, re.DOTALL)
     if blocks:
         for index, block in enumerate(blocks):
             current_block = '```json\n{' + block.split('{', 1)[-1] if '{' in block else block + '\n```'
