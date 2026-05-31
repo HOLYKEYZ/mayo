@@ -63,3 +63,4 @@
 - **Repo: HADNX**: [LOGIC] Fix WAF detector crash on None cookies, add evidence, remove dead import. (Ref: disabled - email spam) - *Status: SKIPPED*
 <!-- LAST_DISCUSSION_REPLY=1780246311 -->
 - **REJECTED by Reviewer**: Executor repeated previously rejected single-line regex tweak in test_json.py; blocked again for triviality.
+- **Repo: mayo**: [LOGIC] Fix JSON extraction regex and improve parser robustness in test_json.py. (Ref: disabled - email spam) - *Status: SKIPPED*
