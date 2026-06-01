@@ -4890,3 +4890,61 @@ HOW to do it:
 **Reviewer**: Reviewer unavailable — used Executor's edits directly
 
 ---
+
+## Cycle 1780279716
+**Scanner**: ### Step 1: Codebase Understanding
+The HADNX repository is a hybrid offensive/defensive web security platform that combines automated vulnerability scanning, compliance auditing, and an AI-driven pentesting agent.
+
+The target files are:
+1. frontend/tsconfig.json: The TypeScript configuration for the Next.js frontend.
+2. backend/apps/scanner/services/pdf_generator.py: A service responsible for converting scan results and AI narratives into a PDF report using xhtml2pdf.
+
+The codebase uses Django (Backend), Next.js/TypeScript (Frontend), Celery/Redis (Async Tasks), and various security tools (Nmap, Nuclei, etc.).
+
+### Step 2: Deep Analysis
+
+Security:
+- The PDF generator uses markdown.markdown to convert AI narratives to HTML. While xhtml2pdf is a PDF generator, if the input markdown contains malicious HTML/JS and is rendered in a browser before PDF conversion or if the PDF viewer has vulnerabilities, this could be a risk. However, the primary risk here is the lack of sanitization of the resulting HTML before passing it to the PDF engine.
+
+Logic:
+- In pdf_generator.py, the severity_counts dictionary is populated by performing five separate database queries (findings.filter(...).count()) on the same queryset. This is inefficient.
+- The PDF generator returns an empty byte string (b"") when pisa_status.err is true. This is a silent failure. The calling function will receive an empty file instead of an error, which is poor error handling.
+
+Performance:
+- N+1 / Redundant Queries: The `severity_counts` logic performs 5 separate count queries. This should be a single aggregation query.
+
+Architecture:
+- The PDF generation is a synchronous process within a service. If the scan has thousands of findings, this could block the worker or time out.
+
+DX:
+- tsconfig.json is standard for a Next.js project; no immediate issues.
+
+Consistency:
+- The use of `io.BytesIO` is consistent.
+
+Dead Code:
+- No obvious dead code in the provided snippets.
+
+### Step 3: Pick ONE Improvement
+
+The most meaningful improvement is the fix for the redundant database queries in the PDF generator. Currently, the code executes five separate queries to count severities. In a production environment with many scans and findings, this creates unnecessary database load. Replacing this with a single Django aggregation (Count/Case/When) reduces the database round-trips from 5 to 1.
+
+### Step 4: Write the Executor's Plan
+
+WHAT: Optimize the severity count logic in the PDFGenerator to use a single database aggregation instead of five separate count queries.
+
+WHERE: In backend/apps/scanner/services/pdf_generator.py, inside the generate_report static method, specifically the block where the severity_counts dictionary is defined (starting with 'severity_counts = {').
+
+WHY: The current implementation performs five separate SQL COUNT queries. This is an inefficient pattern that increases database latency and load. Using Django's aggregation allows the database to calculate all counts in a single pass.
+
+HOW:
+1. Import Count and Case/When from django.db.models.
+2. Replace the existing severity_counts dictionary definition (which uses .filter().count() five times) with a single call to findings.aggregate().
+3. Inside the aggregate call, create five Count expressions using Case/When to count findings where the severity matches 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW', and 'INFO'.
+4. Map the resulting aggregation dictionary (which will have keys like 'critical_count', etc.) back into the severity_counts dictionary format expected by the context.
+
+**Executor**: {"title": "[PERF] Optimize severity count queries in PDF generator", "body": "### Problem / Gap\nThe PDF generator performs five separate database queries to count findings by severity (CRITICAL, HIGH, MEDIUM, LOW, INFO). This N+1 pattern increases database load and latency, especially as the number of findings grows.\n\n### Solution & Insight\nReplace the five `.filter().count()` calls with a single Django aggregation using `Count`, `Case`, and `When`. This reduces the database round-trips from 5 to 1, computing all severity counts in one pass. The resulting dictionary is mapped back to the original `severity_counts` format to preserve downstream behavior.\n\n### Impact\n- **Performance**: Eliminates 4 redundant queries per report generation.\n- **Scalability**: Reduces database contention in high-throughput scanning environments.\n- **Consistency**: No change to the output structure; all existing templates and logic remain unaffected.", "branch_name": "bot/upgrade-1780279716", "edits": [{"file": "backend/apps/scanner/services/pdf_generator.py", "search": "from apps.scanner.models import Scan, Finding", "replace": "from apps.scanner.models import Scan, Finding\nfrom django.db.models import Count, Case, When"}, {"file": "backend/apps/scanner/services/pdf_generator.py", "search": "            # Severity counts\n            severity_counts = {\n                'CRITICAL': findings.filter(severity='CRITICAL').count(),\n                'HIGH': findings.filter(severity='HIGH').count(),\n                'MEDIUM': findings.filter(severity='MEDIUM').count(),\n                'LOW': findings.filter(severity='LOW').count(),\n                'INFO': findings.filter(severity='INFO').count(),\n            }", "replace": "            # Severity counts\n            severity_counts_agg = findings.aggregate(\n                critical_count=Count(Case(When(severity='CRITICAL', then=1))),\n                high_count=Count(Case(When(severity='HIGH', then=1))),\n                medium_count=Count(Case(When(severity='MEDIUM', then=1))),\n                low_count=Count(Case(When(severity='LOW', then=1))),\n                info_count=Count(Case(When(severity='INFO', then=1))),\n            )\n            severity_counts = {\n                'CRITICAL': severity_counts_agg['critical_count'],\n                'HIGH': severity_counts_agg['high_count'],\n                'MEDIUM': severity_counts_agg['medium_count'],\n                'LOW': severity_counts_agg['low_count'],\n                'INFO': severity_counts_agg['info_count'],\n            }"}]}
+
+**Reviewer**: Reviewer unavailable — used Executor's edits directly
+
+---
