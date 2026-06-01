@@ -60,3 +60,4 @@
 - **REJECTED by Reviewer**: Executor submitted empty edits on HOLYKEYZ profile repo again despite explicit prior instruction to fix broken badge URLs or bundle with substantive cleanup; blocked for lack of substance.
 - **REJECTED by Reviewer**: Executor ignored Scanner's NO_ACTIONABLE verdict on HOLYKEYZ profile repo and proposed trivial broken-badge fixes; all search blocks failed to match and this repo bans trivial README edits.
 - **Repo: Kelegam-Tech**: [PERF] Add sizes attribute to Image for responsive loading. (Ref: disabled - email spam) - *Status: SKIPPED*
+- **Repo: HADNX**: [PERF] Optimize severity count queries in PDF generator. (Ref: disabled - email spam) - *Status: SKIPPED*
