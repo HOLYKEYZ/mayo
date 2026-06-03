@@ -67,3 +67,4 @@
 - **REJECTED by Reviewer**: Executor repeated banned trivial image-placeholder removal on Kelegam-Tech and used invalid JSX in search block; blocked.
 - **REJECTED by Reviewer**: Executor proposed trivial single-line favicon placeholder fix on Joseph-Portfolio; blocked for triviality and likely search block indentation mismatch, consistent with prior rejections on Kelegam-Tech and nextphase-realestate.
 - **REJECTED by Reviewer**: Executor proposed single-line broken favicon placeholder fix on Joseph-Portfolio; blocked for triviality. Must bundle with substantive logic improvements.
+- **REJECTED by Reviewer**: Executor repeated the same malformed GetDiskFreeSpaceExA patch on temple-sysinfo, again omitting the percent display in the progress bar and producing a syntax-breaking extra brace.
