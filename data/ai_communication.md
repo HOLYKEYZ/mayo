@@ -5089,3 +5089,68 @@ Step 4: Write the Executor's Plan
 **Reviewer**: REJECTED x2: Do not submit single-line image or favicon placeholder fixes. These are explicitly banned as trivial under auto-reject criteria and have been repeatedly rejected across repos. Bundle this with other substantive improvements (e.g., fix other broken links, improve accessibility, add missing meta tags, optimize the blocking Font Awesome CDN request, or address other scanner findings) to reach at least 3+ lines of meaningful changes. If no other actionable improvements exist, do not submit an empty edit; look for additional cleanup or mark as NO_ACTION if the repo is truly clean.
 
 ---
+
+## Cycle 1780515559
+**Scanner**: ### Step 1: Codebase Understanding
+IntellectSafe is a production-grade AI Safety and Security platform that implements a 5-layer defense architecture to protect against prompt injections, hallucinations, PII leaks, and deepfakes using a multi-model LLM Council.
+
+The target file frontend/src/lib/api.ts serves as the central API client for the frontend, defining TypeScript interfaces for scan responses, risk scores, and audit logs, and providing asynchronous functions to communicate with the backend FastAPI server.
+
+The codebase uses React with TypeScript on the frontend, Axios for HTTP requests, and a Python/FastAPI backend with PostgreSQL and Redis.
+
+### Step 2: Deep Analysis
+
+Security:
+- The API client uses localStorage for the auth_token. While common, it is susceptible to XSS.
+- The login function uses x-www-form-urlencoded, which is correct for OAuth2, but there is no explicit handling for CSRF tokens on the frontend side.
+
+Logic:
+- The response interceptor for 401 errors performs a hard window.location.href redirect. This causes a full page reload, wiping the application state and potentially creating a loop if the login page itself triggers a 401.
+- The executeAgent function is truncated in the provided snippet, but the overall API structure lacks a global error handling wrapper for the async functions, meaning every single call in the UI components must implement its own try-catch block to prevent UI crashes on 500 errors.
+
+Performance:
+- No immediate N+1 or memory leak issues detected in the API client.
+
+Architecture:
+- The API client is tightly coupled to the browser environment (localStorage, window.location).
+- Inconsistent return types: some functions return Promise<any>, while others are strictly typed.
+
+Features:
+- Missing a request timeout in the axios instance. If the Render.com backend is cold-starting or hanging, the frontend will wait indefinitely or until the browser's default timeout, leading to a poor user experience.
+
+Testing:
+- No validation of the API_BASE_URL at runtime; if the environment variable is missing and the fallback is unreachable, the app fails silently until the first request.
+
+Consistency:
+- The login function uses URLSearchParams for form data, while signup uses a plain object. This is consistent with OAuth2 standards but creates a slight inconsistency in how requests are constructed.
+
+Dead Code:
+- None identified in the provided snippet.
+
+### Step 3: Pick ONE Improvement
+
+The most critical issue is the lack of a request timeout in the Axios configuration. Since the backend is hosted on Render (which often employs "spin-down" for free/low-tier instances), requests can hang for 30+ seconds during a cold start or fail silently due to gateway timeouts. Without a client-side timeout, the UI remains in a "loading" state indefinitely, which is a broken user experience for a security-critical application.
+
+This is a meaningful improvement because it prevents the frontend from hanging and allows the application to trigger error states (and thus retry logic or user notifications) in a predictable timeframe.
+
+### Step 4: Write the Executor's Plan
+
+WHAT to change:
+Add a timeout configuration to the axios instance creation to ensure requests do not hang indefinitely.
+
+WHERE in the file:
+In frontend/src/lib/api.ts, locate the axios.create call at the top of the file where the api constant is defined.
+
+WHY this matters:
+The backend is hosted on Render.com. Cold starts or server-side hangs can cause the frontend to wait indefinitely for a response. A defined timeout (e.g., 15-30 seconds) ensures the application remains responsive and can properly handle request failures via the existing interceptors or component-level catch blocks.
+
+HOW to do it:
+1. Locate the axios.create configuration object.
+2. Add a timeout property to the configuration object.
+3. Set the value to 15000 (15 seconds), which is a standard balance between allowing for cold starts and maintaining UI responsiveness.
+
+**Executor**: {"title": "[PERF] Add request timeout to Axios instance to prevent UI hangs", "body": "### Problem / Gap\nThe frontend API client (axios instance) has no request timeout configured. Since the backend is hosted on Render.com, cold starts or server-side hangs can cause requests to wait indefinitely, leaving the UI in a perpetual loading state. This is a broken user experience for a security-critical application.\n\n### Solution & Insight\nAdd a `timeout: 15000` (15 seconds) to the axios.create configuration. This ensures that any request that takes longer than 15 seconds will be aborted, allowing the existing error interceptors and component-level catch blocks to handle the failure gracefully. The 15-second value balances the need to accommodate cold starts while maintaining UI responsiveness.\n\n### Impact\nPrevents the frontend from hanging indefinitely during backend cold starts or network issues. Users will see error states instead of a frozen loading screen, improving reliability and perceived performance.", "branch_name": "bot/upgrade-1780515559", "edits": [{"file": "frontend/src/lib/api.ts", "search": "const api = axios.create({\n  baseURL: API_BASE_URL,\n  headers: {\n    'Content-Type': 'application/json',\n  },\n})", "replace": "const api = axios.create({\n  baseURL: API_BASE_URL,\n  timeout: 15000,\n  headers: {\n    'Content-Type': 'application/json',\n  },\n})"}]}
+
+**Reviewer**: APPROVE: The edit exactly implements the scanner's recommended fix: adding a 15-second timeout to the Axios instance. This prevents the frontend from hanging indefinitely during backend cold starts (e.g., on Render), which is a critical reliability and UX issue for a security platform. The search block matches the original file exactly, and the replacement is valid, compilable, and production-ready.
+
+---
