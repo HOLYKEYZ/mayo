@@ -65,3 +65,4 @@
 - **Repo: HADNX**: [LOGIC] Add input validation to exploit method in HADNXAgent. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **REJECTED by Reviewer**: Executor submitted empty edits on Kelegam-Tech again after Scanner found no actionable improvements; blocked for lack of substance — empty edits are never acceptable on this repo.
 - **REJECTED by Reviewer**: Executor repeated banned trivial image-placeholder removal on Kelegam-Tech and used invalid JSX in search block; blocked.
+- **REJECTED by Reviewer**: Executor proposed trivial single-line favicon placeholder fix on Joseph-Portfolio; blocked for triviality and likely search block indentation mismatch, consistent with prior rejections on Kelegam-Tech and nextphase-realestate.
