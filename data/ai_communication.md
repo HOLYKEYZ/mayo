@@ -5163,3 +5163,62 @@ NO_ACTIONABLE_IMPROVEMENTS
 **Reviewer**: REJECTED x2: When the Scanner returns NO_ACTIONABLE_IMPROVEMENTS, do not submit edits. Adding type checks and positive-number guards to a lightweight internal math utility is a defensive DX tweak, not a real bug fix. Only proceed if you are fixing a crash, security vulnerability, or logic error. If none exist, submit no edits.
 
 ---
+
+## Cycle 1780613940
+**Scanner**: ### Step 1: Codebase Understanding
+VULNRIX is an all-in-one security platform that combines a code vulnerability scanner (using regex, semantic analysis, and AI verification) with a digital footprint OSINT tool.
+
+The target file `vuln_scan/engine/taint.py` implements a static taint analysis engine. It defines sources (user-controlled inputs) and sinks (dangerous functions) and attempts to trace the flow of data from a source to a sink to identify vulnerabilities like SQLi, RCE, and XSS. The `vuln_scan/vscode_extension/package.json` is the manifest for a VS Code extension that allows users to trigger these scans directly from their IDE.
+
+The codebase uses a Django-based backend, a Next.js frontend, and a modular Python engine for security analysis.
+
+### Step 2: Deep Analysis
+
+**Security**
+The `TaintTracker` in `taint.py` relies entirely on regular expressions for taint analysis. While this is a "fast" approach, it is highly susceptible to bypasses. For example, it looks for `request.GET[` but would miss `request.GET.get('param')`. However, since this is a scanner and not the target application, the primary security risk is "False Negatives" (missing real bugs).
+
+**Logic**
+The `TaintTracker.analyze` method (though truncated in the provided snippet) is designed to find paths from sources to sinks. A critical logic flaw in static analysis via regex is the lack of scope awareness. If a variable is named `data` in one function (tainted) and `data` in another (safe), a simple regex-based tracker often conflates them, leading to high false-positive rates.
+
+**Performance**
+The `SOURCES` and `SINKS` lists are iterated over for every analysis. While the lists are small, the regex patterns are compiled/executed repeatedly.
+
+**Architecture**
+The VS Code extension `package.json` is extremely minimal. It defines a command `vuln-scan.scanFile` but lacks essential configuration options (like API endpoint settings or API key storage) that would be required for the extension to actually communicate with the VULNRIX backend without hardcoding values in `extension.js`.
+
+**Testing**
+There is no evidence of a test suite specifically for the `TaintTracker` to validate that the regex patterns actually catch the intended vulnerabilities across different coding styles.
+
+**Consistency**
+The `TaintSource` and `TaintSink` dataclasses are well-defined, but the `TaintTracker` class mixes configuration (the lists) with logic.
+
+### Step 3: Pick ONE Improvement
+
+I have identified a critical logic/functionality gap in `vuln_scan/engine/taint.py`.
+
+The current `SINKS` definitions for SQL Injection are too narrow. Specifically, the pattern for `execute()`: `r"\.execute\s*\([^)]*%|\.execute\s*\([^)]*\.format"` only catches cases where a `%` or `.format()` is used inside the call. It completely misses the most common modern Python SQL injection vector: f-strings (e.g., `cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")`).
+
+Since the goal of this module is to detect vulnerabilities, missing f-string injections—the primary way developers currently write dynamic queries in Python—is a significant failure of the engine's core logic.
+
+### Step 4: Write the Executor's Plan
+
+**WHAT**
+Expand the SQL Injection detection patterns in the `SINKS` list to include f-strings and basic string concatenation, ensuring the scanner catches modern Python injection vectors.
+
+**WHERE**
+In `vuln_scan/engine/taint.py`, inside the `TaintTracker` class, specifically within the `SINKS` list. Locate the `TaintSink` entry for `execute()` which currently has the pattern `r"\.execute\s*\([^)]*%|\.execute\s*\([^)]*\.format"`.
+
+**WHY**
+Modern Python (3.6+) heavily uses f-strings for string interpolation. The current regex only looks for the old `%` operator and the `.format()` method. Any developer using `f"..."` inside an `.execute()` call will currently bypass the taint scanner, leading to a false sense of security (False Negative) for a Critical severity vulnerability.
+
+**HOW**
+1. Locate the `TaintSink` object with the name `execute()` in the `SINKS` list.
+2. Update its regex pattern to include a check for f-strings. An f-string in a function call typically starts with `f"` or `f'`.
+3. Modify the regex to match `.execute(` followed by either a `%`, a `.format`, or an `f` prefix before the opening quote of a string.
+4. Ensure the regex remains non-greedy to avoid capturing too much of the line.
+
+**Executor**: {"title": "[LOGIC] Expand SQL injection sink pattern to detect f-strings", "body": "### Problem / Gap\nThe `execute()` sink regex only matches `%` and `.format()` interpolation, missing f-strings (e.g., `cursor.execute(f\"SELECT * FROM users WHERE id = {user_id}\")`). This causes false negatives for the most common modern Python SQL injection vector.\n\n### Solution & Insight\nAdd an alternative to the regex that matches an `f` prefix before the opening quote of a string inside `.execute()`. The updated pattern is `\\.execute\\s*\\([^)]*%|\\.execute\\s*\\([^)]*\\.format|\\.execute\\s*\\([^)]*f[\"']`.\n\n### Impact\nEliminates a critical blind spot in the taint engine, ensuring f-string based SQL injections are flagged as Critical severity.", "branch_name": "bot/upgrade-1780613940", "edits": [{"file": "vuln_scan/engine/taint.py", "search": "        TaintSink(\"execute()\", r\"\\.execute\\s*\\([^)]*%|\\.execute\\s*\\([^)]*\\.format\", \"SQL Injection\", \"CWE-89\", \"Critical\"),", "replace": "        TaintSink(\"execute()\", r\"\\.execute\\s*\\([^)]*%|\\.execute\\s*\\([^)]*\\.format|\\.execute\\s*\\([^)]*f[\\\"']\", \"SQL Injection\", \"CWE-89\", \"Critical\"),"}]}
+
+**Reviewer**: APPROVE: The edit correctly extends the SQL Injection regex pattern to detect f-string interpolation inside .execute() calls—a critical false-negative gap in a security scanner. The search block matches exactly, the replacement is valid and production-ready, and the change aligns with the Scanner's plan. A single-line change is justified here because it fixes a Critical-severity detection failure in the engine's core logic.
+
+---
