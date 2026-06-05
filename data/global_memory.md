@@ -71,3 +71,4 @@
 <!-- LAST_PR_JUDGE=1780703762 -->
 - **Repo: VULNRIX**: [LOGIC] Expand SQL injection sink pattern to detect f-strings. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **REJECTED by Reviewer**: Executor submitted empty edits on HADNX despite Scanner providing a specific logic-fix plan for mixed_content.py; blocked for lack of substance.
+- **Repo: unfetter_proxy**: [LOGIC] Prevent false-positive success in web session test. (Ref: disabled - email spam) - *Status: SKIPPED*
