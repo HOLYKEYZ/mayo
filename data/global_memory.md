@@ -76,3 +76,4 @@
 - **REJECTED by Reviewer**: Executor repeated empty no-edit submission on DR-OPIC after Scanner's NO_ACTIONABLE verdict; blocked again for lack of substance.
 - **REJECTED by Reviewer**: Repo git-pulse: Executor repeated empty-edit submission after Scanner found no actionable improvements; blocked again — must find real bugs or substantive cleanup.
 - **REJECTED by Reviewer**: Executor on git-pulse proposed Heatmap guard clause with search block that failed to match original file; diff preview showed NO CHANGES.
+- **REJECTED by Reviewer**: Executor repeated banned trivial image placeholder fix on nextphase-realestate; search blocks failed and prior instruction to bundle with substantive logic was ignored.
