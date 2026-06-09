@@ -80,3 +80,4 @@
 - **REJECTED by Reviewer**: Executor attempted the same banned trivial image placeholder fix on nextphase-realestate for the fourth time; search blocks mismatched actual file content and were blocked by safety guards.
 - **REJECTED by Reviewer**: Executor submitted empty edits on HADNX after Scanner's NO_ACTIONABLE verdict; blocked for lack of substance — must find real bugs or substantive cleanup.
 - **REJECTED by Reviewer**: Executor submitted empty edits on HADNX after Scanner's NO_ACTIONABLE verdict; blocked for lack of substance — must find real bugs or substantive cleanup.
+- **Repo: SWARMs-Debate-Primitive**: [LOGIC] Remove restrictive provider check in LLMClient. (Ref: disabled - email spam) - *Status: SKIPPED*
