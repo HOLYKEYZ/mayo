@@ -86,3 +86,4 @@
 - **Repo: codex-OC_mobile**: [LOGIC] Add WebSocket close handler to relay-smoke.js for immediate failure on connection drop. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **Repo: HADNX**: [LOGIC] Add cleanup for polling timeout to prevent memory leak. (Ref: disabled - email spam) - *Status: SKIPPED*
 - **Repo: unfetter_proxy**: [LOGIC] Type-safe config loading and integrate ProviderConfig. (Ref: disabled - email spam) - *Status: SKIPPED*
+- **REJECTED by Reviewer**: Repo: Alexcathe — Executor submitted empty edits after Scanner found no actionable improvements; blocked for lack of substance. Empty edits are never acceptable.
